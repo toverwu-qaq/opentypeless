@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/tover0314-w/opentypeless/actions/workflows/ci.yml"><img src="https://github.com/tover0314-w/opentypeless/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/tover0314-w/opentypeless/releases"><img src="https://img.shields.io/github/v/release/tover0314-w/opentypeless?color=2ABBA7" alt="Release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/tover0314-w/opentypeless" alt="Licencia" /></a>
   <a href="https://github.com/tover0314-w/opentypeless/stargazers"><img src="https://img.shields.io/github/stars/tover0314-w/opentypeless?style=social" alt="Estrellas" /></a>
@@ -155,6 +156,15 @@ src-tauri/src/        # Backend Rust
 - [ ] Combinaciones de teclas personalizables
 - [ ] Experiencia de incorporación mejorada
 - [ ] Aplicación móvil complementaria
+
+## Comunidad
+
+- 💬 [Discord](https://discord.gg/V6rRpJ4RGD) — Conversa, obtén ayuda, comparte comentarios
+- 🗣️ [GitHub Discussions](https://github.com/tover0314-w/opentypeless/discussions) — Propuestas de funciones, preguntas y respuestas
+- 🐛 [Issue Tracker](https://github.com/tover0314-w/opentypeless/issues) — Reportes de errores y solicitudes de funciones
+- 📖 [Guía de contribución](CONTRIBUTING.md) — Configuración de desarrollo y directrices
+- 🔒 [Política de seguridad](SECURITY.md) — Reportar vulnerabilidades de forma responsable
+- 🧭 [Visión](VISION.md) — Principios del proyecto y dirección del roadmap
 
 ## Contribuir
 

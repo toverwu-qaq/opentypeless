@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/tover0314-w/opentypeless/actions/workflows/ci.yml"><img src="https://github.com/tover0314-w/opentypeless/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/tover0314-w/opentypeless/releases"><img src="https://img.shields.io/github/v/release/tover0314-w/opentypeless?color=2ABBA7" alt="Release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/tover0314-w/opentypeless" alt="License" /></a>
   <a href="https://github.com/tover0314-w/opentypeless/stargazers"><img src="https://img.shields.io/github/stars/tover0314-w/opentypeless?style=social" alt="Stars" /></a>
@@ -155,6 +156,15 @@ src-tauri/src/        # Rust 后端
 - [ ] 可自定义热键组合
 - [ ] 改进新手引导体验
 - [ ] 移动端伴侣应用
+
+## 社区
+
+- 💬 [Discord](https://discord.gg/V6rRpJ4RGD) — 交流、获取帮助、分享反馈
+- 🗣️ [GitHub Discussions](https://github.com/tover0314-w/opentypeless/discussions) — 功能提案、问答
+- 🐛 [Issue Tracker](https://github.com/tover0314-w/opentypeless/issues) — Bug 报告和功能请求
+- 📖 [贡献指南](CONTRIBUTING.md) — 开发环境搭建和贡献规范
+- 🔒 [安全策略](SECURITY.md) — 负责任地报告漏洞
+- 🧭 [愿景](VISION.md) — 项目原则和路线图方向
 
 ## 贡献
 

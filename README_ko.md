@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/tover0314-w/opentypeless/actions/workflows/ci.yml"><img src="https://github.com/tover0314-w/opentypeless/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/tover0314-w/opentypeless/releases"><img src="https://img.shields.io/github/v/release/tover0314-w/opentypeless?color=2ABBA7" alt="릴리스" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/tover0314-w/opentypeless" alt="라이선스" /></a>
   <a href="https://github.com/tover0314-w/opentypeless/stargazers"><img src="https://img.shields.io/github/stars/tover0314-w/opentypeless?style=social" alt="Stars" /></a>
@@ -155,6 +156,15 @@ src-tauri/src/        # Rust 백엔드
 - [ ] 사용자 정의 단축키 조합
 - [ ] 온보딩 경험 개선
 - [ ] 모바일 컴패니언 앱
+
+## 커뮤니티
+
+- 💬 [Discord](https://discord.gg/V6rRpJ4RGD) — 대화, 도움 받기, 피드백 공유
+- 🗣️ [GitHub Discussions](https://github.com/tover0314-w/opentypeless/discussions) — 기능 제안, 질문과 답변
+- 🐛 [Issue Tracker](https://github.com/tover0314-w/opentypeless/issues) — 버그 보고 및 기능 요청
+- 📖 [기여 가이드](CONTRIBUTING.md) — 개발 설정 및 가이드라인
+- 🔒 [보안 정책](SECURITY.md) — 취약점을 책임감 있게 보고
+- 🧭 [비전](VISION.md) — 프로젝트 원칙 및 로드맵 방향
 
 ## 기여하기
 
