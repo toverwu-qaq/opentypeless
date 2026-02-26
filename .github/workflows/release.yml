@@ -42,7 +42,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc97ebc # stable
+      - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
