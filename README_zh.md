@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="README.md">English</a> | <strong>中文</strong>
+  <a href="README.md">English</a> | <strong>中文</strong> | <a href="README_ja.md">日本語</a> | <a href="README_ko.md">한국어</a> | <a href="README_es.md">Español</a> | <a href="README_fr.md">Français</a> | <a href="README_de.md">Deutsch</a> | <a href="README_pt.md">Português</a>
 </p>
 
 <p align="center">
@@ -171,6 +171,10 @@ src-tauri/src/        # Rust 后端
     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=tover0314-w/opentypeless&type=Date" />
   </picture>
 </a>
+
+## 借助 Claude Code 一天完成开发
+
+整个项目在一天之内借助 [Claude Code](https://claude.com/claude-code) 完成开发 — 从架构设计到完整实现，包括 Tauri 后端、React 前端、CI/CD 流水线以及本 README。
 
 ## 许可证
 

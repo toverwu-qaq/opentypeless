@@ -1,5 +1,5 @@
 <p align="center">
-  <strong>English</strong> | <a href="README_zh.md">中文</a>
+  <strong>English</strong> | <a href="README_zh.md">中文</a> | <a href="README_ja.md">日本語</a> | <a href="README_ko.md">한국어</a> | <a href="README_es.md">Español</a> | <a href="README_fr.md">Français</a> | <a href="README_de.md">Deutsch</a> | <a href="README_pt.md">Português</a>
 </p>
 
 <p align="center">
@@ -171,6 +171,10 @@ Looking for a place to start? Check out issues labeled [`good first issue`](http
     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=tover0314-w/opentypeless&type=Date" />
   </picture>
 </a>
+
+## Built with Claude Code
+
+This entire project was built in a single day using [Claude Code](https://claude.com/claude-code) — from architecture design to full implementation, including the Tauri backend, React frontend, CI/CD pipeline, and this README.
 
 ## License
 
