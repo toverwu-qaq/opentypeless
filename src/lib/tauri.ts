@@ -24,7 +24,12 @@ export async function testSttConnection(apiKey: string, provider: string): Promi
   return invoke('test_stt_connection', { apiKey, provider })
 }
 
-export async function testLlmConnection(apiKey: string, provider: string, baseUrl: string, model: string): Promise<boolean> {
+export async function testLlmConnection(
+  apiKey: string,
+  provider: string,
+  baseUrl: string,
+  model: string,
+): Promise<boolean> {
   return invoke('test_llm_connection', { apiKey, provider, baseUrl, model })
 }
 
@@ -60,7 +65,10 @@ export async function getDictionary(): Promise<DictionaryEntry[]> {
   return invoke('get_dictionary')
 }
 
-export async function addDictionaryEntry(word: string, pronunciation: string | null): Promise<void> {
+export async function addDictionaryEntry(
+  word: string,
+  pronunciation: string | null,
+): Promise<void> {
   return invoke('add_dictionary_entry', { word, pronunciation })
 }
 

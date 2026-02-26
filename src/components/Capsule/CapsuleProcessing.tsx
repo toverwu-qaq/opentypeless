@@ -17,9 +17,7 @@ export function CapsuleProcessing() {
   }
 
   return (
-    <motion.div
-      className="relative z-10 flex items-center gap-2 h-9 px-3"
-    >
+    <motion.div className="relative z-10 flex items-center gap-2 h-9 px-3">
       {/* Shimmer sweep overlay */}
       <div className="capsule-shimmer" />
       <motion.div

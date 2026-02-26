@@ -31,7 +31,9 @@ export function OnboardingLayout({
   children,
 }: Props) {
   const handleClose = () => {
-    import('@tauri-apps/api/core').then(({ invoke }) => invoke('plugin:process|exit', { code: 0 })).catch(() => {})
+    import('@tauri-apps/api/core')
+      .then(({ invoke }) => invoke('plugin:process|exit', { code: 0 }))
+      .catch(() => {})
   }
 
   return (
@@ -66,15 +68,11 @@ export function OnboardingLayout({
       {/* Title */}
       <div className="text-center px-8 pt-3 pb-4">
         <h1 className="text-[22px] font-semibold text-text-primary">{title}</h1>
-        {subtitle && (
-          <p className="text-[13px] text-text-secondary mt-1.5">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-[13px] text-text-secondary mt-1.5">{subtitle}</p>}
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-8">
-        {children}
-      </div>
+      <div className="flex-1 overflow-y-auto px-8">{children}</div>
 
       {/* Navigation — jelly buttons */}
       <div className="flex items-center justify-between px-8 py-4">

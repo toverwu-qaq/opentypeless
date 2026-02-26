@@ -28,6 +28,7 @@ interface AuthState {
   // Loading
   loading: boolean
   error: string | null
+  emailVerificationPending: boolean
 
   // Actions
   initialize: () => Promise<void>
@@ -48,6 +49,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   llmTokensLimit: 0,
   loading: false,
   error: null,
+  emailVerificationPending: false,
 
   initialize: async () => {
     try {
@@ -115,9 +117,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signUp: async (email, password, name) => {
-    set({ loading: true, error: null })
+    set({ loading: true, error: null, emailVerificationPending: false })
     try {
-      const { data, error } = await authClient.signUp.email(
+      const { error } = await authClient.signUp.email(
         { email, password, name },
         {
           onSuccess: async (ctx) => {
@@ -132,16 +134,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         },
       )
       if (error) throw new Error(error.message ?? 'Sign up failed')
-      if (data?.user) {
-        set({
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.name ?? null,
-          },
-        })
-        await get().refreshSubscription()
-      }
+      // Email verification is required — don't set user yet
+      set({ emailVerificationPending: true })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Sign up failed'
       set({ error: msg })
@@ -187,11 +181,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         llmTokensLimit: status.llmTokensLimit,
       })
       if (status.plan === 'pro') {
-        if (status.sttSecondsLimit > 0 && status.sttSecondsUsed / status.sttSecondsLimit >= 0.9 && !sttWarningShown) {
+        if (
+          status.sttSecondsLimit > 0 &&
+          status.sttSecondsUsed / status.sttSecondsLimit >= 0.9 &&
+          !sttWarningShown
+        ) {
           toast('STT quota is above 90%. Consider switching to BYOK mode.', 'error')
           sttWarningShown = true
         }
-        if (status.llmTokensLimit > 0 && status.llmTokensUsed / status.llmTokensLimit >= 0.9 && !llmWarningShown) {
+        if (
+          status.llmTokensLimit > 0 &&
+          status.llmTokensUsed / status.llmTokensLimit >= 0.9 &&
+          !llmWarningShown
+        ) {
           toast('LLM quota is above 90%. Consider switching to BYOK mode.', 'error')
           llmWarningShown = true
         }

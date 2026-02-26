@@ -45,7 +45,9 @@ export function ToastContainer() {
       setToasts((prev) => [...prev, { id, text, type }])
       setTimeout(() => remove(id), 3000)
     }
-    return () => { addToast = () => {} }
+    return () => {
+      addToast = () => {}
+    }
   }, [remove])
 
   return (

@@ -8,9 +8,33 @@ import { Toggle } from './shared/Toggle'
 
 // Keys that can be used as hotkeys without a modifier
 const STANDALONE_KEYS = new Set([
-  'Space', 'Tab', 'Enter', 'Backspace', 'Escape', 'Delete', 'Insert',
-  'Home', 'End', 'PageUp', 'PageDown', 'Up', 'Down', 'Left', 'Right',
-  'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
+  'Space',
+  'Tab',
+  'Enter',
+  'Backspace',
+  'Escape',
+  'Delete',
+  'Insert',
+  'Home',
+  'End',
+  'PageUp',
+  'PageDown',
+  'Up',
+  'Down',
+  'Left',
+  'Right',
+  'F1',
+  'F2',
+  'F3',
+  'F4',
+  'F5',
+  'F6',
+  'F7',
+  'F8',
+  'F9',
+  'F10',
+  'F11',
+  'F12',
 ])
 
 function HotkeyRecorder() {
@@ -23,75 +47,81 @@ function HotkeyRecorder() {
   const [error, setError] = useState<string | null>(null)
   const autoConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const confirmHotkey = useCallback((hotkey: string) => {
-    setRecording(false)
-    setError(null)
-    setModifierHint(null)
-    updateHotkey(hotkey)
-      .then(() => {
-        updateConfig({ hotkey })
-        setPending(null)
-      })
-      .catch((e) => {
-        setError(String(e))
-        setPending(null)
-        resumeHotkey().catch(() => {})
-      })
-  }, [updateConfig])
+  const confirmHotkey = useCallback(
+    (hotkey: string) => {
+      setRecording(false)
+      setError(null)
+      setModifierHint(null)
+      updateHotkey(hotkey)
+        .then(() => {
+          updateConfig({ hotkey })
+          setPending(null)
+        })
+        .catch((e) => {
+          setError(String(e))
+          setPending(null)
+          resumeHotkey().catch(() => {})
+        })
+    },
+    [updateConfig],
+  )
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
 
-    // Build modifier prefix
-    const parts: string[] = []
-    if (e.ctrlKey) parts.push('Ctrl')
-    if (e.altKey) parts.push('Alt')
-    if (e.shiftKey) parts.push('Shift')
-    if (e.metaKey) parts.push('Meta')
+      // Build modifier prefix
+      const parts: string[] = []
+      if (e.ctrlKey) parts.push('Ctrl')
+      if (e.altKey) parts.push('Alt')
+      if (e.shiftKey) parts.push('Shift')
+      if (e.metaKey) parts.push('Meta')
 
-    // If only modifier keys are pressed, show hint like "Alt+..."
-    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) {
-      setModifierHint(parts.length > 0 ? parts.join('+') + '+...' : null)
-      return
-    }
+      // If only modifier keys are pressed, show hint like "Alt+..."
+      if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) {
+        setModifierHint(parts.length > 0 ? parts.join('+') + '+...' : null)
+        return
+      }
 
-    setModifierHint(null)
+      setModifierHint(null)
 
-    const keyMap: Record<string, string> = {
-      ' ': 'Space',
-      Tab: 'Tab',
-      Enter: 'Enter',
-      Backspace: 'Backspace',
-      Escape: 'Escape',
-      Delete: 'Delete',
-      Insert: 'Insert',
-      Home: 'Home',
-      End: 'End',
-      PageUp: 'PageUp',
-      PageDown: 'PageDown',
-      ArrowUp: 'Up',
-      ArrowDown: 'Down',
-      ArrowLeft: 'Left',
-      ArrowRight: 'Right',
-    }
+      const keyMap: Record<string, string> = {
+        ' ': 'Space',
+        Tab: 'Tab',
+        Enter: 'Enter',
+        Backspace: 'Backspace',
+        Escape: 'Escape',
+        Delete: 'Delete',
+        Insert: 'Insert',
+        Home: 'Home',
+        End: 'End',
+        PageUp: 'PageUp',
+        PageDown: 'PageDown',
+        ArrowUp: 'Up',
+        ArrowDown: 'Down',
+        ArrowLeft: 'Left',
+        ArrowRight: 'Right',
+      }
 
-    let keyName = keyMap[e.key] || e.key
-    if (keyName.length === 1) keyName = keyName.toUpperCase()
+      let keyName = keyMap[e.key] || e.key
+      if (keyName.length === 1) keyName = keyName.toUpperCase()
 
-    // Letters and digits require at least one modifier to avoid interfering with typing
-    if (parts.length === 0 && !STANDALONE_KEYS.has(keyName)) return
+      // Letters and digits require at least one modifier to avoid interfering with typing
+      if (parts.length === 0 && !STANDALONE_KEYS.has(keyName)) return
 
-    parts.push(keyName)
-    const combo = parts.join('+')
-    setPending(combo)
+      parts.push(keyName)
+      const combo = parts.join('+')
+      setPending(combo)
 
-    // Auto-confirm after 1.5 seconds
-    if (autoConfirmTimer.current) clearTimeout(autoConfirmTimer.current)
-    autoConfirmTimer.current = setTimeout(() => {
-      confirmHotkey(combo)
-    }, 1500)
-  }, [confirmHotkey])
+      // Auto-confirm after 1.5 seconds
+      if (autoConfirmTimer.current) clearTimeout(autoConfirmTimer.current)
+      autoConfirmTimer.current = setTimeout(() => {
+        confirmHotkey(combo)
+      }, 1500)
+    },
+    [confirmHotkey],
+  )
 
   const handleKeyUp = useCallback(() => {
     setModifierHint(null)

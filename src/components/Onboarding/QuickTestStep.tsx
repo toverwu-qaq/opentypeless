@@ -46,11 +46,7 @@ export function QuickTestStep() {
             <div key={stage.key} className="flex items-center">
               <motion.div
                 className={`flex flex-col items-center gap-1.5 px-3 py-2 rounded-[10px] transition-colors ${
-                  isActive
-                    ? 'bg-accent/10'
-                    : isDone
-                      ? 'bg-success/10'
-                      : 'bg-bg-secondary'
+                  isActive ? 'bg-accent/10' : isDone ? 'bg-success/10' : 'bg-bg-secondary'
                 }`}
                 animate={isActive ? { scale: [1, 1.05, 1] } : {}}
                 transition={isActive ? { repeat: Infinity, duration: 1.5 } : {}}
@@ -58,23 +54,19 @@ export function QuickTestStep() {
                 <Icon
                   size={18}
                   className={
-                    isActive
-                      ? 'text-accent'
-                      : isDone
-                        ? 'text-success'
-                        : 'text-text-tertiary'
+                    isActive ? 'text-accent' : isDone ? 'text-success' : 'text-text-tertiary'
                   }
                 />
-                <span className={`text-[11px] ${
-                  isActive ? 'text-accent' : isDone ? 'text-success' : 'text-text-tertiary'
-                }`}>
+                <span
+                  className={`text-[11px] ${
+                    isActive ? 'text-accent' : isDone ? 'text-success' : 'text-text-tertiary'
+                  }`}
+                >
                   {stage.label}
                 </span>
               </motion.div>
               {i < STAGES.length - 1 && (
-                <div className={`w-4 h-[1px] ${
-                  isDone ? 'bg-success/40' : 'bg-border'
-                }`} />
+                <div className={`w-4 h-[1px] ${isDone ? 'bg-success/40' : 'bg-border'}`} />
               )}
             </div>
           )
@@ -106,9 +98,7 @@ export function QuickTestStep() {
           {finalTranscript && (
             <p className="text-[12px] text-text-tertiary line-through">{finalTranscript}</p>
           )}
-          {polishedText && (
-            <p className="text-[13px] text-text-primary">{polishedText}</p>
-          )}
+          {polishedText && <p className="text-[13px] text-text-primary">{polishedText}</p>}
         </div>
       )}
     </div>

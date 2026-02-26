@@ -2,7 +2,15 @@ import { API_BASE_URL } from './constants'
 
 const DEFAULT_TIMEOUT_MS = 30_000
 
-async function request<T>(path: string, options?: RequestInit & { timeoutMs?: number }): Promise<T> {
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem('session_token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+async function request<T>(
+  path: string,
+  options?: RequestInit & { timeoutMs?: number },
+): Promise<T> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, ...fetchOptions } = options ?? {}
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -14,6 +22,7 @@ async function request<T>(path: string, options?: RequestInit & { timeoutMs?: nu
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders(),
         ...fetchOptions?.headers,
       },
     })
@@ -30,7 +39,10 @@ async function request<T>(path: string, options?: RequestInit & { timeoutMs?: nu
 }
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message)
     this.name = 'ApiError'
   }
@@ -76,6 +88,7 @@ export async function proxyStt(audioBlob: Blob, language: string): Promise<{ tex
       method: 'POST',
       credentials: 'include',
       signal: controller.signal,
+      headers: authHeaders(),
       body: formData,
     })
 
@@ -91,7 +104,9 @@ export async function proxyStt(audioBlob: Blob, language: string): Promise<{ tex
 }
 
 // Proxy LLM
-export function proxyLlm(messages: Array<{ role: string; content: string }>): Promise<{ text: string }> {
+export function proxyLlm(
+  messages: Array<{ role: string; content: string }>,
+): Promise<{ text: string }> {
   return request('/api/proxy/llm', {
     method: 'POST',
     body: JSON.stringify({ messages }),
@@ -99,14 +114,22 @@ export function proxyLlm(messages: Array<{ role: string; content: string }>): Pr
 }
 
 // Backup
-export function uploadBackup(data: { history?: unknown; dictionary?: unknown; settings?: unknown }): Promise<{ success: boolean }> {
+export function uploadBackup(data: {
+  history?: unknown
+  dictionary?: unknown
+  settings?: unknown
+}): Promise<{ success: boolean }> {
   return request('/api/backup/upload', {
     method: 'POST',
     body: JSON.stringify(data),
   })
 }
 
-export function downloadBackup(): Promise<{ history?: unknown; dictionary?: unknown; settings?: unknown }> {
+export function downloadBackup(): Promise<{
+  history?: unknown
+  dictionary?: unknown
+  settings?: unknown
+}> {
   return request('/api/backup/download')
 }
 

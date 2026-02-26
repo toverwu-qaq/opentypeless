@@ -44,9 +44,13 @@ export function Capsule() {
     if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
       isDragging.current = true
       dragStart.current = null
-      import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-        getCurrentWindow().startDragging().catch(() => {})
-      }).catch(() => {})
+      import('@tauri-apps/api/window')
+        .then(({ getCurrentWindow }) => {
+          getCurrentWindow()
+            .startDragging()
+            .catch(() => {})
+        })
+        .catch(() => {})
     }
   }, [])
 

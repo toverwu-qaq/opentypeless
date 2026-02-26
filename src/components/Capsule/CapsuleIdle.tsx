@@ -14,9 +14,13 @@ export function CapsuleIdle() {
     >
       {/* Subtle breathing wrapper */}
       <motion.div
-        animate={reduced ? undefined : {
-          scale: [1, 1.02, 1],
-        }}
+        animate={
+          reduced
+            ? undefined
+            : {
+                scale: [1, 1.02, 1],
+              }
+        }
         transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
       >
         <CapsuleLogo size={18} className="drop-shadow-sm" />

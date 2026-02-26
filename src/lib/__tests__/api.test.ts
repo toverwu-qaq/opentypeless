@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ApiError } from '../api'
+import { API_BASE_URL } from '../constants'
 
-// We test the module by importing it after mocking fetch
-const API_BASE = 'https://talkmore.ai'
+const API_BASE = API_BASE_URL
 
 describe('ApiError', () => {
   it('stores status and message', () => {

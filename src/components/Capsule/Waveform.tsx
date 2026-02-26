@@ -45,7 +45,9 @@ export function Waveform() {
       {Array.from({ length: BAR_COUNT }).map((_, i) => (
         <div
           key={i}
-          ref={(el) => { barsRef.current[i] = el }}
+          ref={(el) => {
+            barsRef.current[i] = el
+          }}
           className="w-[2px] rounded-full bg-white/80"
           style={{
             height: `${MIN_HEIGHT}px`,

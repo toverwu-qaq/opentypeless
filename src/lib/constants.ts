@@ -1,8 +1,8 @@
 // App metadata
 export const APP_NAME = 'OpenTypeless'
 export const APP_VERSION = 'v0.1.0'
-export const APP_REPO_URL = 'https://github.com/nicepkg/opentypeless'
-export const APP_LICENSE_URL = 'https://github.com/nicepkg/opentypeless/blob/main/LICENSE'
+export const APP_REPO_URL = 'https://github.com/tover0314-w/opentypeless'
+export const APP_LICENSE_URL = 'https://github.com/tover0314-w/opentypeless/blob/main/LICENSE'
 // Cloud API base URL — defaults to talkmore.ai but can be overridden via VITE_API_BASE_URL env var.
 // All core features (BYOK mode) work without any cloud connection.
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://talkmore.ai'
@@ -48,7 +48,10 @@ export const LLM_DEFAULT_CONFIG: Record<string, { baseUrl: string; model: string
   deepseek: { baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
   siliconflow: { baseUrl: 'https://api.siliconflow.cn/v1', model: 'Qwen/Qwen2.5-7B-Instruct' },
   openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
-  gemini: { baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.0-flash' },
+  gemini: {
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    model: 'gemini-2.0-flash',
+  },
   moonshot: { baseUrl: 'https://api.moonshot.cn/v1', model: 'moonshot-v1-8k' },
   qwen: { baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-turbo' },
   groq: { baseUrl: 'https://api.groq.com/openai/v1', model: 'llama-3.1-8b-instant' },

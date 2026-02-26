@@ -6,13 +6,7 @@ export function CapsuleLogo({ size = 22, className = '' }: { size?: number; clas
   const highlightId = `mic-highlight-${id}`
 
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      className={className}
-    >
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
       <defs>
         <linearGradient id={bodyId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="currentColor" stopOpacity="1" />
@@ -25,23 +19,10 @@ export function CapsuleLogo({ size = 22, className = '' }: { size?: number; clas
       </defs>
 
       {/* Mic head */}
-      <rect
-        x="8.5"
-        y="3"
-        width="7"
-        height="11"
-        rx="3.5"
-        fill={`url(#${bodyId})`}
-      />
+      <rect x="8.5" y="3" width="7" height="11" rx="3.5" fill={`url(#${bodyId})`} />
 
       {/* Inner highlight */}
-      <ellipse
-        cx="10.5"
-        cy="6.5"
-        rx="1.5"
-        ry="2.5"
-        fill={`url(#${highlightId})`}
-      />
+      <ellipse cx="10.5" cy="6.5" rx="1.5" ry="2.5" fill={`url(#${highlightId})`} />
 
       {/* Arc stand */}
       <path

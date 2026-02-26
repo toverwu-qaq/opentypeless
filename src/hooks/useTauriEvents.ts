@@ -21,15 +21,17 @@ export function useTauriEvents() {
     const unlisteners: Array<() => void> = []
 
     function addListener<T>(event: string, handler: (payload: T) => void) {
-      listen<T>(event, (e) => handler(e.payload)).then((unlisten) => {
-        if (cancelled) {
-          unlisten()
-        } else {
-          unlisteners.push(unlisten)
-        }
-      }).catch((err) => {
-        console.error(`Failed to register listener for "${event}":`, err)
-      })
+      listen<T>(event, (e) => handler(e.payload))
+        .then((unlisten) => {
+          if (cancelled) {
+            unlisten()
+          } else {
+            unlisteners.push(unlisten)
+          }
+        })
+        .catch((err) => {
+          console.error(`Failed to register listener for "${event}":`, err)
+        })
     }
 
     addListener<number>('audio:volume', setAudioVolume)
@@ -39,9 +41,11 @@ export function useTauriEvents() {
     addListener<PipelineState>('pipeline:state', (state) => {
       setPipelineState(state)
       if (state === 'idle') {
-        getHistory(200, 0).then(setHistory).catch((err) => {
-          console.error('Failed to refresh history:', err)
-        })
+        getHistory(200, 0)
+          .then(setHistory)
+          .catch((err) => {
+            console.error('Failed to refresh history:', err)
+          })
       }
     })
     addListener<string>('pipeline:target_app', setTargetApp)

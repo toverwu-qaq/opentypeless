@@ -34,7 +34,7 @@ function AuthForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const { signIn, signUp, loading, error } = useAuthStore()
+  const { signIn, signUp, loading, error, emailVerificationPending } = useAuthStore()
   const [localError, setLocalError] = useState<string | null>(null)
   const { t } = useTranslation()
 
@@ -60,6 +60,32 @@ function AuthForm() {
     } catch {
       // Error already set in store
     }
+  }
+
+  if (emailVerificationPending) {
+    return (
+      <div className="max-w-[340px] mx-auto py-8 px-6 space-y-5 text-[13px] text-center">
+        <div className="text-[40px]">📧</div>
+        <h2 className="text-[16px] font-semibold text-text-primary">
+          {t('account.verifyEmailTitle', 'Check your email')}
+        </h2>
+        <p className="text-text-secondary">
+          {t(
+            'account.verifyEmailDesc',
+            'We sent a verification link to your email. Please click the link to verify your account, then come back and sign in.',
+          )}
+        </p>
+        <button
+          onClick={() => {
+            useAuthStore.setState({ emailVerificationPending: false })
+            setTab('signin')
+          }}
+          className="mt-4 px-4 py-2 rounded-[8px] bg-bg-secondary border border-border text-text-primary text-[13px] cursor-pointer hover:bg-bg-tertiary transition-colors"
+        >
+          {t('account.backToSignIn', 'Back to Sign In')}
+        </button>
+      </div>
+    )
   }
 
   const handleOAuth = async (provider: 'google' | 'github') => {

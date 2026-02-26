@@ -17,9 +17,7 @@ export function CapsuleComplete() {
   }, [resetRecording, setPipelineState])
 
   return (
-    <motion.div
-      className="relative z-10 flex items-center gap-1.5 h-9 px-3"
-    >
+    <motion.div className="relative z-10 flex items-center gap-1.5 h-9 px-3">
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

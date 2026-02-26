@@ -13,11 +13,7 @@ export function StepIndicator({ total, current }: Props) {
         <motion.div
           key={i}
           className={`w-2 h-2 rounded-full ${
-            i === current
-              ? 'bg-accent'
-              : i < current
-                ? 'bg-accent/40'
-                : 'bg-border'
+            i === current ? 'bg-accent' : i < current ? 'bg-accent/40' : 'bg-border'
           }`}
           animate={{
             scale: i === current ? 1 : 0.85,

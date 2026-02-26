@@ -34,13 +34,20 @@ export function LlmSetupStep() {
     debounceRef.current = setTimeout(() => {
       doFetchModels(config.llm_api_key, config.llm_base_url)
     }, 500)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
   }, [config.llm_api_key, config.llm_base_url, doFetchModels])
 
   const handleTest = async () => {
     setLlmTestStatus('testing')
     try {
-      const ok = await testLlmConnection(config.llm_api_key, config.llm_provider, config.llm_base_url, config.llm_model)
+      const ok = await testLlmConnection(
+        config.llm_api_key,
+        config.llm_provider,
+        config.llm_base_url,
+        config.llm_model,
+      )
       setLlmTestStatus(ok ? 'success' : 'error')
     } catch {
       setLlmTestStatus('error')
@@ -66,7 +73,9 @@ export function LlmSetupStep() {
           className="w-full px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
         >
           {LLM_PROVIDERS.map((p) => (
-            <option key={p.value} value={p.value}>{p.label}</option>
+            <option key={p.value} value={p.value}>
+              {p.label}
+            </option>
           ))}
         </select>
       </Field>

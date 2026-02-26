@@ -17,42 +17,61 @@ export function CapsuleContextMenu({ x, y, onClose }: Props) {
         await mainWin.setFocus()
         await emitTo('main', 'navigate', hash)
       }
-    } catch {}
+    } catch {
+      /* ignore – window may not exist */
+    }
   }
 
   const items = [
     {
       icon: AppWindow,
       label: 'Open Main Window',
-      onClick: () => { openMainWindow('#/'); onClose() },
+      onClick: () => {
+        openMainWindow('#/')
+        onClose()
+      },
     },
     { type: 'separator' as const },
     {
       icon: Settings,
       label: 'Settings',
-      onClick: () => { openMainWindow('#/settings'); onClose() },
+      onClick: () => {
+        openMainWindow('#/settings')
+        onClose()
+      },
     },
     {
       icon: History,
       label: 'History',
-      onClick: () => { openMainWindow('#/history'); onClose() },
+      onClick: () => {
+        openMainWindow('#/history')
+        onClose()
+      },
     },
     {
       icon: CircleUser,
       label: 'Account',
-      onClick: () => { openMainWindow('#/account'); onClose() },
+      onClick: () => {
+        openMainWindow('#/account')
+        onClose()
+      },
     },
     {
       icon: Crown,
       label: 'Upgrade',
-      onClick: () => { openMainWindow('#/upgrade'); onClose() },
+      onClick: () => {
+        openMainWindow('#/upgrade')
+        onClose()
+      },
     },
     { type: 'separator' as const },
     {
       icon: LogOut,
       label: 'Exit',
       onClick: () => {
-        import('@tauri-apps/api/core').then(({ invoke }) => invoke('plugin:process|exit', { code: 0 })).catch(() => {})
+        import('@tauri-apps/api/core')
+          .then(({ invoke }) => invoke('plugin:process|exit', { code: 0 }))
+          .catch(() => {})
         onClose()
       },
     },
@@ -70,7 +89,11 @@ export function CapsuleContextMenu({ x, y, onClose }: Props) {
           if ('type' in item && item.type === 'separator') {
             return <div key={i} className="my-1 border-t border-border" />
           }
-          const { icon: Icon, label, onClick } = item as { icon: typeof Settings; label: string; onClick: () => void }
+          const {
+            icon: Icon,
+            label,
+            onClick,
+          } = item as { icon: typeof Settings; label: string; onClick: () => void }
           return (
             <button
               key={label}

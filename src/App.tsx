@@ -26,18 +26,24 @@ function CapsuleApp() {
     // Let React paint first, then show the window
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        import('@tauri-apps/api/window').then(async ({ getCurrentWindow }) => {
-          await getCurrentWindow().show()
-          setReady(true)
-        }).catch((e: unknown) => {
-          console.error('Failed to show window:', e)
-        })
+        import('@tauri-apps/api/window')
+          .then(async ({ getCurrentWindow }) => {
+            await getCurrentWindow().show()
+            setReady(true)
+          })
+          .catch((e: unknown) => {
+            console.error('Failed to show window:', e)
+          })
       })
     })
   }, [])
 
   // Always render Capsule so it paints before window shows
-  return <div style={{ opacity: ready ? 1 : 0 }}><Capsule /></div>
+  return (
+    <div style={{ opacity: ready ? 1 : 0 }}>
+      <Capsule />
+    </div>
+  )
 }
 
 function MainApp() {
@@ -89,9 +95,12 @@ function MainApp() {
   useEffect(() => {
     if (!loaded || !user) return
 
-    const interval = setInterval(() => {
-      useAuthStore.getState().refreshSubscription()
-    }, 5 * 60 * 1000)
+    const interval = setInterval(
+      () => {
+        useAuthStore.getState().refreshSubscription()
+      },
+      5 * 60 * 1000,
+    )
 
     const onFocus = () => {
       useAuthStore.getState().refreshSubscription()
@@ -104,22 +113,24 @@ function MainApp() {
     }
   }, [loaded, user])
 
-  if (!loaded) return (
-    <div className="flex items-center justify-center h-screen">
-      <span className="text-text-tertiary text-[13px]">Loading...</span>
-    </div>
-  )
-  if (loadError) return (
-    <div className="flex flex-col items-center justify-center h-screen gap-3">
-      <span className="text-error text-[13px]">Failed to load application data.</span>
-      <button
-        onClick={() => window.location.reload()}
-        className="px-4 py-2 bg-accent text-white rounded-[10px] text-[13px] border-none cursor-pointer hover:bg-accent-hover transition-colors"
-      >
-        Retry
-      </button>
-    </div>
-  )
+  if (!loaded)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <span className="text-text-tertiary text-[13px]">Loading...</span>
+      </div>
+    )
+  if (loadError)
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-3">
+        <span className="text-error text-[13px]">Failed to load application data.</span>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-accent text-white rounded-[10px] text-[13px] border-none cursor-pointer hover:bg-accent-hover transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    )
   if (!onboardingCompleted) return <Onboarding />
 
   return (

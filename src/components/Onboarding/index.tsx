@@ -20,20 +20,35 @@ export function Onboarding() {
 
   const canNext = (() => {
     switch (step) {
-      case 0: return true // Welcome — always
-      case 1: return sttTestStatus === 'success' // STT must pass
-      case 2: return llmTestStatus === 'success' // LLM must pass
-      case 3: return true // Quick test — optional
-      case 4: return true // Done
-      default: return false
+      case 0:
+        return true // Welcome — always
+      case 1:
+        return sttTestStatus === 'success' // STT must pass
+      case 2:
+        return llmTestStatus === 'success' // LLM must pass
+      case 3:
+        return true // Quick test — optional
+      case 4:
+        return true // Done
+      default:
+        return false
     }
   })()
 
   const titles = [
-    { title: 'Welcome to OpenTypeless', subtitle: 'A few quick steps to get started with voice input' },
-    { title: 'Speech Recognition', subtitle: 'Configure your ASR service to convert speech to text' },
+    {
+      title: 'Welcome to OpenTypeless',
+      subtitle: 'A few quick steps to get started with voice input',
+    },
+    {
+      title: 'Speech Recognition',
+      subtitle: 'Configure your ASR service to convert speech to text',
+    },
     { title: 'AI Polish', subtitle: 'Configure an LLM service to polish transcribed text' },
-    { title: 'Try It Out', subtitle: 'Hold the button and say something to test the full pipeline' },
+    {
+      title: 'Try It Out',
+      subtitle: 'Hold the button and say something to test the full pipeline',
+    },
     { title: 'Setup Complete', subtitle: undefined },
   ]
 

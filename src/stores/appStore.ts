@@ -2,8 +2,27 @@ import { create } from 'zustand'
 
 export type PipelineState = 'idle' | 'recording' | 'transcribing' | 'polishing' | 'outputting'
 
-export type SttProvider = 'deepgram' | 'assemblyai' | 'glm-asr' | 'openai-whisper' | 'groq-whisper' | 'siliconflow' | 'cloud'
-export type LlmProvider = 'zhipu' | 'deepseek' | 'siliconflow' | 'openai' | 'gemini' | 'moonshot' | 'qwen' | 'groq' | 'claude' | 'ollama' | 'openrouter' | 'cloud'
+export type SttProvider =
+  | 'deepgram'
+  | 'assemblyai'
+  | 'glm-asr'
+  | 'openai-whisper'
+  | 'groq-whisper'
+  | 'siliconflow'
+  | 'cloud'
+export type LlmProvider =
+  | 'zhipu'
+  | 'deepseek'
+  | 'siliconflow'
+  | 'openai'
+  | 'gemini'
+  | 'moonshot'
+  | 'qwen'
+  | 'groq'
+  | 'claude'
+  | 'ollama'
+  | 'openrouter'
+  | 'cloud'
 export type OutputMode = 'keyboard' | 'clipboard'
 export type HotkeyMode = 'hold' | 'toggle'
 export type Theme = 'light' | 'dark' | 'system'
@@ -177,15 +196,16 @@ export const useAppStore = create<AppState>((set) => ({
   pipelineError: null,
   setPipelineError: (pipelineError) => set({ pipelineError }),
 
-  resetRecording: () => set({
-    audioVolume: 0,
-    partialTranscript: '',
-    finalTranscript: '',
-    polishedText: '',
-    recordingDuration: 0,
-  }),
+  resetRecording: () =>
+    set({
+      audioVolume: 0,
+      partialTranscript: '',
+      finalTranscript: '',
+      polishedText: '',
+      recordingDuration: 0,
+    }),
 
   savedConfig: null,
   setSavedConfig: (savedConfig) => set({ savedConfig }),
-  resetConfig: () => set((s) => s.savedConfig ? { config: { ...s.savedConfig } } : {}),
+  resetConfig: () => set((s) => (s.savedConfig ? { config: { ...s.savedConfig } } : {})),
 }))

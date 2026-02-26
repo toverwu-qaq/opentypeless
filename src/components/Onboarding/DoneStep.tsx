@@ -38,7 +38,8 @@ export function DoneStep() {
           <div>
             <p className="text-[13px] font-medium text-text-primary">Hotkey</p>
             <p className="text-[12px] text-text-secondary">
-              {config.hotkey_mode === 'hold' ? 'Hold' : 'Press'} {config.hotkey} {config.hotkey_mode === 'hold' ? 'to talk' : 'to start/stop'}
+              {config.hotkey_mode === 'hold' ? 'Hold' : 'Press'} {config.hotkey}{' '}
+              {config.hotkey_mode === 'hold' ? 'to talk' : 'to start/stop'}
             </p>
           </div>
         </div>
