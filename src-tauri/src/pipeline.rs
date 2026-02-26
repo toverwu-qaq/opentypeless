@@ -16,6 +16,13 @@ use crate::SessionTokenStore;
 
 // ─── Timing constants ───
 
+/// Wrapper to allow Enigo to be shared across threads via Arc<Mutex<>>.
+/// On macOS, Enigo contains CGEventSource (a NonNull pointer) which is not Send/Sync.
+/// Safety: We only access Enigo through a Mutex, ensuring exclusive access.
+struct SendSyncEnigo(Enigo);
+unsafe impl Send for SendSyncEnigo {}
+unsafe impl Sync for SendSyncEnigo {}
+
 /// Delay before capturing selected text to ensure hotkey modifiers are released.
 const SELECTED_TEXT_CAPTURE_DELAY_MS: u64 = 60;
 /// Delay after simulating Ctrl+C to let the clipboard update.
@@ -571,7 +578,7 @@ impl PipelineHandle {
             let on_chunk: llm::ChunkCallback = if is_keyboard {
                 match enigo_result.expect("enigo_result should be Some when is_keyboard is true") {
                     Ok(enigo_instance) => {
-                        let enigo = Arc::new(Mutex::new(enigo_instance));
+                        let enigo = Arc::new(Mutex::new(SendSyncEnigo(enigo_instance)));
                         let app_handle = self.app_handle.clone();
                         let state = self.state.clone();
                         let transitioned = Arc::new(AtomicBool::new(false));
@@ -592,9 +599,9 @@ impl PipelineHandle {
                                         let modifier = Key::Meta;
                                         #[cfg(not(target_os = "macos"))]
                                         let modifier = Key::Control;
-                                        let _ = e.key(modifier, Direction::Press);
-                                        let _ = e.key(Key::Unicode('v'), Direction::Click);
-                                        let _ = e.key(modifier, Direction::Release);
+                                        let _ = e.0.key(modifier, Direction::Press);
+                                        let _ = e.0.key(Key::Unicode('v'), Direction::Click);
+                                        let _ = e.0.key(modifier, Direction::Release);
                                         std::thread::sleep(std::time::Duration::from_millis(
                                             STREAM_PASTE_DELAY_MS,
                                         ));
