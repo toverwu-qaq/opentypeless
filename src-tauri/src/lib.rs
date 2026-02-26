@@ -18,7 +18,7 @@ use tracing_subscriber::EnvFilter;
 use std::sync::{Arc, Mutex};
 
 /// Default cloud API base URL. Override with the `API_BASE_URL` environment variable.
-/// TODO: Change back to "https://talkmore.ai" before release.
+/// TODO: Change back to "https://opentypeless.com" before release.
 pub const DEFAULT_API_BASE_URL: &str = "http://localhost:3002";
 
 /// Read the cloud API base URL from the environment, falling back to the compiled default.

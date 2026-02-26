@@ -103,7 +103,7 @@ OpenTypeless también ofrece una suscripción Pro opcional que proporciona cuota
 |---|---|---|
 | STT | Tu propia clave API (Deepgram, AssemblyAI, etc.) | Cuota gestionada (10h/mes) |
 | LLM | Tu propia clave API (OpenAI, DeepSeek, etc.) | Cuota gestionada (~5M tokens/mes) |
-| Dependencia de la nube | Ninguna — todas las solicitudes van directamente a tu proveedor | Requiere conexión a talkmore.ai |
+| Dependencia de la nube | Ninguna — todas las solicitudes van directamente a tu proveedor | Requiere conexión a opentypeless.com |
 | Coste | Pagas directamente a tu proveedor | Suscripción de $4.99/mes |
 
 Todas las funciones principales — grabación, transcripción, pulido IA, salida por teclado/portapapeles, diccionario, historial — funcionan completamente sin conexión a los servidores de OpenTypeless en modo BYOK.
@@ -114,14 +114,14 @@ Para ejecutar OpenTypeless sin ninguna dependencia de la nube:
 
 1. Elige cualquier proveedor STT y LLM que no sea Cloud en Configuración
 2. Introduce tus propias claves API
-3. Eso es todo — no se necesita cuenta ni conexión a internet con talkmore.ai
+3. Eso es todo — no se necesita cuenta ni conexión a internet con opentypeless.com
 
 Si deseas apuntar las funciones opcionales de la nube a tu propio backend, establece estas variables de entorno antes de compilar:
 
 | Variable | Valor por defecto | Descripción |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://talkmore.ai` | URL base de la API cloud del frontend |
-| `API_BASE_URL` | `https://talkmore.ai` | URL base de la API cloud del backend Rust |
+| `VITE_API_BASE_URL` | `https://opentypeless.com` | URL base de la API cloud del frontend |
+| `API_BASE_URL` | `https://opentypeless.com` | URL base de la API cloud del backend Rust |
 
 ```bash
 # Ejemplo: compilar con un backend personalizado

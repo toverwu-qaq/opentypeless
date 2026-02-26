@@ -103,7 +103,7 @@ OpenTypeless also offers an optional Pro subscription that provides managed STT 
 |---|---|---|
 | STT | Your own API key (Deepgram, AssemblyAI, etc.) | Managed quota (10h/month) |
 | LLM | Your own API key (OpenAI, DeepSeek, etc.) | Managed quota (~5M tokens/month) |
-| Cloud dependency | None — all requests go directly to your provider | Requires connection to talkmore.ai |
+| Cloud dependency | None — all requests go directly to your provider | Requires connection to opentypeless.com |
 | Cost | Pay your provider directly | $4.99/month subscription |
 
 All core features — recording, transcription, AI polish, keyboard/clipboard output, dictionary, history — work entirely offline from OpenTypeless servers in BYOK mode.
@@ -114,14 +114,14 @@ To run OpenTypeless without any cloud dependency:
 
 1. Choose any non-Cloud STT and LLM provider in Settings
 2. Enter your own API keys
-3. That's it — no account or internet connection to talkmore.ai is needed
+3. That's it — no account or internet connection to opentypeless.com is needed
 
 If you want to point the optional cloud features at your own backend, set these environment variables before building:
 
 | Variable | Default | Description |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://talkmore.ai` | Frontend cloud API base URL |
-| `API_BASE_URL` | `https://talkmore.ai` | Rust backend cloud API base URL |
+| `VITE_API_BASE_URL` | `https://opentypeless.com` | Frontend cloud API base URL |
+| `API_BASE_URL` | `https://opentypeless.com` | Rust backend cloud API base URL |
 
 ```bash
 # Example: build with a custom backend
