@@ -20,19 +20,23 @@
 </p>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/app-main-dark.png" />
-    <source media="(prefers-color-scheme: light)" srcset="docs/images/app-main-light.png" />
-    <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless" />
-  </picture>
+  <img src="docs/images/voice-flow-demo.gif" width="720" alt="OpenTypeless Demo" />
 </p>
 
 <details>
 <summary>More screenshots</summary>
 
-| Capsule (Recording) | Settings | History |
-|---|---|---|
-| <img src="docs/images/app-capsule-recording.png" width="240" /> | <img src="docs/images/app-settings.png" width="360" /> | <img src="docs/images/app-history.png" width="360" /> |
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/app-main-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="docs/images/app-main-light.png" />
+    <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless Main Window" />
+  </picture>
+</p>
+
+| Settings | History |
+|---|---|
+| <img src="docs/images/app-settings.png" width="360" /> | <img src="docs/images/app-history.png" width="360" /> |
 
 </details>
 
