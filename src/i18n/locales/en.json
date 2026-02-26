@@ -219,7 +219,11 @@
     "restore": "Restore",
     "opening": "Opening...",
     "manageSubscription": "Manage Subscription",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "oauthPendingTitle": "Completing sign in...",
+    "oauthPendingDesc": "Finish signing in with your browser. You'll be redirected back automatically.",
+    "oauthTimeout": "Sign in timed out. Please try again.",
+    "cancel": "Cancel"
   },
   "error": {
     "somethingWentWrong": "Something went wrong",

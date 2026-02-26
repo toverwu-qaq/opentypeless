@@ -3,12 +3,25 @@ import { useAuthStore } from '../stores/authStore'
 
 /** Pending OAuth state for CSRF validation. */
 let pendingOAuthState: string | null = null
+let pendingOAuthTimer: ReturnType<typeof setTimeout> | null = null
 
 /** Generate and store a random state string for OAuth CSRF protection. */
 export function generateOAuthState(): string {
+  clearOAuthState()
   const state = crypto.randomUUID()
   pendingOAuthState = state
+  // Auto-expire after 5 minutes to prevent stale state
+  pendingOAuthTimer = setTimeout(clearOAuthState, 5 * 60 * 1000)
   return state
+}
+
+/** Clear pending OAuth state (e.g. user cancelled or timed out). */
+export function clearOAuthState(): void {
+  pendingOAuthState = null
+  if (pendingOAuthTimer) {
+    clearTimeout(pendingOAuthTimer)
+    pendingOAuthTimer = null
+  }
 }
 
 export async function initDeepLinkListener() {

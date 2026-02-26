@@ -219,7 +219,11 @@
     "restore": "恢复",
     "opening": "打开中...",
     "manageSubscription": "管理订阅",
-    "signOut": "退出登录"
+    "signOut": "退出登录",
+    "oauthPendingTitle": "正在完成登录...",
+    "oauthPendingDesc": "请在浏览器中完成登录，完成后将自动返回。",
+    "oauthTimeout": "登录超时，请重试。",
+    "cancel": "取消"
   },
   "error": {
     "somethingWentWrong": "出了点问题",
