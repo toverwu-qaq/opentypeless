@@ -91,25 +91,31 @@ function MainApp() {
 
   const user = useAuthStore((s) => s.user)
 
-  // Periodically refresh subscription status + refresh on window focus
+  // Periodically refresh subscription status + refresh on window focus (throttled)
   useEffect(() => {
     if (!loaded || !user) return
 
+    let lastRefresh = 0
+    const throttledRefresh = () => {
+      const now = Date.now()
+      if (now - lastRefresh < 30_000) return // at most once per 30s
+      lastRefresh = now
+      useAuthStore.getState().refreshSubscription()
+    }
+
     const interval = setInterval(
       () => {
+        lastRefresh = Date.now()
         useAuthStore.getState().refreshSubscription()
       },
       5 * 60 * 1000,
     )
 
-    const onFocus = () => {
-      useAuthStore.getState().refreshSubscription()
-    }
-    window.addEventListener('focus', onFocus)
+    window.addEventListener('focus', throttledRefresh)
 
     return () => {
       clearInterval(interval)
-      window.removeEventListener('focus', onFocus)
+      window.removeEventListener('focus', throttledRefresh)
     }
   }, [loaded, user])
 
