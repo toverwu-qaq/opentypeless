@@ -34,8 +34,9 @@ function AuthForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const { signIn, signUp, loading, error, emailVerificationPending } = useAuthStore()
+  const { signIn, signUp, loading, error, emailVerificationPending, resendVerification } = useAuthStore()
   const [localError, setLocalError] = useState<string | null>(null)
+  const [resent, setResent] = useState(false)
   const { t } = useTranslation()
 
   const displayError = localError ?? error
@@ -75,15 +76,42 @@ function AuthForm() {
             'We sent a verification link to your email. Please click the link to verify your account, then come back and sign in.',
           )}
         </p>
-        <button
-          onClick={() => {
-            useAuthStore.setState({ emailVerificationPending: false })
-            setTab('signin')
-          }}
-          className="mt-4 px-4 py-2 rounded-[8px] bg-bg-secondary border border-border text-text-primary text-[13px] cursor-pointer hover:bg-bg-tertiary transition-colors"
-        >
-          {t('account.backToSignIn', 'Back to Sign In')}
-        </button>
+        <div className="flex flex-col items-center gap-2 mt-4">
+          <button
+            onClick={async () => {
+              setResent(false)
+              await resendVerification()
+              // Only show success if store didn't set an error
+              if (!useAuthStore.getState().error) {
+                setResent(true)
+              }
+            }}
+            disabled={loading}
+            className="px-4 py-2 rounded-[8px] bg-accent text-white text-[13px] font-medium cursor-pointer border-none hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {loading
+              ? t('account.sending', 'Sending...')
+              : t('account.resendVerification', 'Resend verification email')}
+          </button>
+          {resent && (
+            <p className="text-green-500 text-[12px]">
+              {t('account.verificationResent', 'Verification email sent!')}
+            </p>
+          )}
+          {error && (
+            <p className="text-red-500 text-[12px]">{error}</p>
+          )}
+          <button
+            onClick={() => {
+              useAuthStore.setState({ emailVerificationPending: false, pendingEmail: null })
+              setTab('signin')
+              setResent(false)
+            }}
+            className="px-4 py-2 rounded-[8px] bg-bg-secondary border border-border text-text-primary text-[13px] cursor-pointer hover:bg-bg-tertiary transition-colors"
+          >
+            {t('account.backToSignIn', 'Back to Sign In')}
+          </button>
+        </div>
       </div>
     )
   }

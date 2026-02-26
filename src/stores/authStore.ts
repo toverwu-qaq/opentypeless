@@ -29,11 +29,13 @@ interface AuthState {
   loading: boolean
   error: string | null
   emailVerificationPending: boolean
+  pendingEmail: string | null
 
   // Actions
   initialize: () => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, name: string) => Promise<void>
+  resendVerification: () => Promise<void>
   signOut: () => Promise<void>
   refreshSubscription: () => Promise<void>
   handleDeepLinkToken: (token: string) => Promise<void>
@@ -50,6 +52,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loading: false,
   error: null,
   emailVerificationPending: false,
+  pendingEmail: null,
 
   initialize: async () => {
     try {
@@ -96,7 +99,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           },
         },
       )
-      if (error) throw new Error(error.message ?? 'Sign in failed')
+      if (error) {
+        if (error.code === 'EMAIL_NOT_VERIFIED') {
+          set({ emailVerificationPending: true, pendingEmail: email })
+          return
+        }
+        throw new Error(error.message ?? 'Sign in failed')
+      }
       if (data?.user) {
         set({
           user: {
@@ -135,11 +144,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       )
       if (error) throw new Error(error.message ?? 'Sign up failed')
       // Email verification is required — don't set user yet
-      set({ emailVerificationPending: true })
+      set({ emailVerificationPending: true, pendingEmail: email })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Sign up failed'
       set({ error: msg })
       throw e
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  resendVerification: async () => {
+    const email = get().pendingEmail
+    if (!email) return
+    set({ loading: true, error: null })
+    try {
+      const { error } = await authClient.sendVerificationEmail({ email })
+      if (error) throw new Error(error.message ?? 'Failed to resend')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to resend verification email'
+      set({ error: msg })
     } finally {
       set({ loading: false })
     }
@@ -163,6 +187,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         llmTokensUsed: 0,
         llmTokensLimit: 0,
         error: null,
+        emailVerificationPending: false,
+        pendingEmail: null,
       })
       sttWarningShown = false
       llmWarningShown = false
