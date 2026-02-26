@@ -5,12 +5,17 @@ use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 use super::{SttConfig, SttProvider, TranscriptEvent};
 
-type WsStream = tokio_tungstenite::WebSocketStream<
-    tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
->;
+type WsStream =
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
 pub struct DeepgramProvider {
     ws: Option<WsStream>,
+}
+
+impl Default for DeepgramProvider {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl DeepgramProvider {
@@ -62,7 +67,7 @@ impl SttProvider for DeepgramProvider {
 
     async fn send_audio(&mut self, chunk: &[u8]) -> Result<()> {
         if let Some(ws) = &mut self.ws {
-            ws.send(Message::Binary(chunk.to_vec().into())).await?;
+            ws.send(Message::Binary(chunk.to_vec())).await?;
         }
         Ok(())
     }
@@ -130,7 +135,7 @@ impl SttProvider for DeepgramProvider {
     async fn disconnect(&mut self) -> Result<Option<String>> {
         if let Some(ws) = &mut self.ws {
             let close_msg = serde_json::json!({"type": "CloseStream"});
-            let _ = ws.send(Message::Text(close_msg.to_string().into())).await;
+            let _ = ws.send(Message::Text(close_msg.to_string())).await;
             let _ = ws.close(None).await;
         }
         self.ws = None;

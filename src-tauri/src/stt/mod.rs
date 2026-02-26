@@ -1,7 +1,7 @@
-pub mod deepgram;
 pub mod assemblyai;
-pub mod whisper_compat;
 pub mod cloud;
+pub mod deepgram;
+pub mod whisper_compat;
 
 use anyhow::Result;
 use async_trait::async_trait;
@@ -47,7 +47,10 @@ pub trait SttProvider: Send + Sync {
     fn name(&self) -> &str;
 }
 
-pub fn create_provider(provider_name: &str, client: Option<reqwest::Client>) -> Box<dyn SttProvider> {
+pub fn create_provider(
+    provider_name: &str,
+    client: Option<reqwest::Client>,
+) -> Box<dyn SttProvider> {
     let make = |cfg: WhisperCompatConfig| -> Box<dyn SttProvider> {
         match client {
             Some(ref c) => Box::new(WhisperCompatProvider::with_client(cfg, c.clone())),
@@ -58,7 +61,10 @@ pub fn create_provider(provider_name: &str, client: Option<reqwest::Client>) -> 
         "cloud" => {
             let api_base_url = crate::api_base_url();
             match client {
-                Some(ref c) => Box::new(cloud::CloudSttProvider::with_client(api_base_url, c.clone())),
+                Some(ref c) => Box::new(cloud::CloudSttProvider::with_client(
+                    api_base_url,
+                    c.clone(),
+                )),
                 None => Box::new(cloud::CloudSttProvider::new(api_base_url)),
             }
         }

@@ -3,12 +3,18 @@ use async_trait::async_trait;
 use futures_util::StreamExt;
 use reqwest::Client;
 
-use super::{ChunkCallback, LlmConfig, LlmProvider, PolishRequest, PolishResponse, prompt};
+use super::{prompt, ChunkCallback, LlmConfig, LlmProvider, PolishRequest, PolishResponse};
 
 /// Cloud LLM provider that proxies requests through the talkmore-web API.
 /// Requires a Pro subscription — auth token is passed via the api_key field in LlmConfig.
 pub struct CloudLlmProvider {
     client: Client,
+}
+
+impl Default for CloudLlmProvider {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl CloudLlmProvider {
@@ -31,8 +37,10 @@ impl LlmProvider for CloudLlmProvider {
             anyhow::bail!("Cloud LLM: session token is missing. Please sign in first.");
         }
 
-        let has_selected_text = req.selected_text.as_ref()
-            .map_or(false, |s| !s.trim().is_empty());
+        let has_selected_text = req
+            .selected_text
+            .as_ref()
+            .is_some_and(|s| !s.trim().is_empty());
 
         let system_prompt = prompt::build_system_prompt(
             req.app_type,
@@ -42,9 +50,7 @@ impl LlmProvider for CloudLlmProvider {
             has_selected_text,
         );
 
-        let mut messages = vec![
-            serde_json::json!({ "role": "system", "content": system_prompt }),
-        ];
+        let mut messages = vec![serde_json::json!({ "role": "system", "content": system_prompt })];
         if has_selected_text {
             messages.push(serde_json::json!({
                 "role": "user",
@@ -60,7 +66,8 @@ impl LlmProvider for CloudLlmProvider {
             "stream": on_chunk.is_some()
         });
 
-        let response = self.client
+        let response = self
+            .client
             .post(format!("{}/api/proxy/llm", api_base_url))
             .header("Authorization", format!("Bearer {}", config.api_key))
             .header("Content-Type", "application/json")
@@ -79,7 +86,8 @@ impl LlmProvider for CloudLlmProvider {
                     .unwrap_or_else(|| "LLM quota exceeded".to_string());
                 anyhow::bail!("{}", msg);
             }
-            let truncate_at = text.char_indices()
+            let truncate_at = text
+                .char_indices()
                 .take_while(|&(i, _)| i < 200)
                 .last()
                 .map(|(i, c)| i + c.len_utf8())
@@ -101,8 +109,7 @@ impl LlmProvider for CloudLlmProvider {
                     let line = buffer[..line_end].trim().to_string();
                     buffer = buffer[line_end + 1..].to_string();
 
-                    if line.starts_with("data: ") {
-                        let data = &line[6..];
+                    if let Some(data) = line.strip_prefix("data: ") {
                         if data == "[DONE]" {
                             break;
                         }
@@ -118,15 +125,20 @@ impl LlmProvider for CloudLlmProvider {
                 }
             }
 
-            Ok(PolishResponse { polished_text: full_text })
+            Ok(PolishResponse {
+                polished_text: full_text,
+            })
         } else {
             let v: serde_json::Value = response.json().await?;
-            let text = v["text"].as_str()
+            let text = v["text"]
+                .as_str()
                 .or_else(|| v["choices"][0]["message"]["content"].as_str())
                 .unwrap_or("")
                 .to_string();
 
-            Ok(PolishResponse { polished_text: text })
+            Ok(PolishResponse {
+                polished_text: text,
+            })
         }
     }
 

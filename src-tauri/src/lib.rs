@@ -1,24 +1,25 @@
+pub mod app_detector;
 pub mod audio;
-pub mod stt;
 pub mod llm;
 pub mod output;
-pub mod app_detector;
-pub mod storage;
 pub mod pipeline;
+pub mod storage;
+pub mod stt;
 
-use tauri::Manager;
-use tauri::Emitter;
-use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::Emitter;
+use tauri::Manager;
 use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use tauri_plugin_store::StoreExt;
 use tracing_subscriber::EnvFilter;
 
 use std::sync::{Arc, Mutex};
 
 /// Default cloud API base URL. Override with the `API_BASE_URL` environment variable.
-pub const DEFAULT_API_BASE_URL: &str = "https://talkmore.ai";
+/// TODO: Change back to "https://talkmore.ai" before release.
+pub const DEFAULT_API_BASE_URL: &str = "http://localhost:3002";
 
 /// Read the cloud API base URL from the environment, falling back to the compiled default.
 pub fn api_base_url() -> String {
@@ -59,7 +60,11 @@ fn build_tray_menu(
     let show_hide = MenuItem::with_id(
         app,
         "show_hide",
-        if window_visible { "Hide Window" } else { "Show Window" },
+        if window_visible {
+            "Hide Window"
+        } else {
+            "Show Window"
+        },
         true,
         None::<&str>,
     )?;
@@ -67,7 +72,11 @@ fn build_tray_menu(
     let record = MenuItem::with_id(
         app,
         "record",
-        if is_recording { "Stop Recording" } else { "Start Recording" },
+        if is_recording {
+            "Stop Recording"
+        } else {
+            "Start Recording"
+        },
         true,
         None::<&str>,
     )?;
@@ -81,7 +90,9 @@ fn build_tray_menu(
 
     let menu = Menu::with_items(
         app,
-        &[&show_hide, &sep1, &record, &sep2, &settings, &history, &account, &sep3, &about, &quit],
+        &[
+            &show_hide, &sep1, &record, &sep2, &settings, &history, &account, &sep3, &about, &quit,
+        ],
     )?;
     Ok(menu)
 }
@@ -117,7 +128,9 @@ async fn stop_recording(state: tauri::State<'_, pipeline::PipelineHandle>) -> Re
 }
 
 #[tauri::command]
-async fn get_config(state: tauri::State<'_, storage::ConfigManager>) -> Result<storage::AppConfig, String> {
+async fn get_config(
+    state: tauri::State<'_, storage::ConfigManager>,
+) -> Result<storage::AppConfig, String> {
     state.load().await.map_err(|e| e.to_string())
 }
 
@@ -145,7 +158,11 @@ async fn test_stt_connection(
 
     // Cloud provider: verify session token + Pro status via API
     if provider == "cloud" {
-        let token = token_store.0.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        let token = token_store
+            .0
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone();
         if token.is_empty() {
             return Ok(false);
         }
@@ -183,12 +200,29 @@ async fn test_stt_connection(
         }
         "glm-asr" | "openai-whisper" | "groq-whisper" | "siliconflow" => {
             // All four use Whisper-compatible file upload API
-            let (endpoint, model, extra_fields): (&str, &str, &[(&str, &str)]) = match provider.as_str() {
-                "glm-asr" => ("https://open.bigmodel.cn/api/paas/v4/audio/transcriptions", "glm-asr-2512", &[("stream", "false")][..]),
-                "openai-whisper" => ("https://api.openai.com/v1/audio/transcriptions", "whisper-1", &[][..]),
-                "groq-whisper" => ("https://api.groq.com/openai/v1/audio/transcriptions", "whisper-large-v3-turbo", &[][..]),
-                _ => ("https://api.siliconflow.cn/v1/audio/transcriptions", "FunAudioLLM/SenseVoiceSmall", &[][..]),
-            };
+            let (endpoint, model, extra_fields): (&str, &str, &[(&str, &str)]) =
+                match provider.as_str() {
+                    "glm-asr" => (
+                        "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions",
+                        "glm-asr-2512",
+                        &[("stream", "false")][..],
+                    ),
+                    "openai-whisper" => (
+                        "https://api.openai.com/v1/audio/transcriptions",
+                        "whisper-1",
+                        &[][..],
+                    ),
+                    "groq-whisper" => (
+                        "https://api.groq.com/openai/v1/audio/transcriptions",
+                        "whisper-large-v3-turbo",
+                        &[][..],
+                    ),
+                    _ => (
+                        "https://api.siliconflow.cn/v1/audio/transcriptions",
+                        "FunAudioLLM/SenseVoiceSmall",
+                        &[][..],
+                    ),
+                };
 
             let silent_pcm = vec![0u8; 3200]; // 0.1s at 16kHz 16-bit mono
             let wav = stt::whisper_compat::WhisperCompatProvider::build_wav(&silent_pcm, 16000);
@@ -215,9 +249,7 @@ async fn test_stt_connection(
                 .map_err(|e| e.to_string())?;
             Ok(resp.status().is_success())
         }
-        _ => {
-            Err(format!("Unknown STT provider: {}", provider))
-        }
+        _ => Err(format!("Unknown STT provider: {}", provider)),
     }
 }
 
@@ -235,7 +267,11 @@ async fn test_llm_connection(
 
     // Cloud provider: verify session token + Pro status via API
     if provider == "cloud" {
-        let token = token_store.0.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        let token = token_store
+            .0
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone();
         if token.is_empty() {
             return Ok(false);
         }
@@ -376,7 +412,10 @@ async fn add_dictionary_entry(
             return Err("Pronunciation is too long (max 100 characters)".to_string());
         }
     }
-    state.add(&word, pronunciation.as_deref()).await.map_err(|e| e.to_string())
+    state
+        .add(&word, pronunciation.as_deref())
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -411,7 +450,10 @@ async fn set_auto_start(
     }
     let mut config = config_state.load().await.map_err(|e| e.to_string())?;
     config.auto_start = enabled;
-    config_state.save(&config).await.map_err(|e| e.to_string())?;
+    config_state
+        .save(&config)
+        .await
+        .map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -421,18 +463,25 @@ async fn update_hotkey(
     config_state: tauri::State<'_, storage::ConfigManager>,
     hotkey: String,
 ) -> Result<(), String> {
-    let new_shortcut = parse_hotkey(&hotkey)
-        .ok_or_else(|| format!("Invalid hotkey: {}", hotkey))?;
+    let new_shortcut =
+        parse_hotkey(&hotkey).ok_or_else(|| format!("Invalid hotkey: {}", hotkey))?;
 
     // Unregister all existing shortcuts, then register the new one
     // (the global handler from with_handler is still active)
-    app.global_shortcut().unregister_all().map_err(|e| e.to_string())?;
-    app.global_shortcut().register(new_shortcut).map_err(|e| e.to_string())?;
+    app.global_shortcut()
+        .unregister_all()
+        .map_err(|e| e.to_string())?;
+    app.global_shortcut()
+        .register(new_shortcut)
+        .map_err(|e| e.to_string())?;
 
     // Save updated hotkey to config
     let mut config = config_state.load().await.map_err(|e| e.to_string())?;
     config.hotkey = hotkey;
-    config_state.save(&config).await.map_err(|e| e.to_string())?;
+    config_state
+        .save(&config)
+        .await
+        .map_err(|e| e.to_string())?;
 
     Ok(())
 }
@@ -440,7 +489,9 @@ async fn update_hotkey(
 /// Temporarily unregister all global shortcuts so the webview can capture key events.
 #[tauri::command]
 fn pause_hotkey(app: tauri::AppHandle) -> Result<(), String> {
-    app.global_shortcut().unregister_all().map_err(|e| e.to_string())
+    app.global_shortcut()
+        .unregister_all()
+        .map_err(|e| e.to_string())
 }
 
 /// Re-register the current hotkey from config after recording is done.
@@ -454,17 +505,29 @@ async fn resume_hotkey(
         .unwrap_or_else(|| Shortcut::new(Some(Modifiers::ALT), Code::Space));
     // Ensure clean state, then register
     let _ = app.global_shortcut().unregister_all();
-    app.global_shortcut().register(shortcut).map_err(|e| e.to_string())
+    app.global_shortcut()
+        .register(shortcut)
+        .map_err(|e| e.to_string())
 }
 
 // ─── Hotkey parsing ───
 
-fn build_shortcut_handler(app_handle: tauri::AppHandle) -> impl Fn(&tauri::AppHandle, &Shortcut, tauri_plugin_global_shortcut::ShortcutEvent) + Send + Sync + 'static {
+fn build_shortcut_handler(
+    app_handle: tauri::AppHandle,
+) -> impl Fn(&tauri::AppHandle, &Shortcut, tauri_plugin_global_shortcut::ShortcutEvent)
+       + Send
+       + Sync
+       + 'static {
     move |_app, _shortcut, event| {
         let handle = app_handle.clone();
         match event.state {
             ShortcutState::Pressed => {
-                let hotkey_mode = handle.state::<HotkeyModeCache>().0.lock().unwrap_or_else(|e| e.into_inner()).clone();
+                let hotkey_mode = handle
+                    .state::<HotkeyModeCache>()
+                    .0
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .clone();
                 tauri::async_runtime::spawn(async move {
                     let pipeline = handle.state::<pipeline::PipelineHandle>();
 
@@ -474,22 +537,23 @@ fn build_shortcut_handler(app_handle: tauri::AppHandle) -> impl Fn(&tauri::AppHa
                                 tracing::error!("Failed to start recording: {}", e);
                                 let _ = handle.emit("pipeline:error", e.to_string());
                             }
-                        } else {
-                            if let Err(e) = pipeline.stop().await {
-                                tracing::error!("Failed to stop recording: {}", e);
-                                let _ = handle.emit("pipeline:error", e.to_string());
-                            }
-                        }
-                    } else {
-                        if let Err(e) = pipeline.start().await {
-                            tracing::error!("Failed to start recording: {}", e);
+                        } else if let Err(e) = pipeline.stop().await {
+                            tracing::error!("Failed to stop recording: {}", e);
                             let _ = handle.emit("pipeline:error", e.to_string());
                         }
+                    } else if let Err(e) = pipeline.start().await {
+                        tracing::error!("Failed to start recording: {}", e);
+                        let _ = handle.emit("pipeline:error", e.to_string());
                     }
                 });
             }
             ShortcutState::Released => {
-                let hotkey_mode = handle.state::<HotkeyModeCache>().0.lock().unwrap_or_else(|e| e.into_inner()).clone();
+                let hotkey_mode = handle
+                    .state::<HotkeyModeCache>()
+                    .0
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .clone();
                 if hotkey_mode != "toggle" {
                     tauri::async_runtime::spawn(async move {
                         let pipeline = handle.state::<pipeline::PipelineHandle>();
@@ -590,7 +654,11 @@ fn parse_hotkey(s: &str) -> Option<Shortcut> {
         _ => return None,
     };
 
-    let mods = if modifiers.is_empty() { None } else { Some(modifiers) };
+    let mods = if modifiers.is_empty() {
+        None
+    } else {
+        Some(modifiers)
+    };
     Some(Shortcut::new(mods, code))
 }
 
@@ -692,14 +760,23 @@ mod tests {
 }
 pub fn run() {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env().add_directive("opentypeless=debug".parse().expect("static directive is valid")))
+        .with_env_filter(
+            EnvFilter::from_default_env().add_directive(
+                "opentypeless=debug"
+                    .parse()
+                    .expect("static directive is valid"),
+            ),
+        )
         .init();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            None,
+        ))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
@@ -730,8 +807,8 @@ pub fn run() {
             let pipeline_handle = pipeline::PipelineHandle::new(app_handle.clone());
 
             // Load initial config to get hotkey
-            let initial_config = tauri::async_runtime::block_on(config_manager.load())
-                .unwrap_or_default();
+            let initial_config =
+                tauri::async_runtime::block_on(config_manager.load()).unwrap_or_default();
             let shortcut = parse_hotkey(&initial_config.hotkey)
                 .unwrap_or_else(|| Shortcut::new(Some(Modifiers::ALT), Code::Space));
 
@@ -739,8 +816,12 @@ pub fn run() {
             app.manage(history_store);
             app.manage(dictionary_store);
             app.manage(pipeline_handle);
-            app.manage(HotkeyModeCache(Arc::new(Mutex::new(initial_config.hotkey_mode.clone()))));
-            app.manage(CloseToTrayCache(Arc::new(Mutex::new(initial_config.close_to_tray))));
+            app.manage(HotkeyModeCache(Arc::new(Mutex::new(
+                initial_config.hotkey_mode.clone(),
+            ))));
+            app.manage(CloseToTrayCache(Arc::new(Mutex::new(
+                initial_config.close_to_tray,
+            ))));
             app.manage(SessionTokenStore(Arc::new(Mutex::new(String::new()))));
 
             // Sync auto-start state with system
@@ -763,7 +844,10 @@ pub fn run() {
                     .build(),
             )?;
             if let Err(e) = app.global_shortcut().register(shortcut) {
-                tracing::warn!("Failed to register shortcut '{}' (may be occupied): {e}", initial_config.hotkey);
+                tracing::warn!(
+                    "Failed to register shortcut '{}' (may be occupied): {e}",
+                    initial_config.hotkey
+                );
             }
 
             // System tray
@@ -771,7 +855,11 @@ pub fn run() {
                 .map_err(|e| anyhow::anyhow!("Failed to build tray menu: {}", e))?;
 
             let tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().expect("default window icon missing").clone())
+                .icon(
+                    app.default_window_icon()
+                        .expect("default window icon missing")
+                        .clone(),
+                )
                 .menu(&tray_menu)
                 .tooltip("OpenTypeless")
                 .on_menu_event(move |app, event| match event.id.as_ref() {
@@ -798,7 +886,8 @@ pub fn run() {
                                 if let Err(e) = pipeline.start().await {
                                     tracing::error!("Tray start recording failed: {}", e);
                                 }
-                            } else if pipeline.current_state() == pipeline::PipelineState::Recording {
+                            } else if pipeline.current_state() == pipeline::PipelineState::Recording
+                            {
                                 if let Err(e) = pipeline.stop().await {
                                     tracing::error!("Tray stop recording failed: {}", e);
                                 }
@@ -881,7 +970,11 @@ pub fn run() {
                             // Save window state before hiding (skip if minimized)
                             if let Some(w) = handle.get_webview_window("main") {
                                 if let (Ok(pos), Ok(size)) = (w.outer_position(), w.outer_size()) {
-                                    if pos.x > -1000 && pos.y > -1000 && size.width >= 720 && size.height >= 480 {
+                                    if pos.x > -1000
+                                        && pos.y > -1000
+                                        && size.width >= 720
+                                        && size.height >= 480
+                                    {
                                         let ws = WindowState {
                                             x: pos.x,
                                             y: pos.y,

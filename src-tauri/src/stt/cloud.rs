@@ -1,8 +1,8 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use super::{SttConfig, SttProvider, TranscriptEvent};
 use super::whisper_compat::WhisperCompatProvider;
+use super::{SttConfig, SttProvider, TranscriptEvent};
 
 /// Cloud STT provider that proxies audio through the talkmore-web API.
 /// Requires a Pro subscription — auth token is passed via the api_key field.
@@ -74,20 +74,23 @@ impl SttProvider for CloudSttProvider {
         let audio_len_secs = self.audio_buffer.len() as f64 / (config.sample_rate as f64 * 2.0);
         let wav_data = WhisperCompatProvider::build_wav(&self.audio_buffer, config.sample_rate);
         self.audio_buffer.clear();
-        tracing::info!("Cloud STT: sending {:.1}s of audio for transcription", audio_len_secs);
+        tracing::info!(
+            "Cloud STT: sending {:.1}s of audio for transcription",
+            audio_len_secs
+        );
 
         let file_part = reqwest::multipart::Part::bytes(wav_data)
             .file_name("audio.wav")
             .mime_str("audio/wav")?;
 
-        let mut form = reqwest::multipart::Form::new()
-            .part("audio", file_part);
+        let mut form = reqwest::multipart::Form::new().part("audio", file_part);
 
         if let Some(ref lang) = config.language {
             form = form.text("language", lang.clone());
         }
 
-        let resp = self.client
+        let resp = self
+            .client
             .post(format!("{}/api/proxy/stt", self.api_base_url))
             .header("Authorization", format!("Bearer {}", config.api_key))
             .multipart(form)
@@ -106,7 +109,8 @@ impl SttProvider for CloudSttProvider {
                     .unwrap_or_else(|| "STT quota exceeded".to_string());
                 anyhow::bail!("{}", msg);
             }
-            let truncate_at = body.char_indices()
+            let truncate_at = body
+                .char_indices()
                 .take_while(|&(i, _)| i < 200)
                 .last()
                 .map(|(i, c)| i + c.len_utf8())
@@ -121,7 +125,11 @@ impl SttProvider for CloudSttProvider {
 
         tracing::info!("Cloud STT transcription: {} chars", text.len());
 
-        if text.is_empty() { Ok(None) } else { Ok(Some(text)) }
+        if text.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(text))
+        }
     }
 
     fn name(&self) -> &str {

@@ -150,8 +150,7 @@ fn run_capture(
 
     let target_rate = config.sample_rate;
     let target_channels = config.channels;
-    let samples_per_chunk =
-        (target_rate * config.chunk_duration_ms / 1000) as usize;
+    let samples_per_chunk = (target_rate * config.chunk_duration_ms / 1000) as usize;
     let buffer: Arc<Mutex<Vec<i16>>> = Arc::new(Mutex::new(Vec::with_capacity(samples_per_chunk)));
 
     let stream = device.build_input_stream(
@@ -190,10 +189,7 @@ fn run_capture(
             // Send complete chunks
             while buf.len() >= samples_per_chunk {
                 let chunk: Vec<i16> = buf.drain(..samples_per_chunk).collect();
-                let bytes: Vec<u8> = chunk
-                    .iter()
-                    .flat_map(|s| s.to_le_bytes())
-                    .collect();
+                let bytes: Vec<u8> = chunk.iter().flat_map(|s| s.to_le_bytes()).collect();
                 let _ = sender.try_send(bytes);
             }
         },
@@ -205,8 +201,13 @@ fn run_capture(
 
     stream.play()?;
     *state.lock().unwrap_or_else(|e| e.into_inner()) = CaptureState::Recording;
-    tracing::info!("Audio capture started (device: {}Hz {}ch -> target: {}Hz {}ch)",
-        device_sample_rate, device_channels, target_rate, target_channels);
+    tracing::info!(
+        "Audio capture started (device: {}Hz {}ch -> target: {}Hz {}ch)",
+        device_sample_rate,
+        device_channels,
+        target_rate,
+        target_channels
+    );
 
     // Block until stop signal (sender dropped)
     let _ = stop_rx.recv();

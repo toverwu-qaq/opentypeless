@@ -11,6 +11,12 @@ const PASTE_RESTORE_DELAY_MS: u64 = 50;
 
 pub struct ClipboardOutput;
 
+impl Default for ClipboardOutput {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ClipboardOutput {
     pub fn new() -> Self {
         Self
@@ -43,11 +49,14 @@ impl TextOutput for ClipboardOutput {
         #[cfg(not(target_os = "macos"))]
         let modifier = Key::Control;
 
-        enigo.key(modifier, Direction::Press)
+        enigo
+            .key(modifier, Direction::Press)
             .map_err(|e| anyhow::anyhow!("Key press error: {:?}", e))?;
-        enigo.key(Key::Unicode('v'), Direction::Click)
+        enigo
+            .key(Key::Unicode('v'), Direction::Click)
             .map_err(|e| anyhow::anyhow!("Key click error: {:?}", e))?;
-        enigo.key(modifier, Direction::Release)
+        enigo
+            .key(modifier, Direction::Release)
             .map_err(|e| anyhow::anyhow!("Key release error: {:?}", e))?;
 
         tokio::time::sleep(std::time::Duration::from_millis(PASTE_RESTORE_DELAY_MS)).await;

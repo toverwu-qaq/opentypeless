@@ -4,14 +4,18 @@ use enigo::{Direction, Enigo, Key, Keyboard, Settings};
 
 use super::{OutputMode, TextOutput};
 
-/// Delay after simulating Shift+Enter to let the target app process the newline.
-const NEWLINE_DELAY_MS: u64 = 20;
 /// Maximum characters per enigo.text() call to avoid input buffer overflow.
 const TYPE_CHUNK_SIZE: usize = 200;
 /// Delay between typing chunks.
 const TYPE_CHUNK_DELAY_MS: u64 = 5;
 
 pub struct KeyboardOutput;
+
+impl Default for KeyboardOutput {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl KeyboardOutput {
     pub fn new() -> Self {
@@ -37,11 +41,14 @@ impl TextOutput for KeyboardOutput {
                 }
             }
             if i < lines.len() - 1 {
-                enigo.key(Key::Shift, Direction::Press)
+                enigo
+                    .key(Key::Shift, Direction::Press)
                     .map_err(|e| anyhow::anyhow!("Key error: {:?}", e))?;
-                enigo.key(Key::Return, Direction::Click)
+                enigo
+                    .key(Key::Return, Direction::Click)
                     .map_err(|e| anyhow::anyhow!("Key error: {:?}", e))?;
-                enigo.key(Key::Shift, Direction::Release)
+                enigo
+                    .key(Key::Shift, Direction::Release)
                     .map_err(|e| anyhow::anyhow!("Key error: {:?}", e))?;
             }
         }

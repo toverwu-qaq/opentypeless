@@ -5,12 +5,17 @@ use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 use super::{SttConfig, SttProvider, TranscriptEvent};
 
-type WsStream = tokio_tungstenite::WebSocketStream<
-    tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
->;
+type WsStream =
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
 pub struct AssemblyAiProvider {
     ws: Option<WsStream>,
+}
+
+impl Default for AssemblyAiProvider {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AssemblyAiProvider {
@@ -53,7 +58,7 @@ impl SttProvider for AssemblyAiProvider {
 
     async fn send_audio(&mut self, chunk: &[u8]) -> Result<()> {
         if let Some(ws) = &mut self.ws {
-            ws.send(Message::Binary(chunk.to_vec().into())).await?;
+            ws.send(Message::Binary(chunk.to_vec())).await?;
         }
         Ok(())
     }
@@ -71,7 +76,10 @@ impl SttProvider for AssemblyAiProvider {
 
                 match msg_type {
                     "Begin" => {
-                        tracing::info!("AssemblyAI session started: {}", v["id"].as_str().unwrap_or(""));
+                        tracing::info!(
+                            "AssemblyAI session started: {}",
+                            v["id"].as_str().unwrap_or("")
+                        );
                         Ok(None)
                     }
                     "Turn" => {
@@ -117,7 +125,7 @@ impl SttProvider for AssemblyAiProvider {
     async fn disconnect(&mut self) -> Result<Option<String>> {
         if let Some(ws) = &mut self.ws {
             let terminate = serde_json::json!({"type": "Terminate"});
-            let _ = ws.send(Message::Text(terminate.to_string().into())).await;
+            let _ = ws.send(Message::Text(terminate.to_string())).await;
             let _ = ws.close(None).await;
         }
         self.ws = None;

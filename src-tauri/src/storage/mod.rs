@@ -76,15 +76,10 @@ impl ConfigManager {
         }
 
         let config = match self.app_handle.store("settings.json") {
-            Ok(store) => {
-                match store.get("app_config") {
-                    Some(val) => {
-                        serde_json::from_value::<AppConfig>(val.clone())
-                            .unwrap_or_default()
-                    }
-                    None => AppConfig::default(),
-                }
-            }
+            Ok(store) => match store.get("app_config") {
+                Some(val) => serde_json::from_value::<AppConfig>(val.clone()).unwrap_or_default(),
+                None => AppConfig::default(),
+            },
             Err(_) => AppConfig::default(),
         };
 
@@ -95,7 +90,9 @@ impl ConfigManager {
     pub async fn save(&self, config: &AppConfig) -> Result<()> {
         *self.cache.lock().unwrap_or_else(|e| e.into_inner()) = Some(config.clone());
 
-        let store = self.app_handle.store("settings.json")
+        let store = self
+            .app_handle
+            .store("settings.json")
             .map_err(|e| anyhow::anyhow!("Failed to open store: {}", e))?;
         let val = serde_json::to_value(config)?;
         store.set("app_config", val);
@@ -140,7 +137,7 @@ impl HistoryStore {
                 polished_text TEXT NOT NULL DEFAULT '',
                 language TEXT,
                 duration_ms INTEGER
-            );"
+            );",
         )?;
         Ok(Self {
             conn: Mutex::new(conn),
@@ -226,7 +223,7 @@ impl DictionaryStore {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 word TEXT NOT NULL,
                 pronunciation TEXT
-            );"
+            );",
         )?;
         Ok(Self {
             conn: Mutex::new(conn),
@@ -244,7 +241,10 @@ impl DictionaryStore {
 
     pub async fn remove(&self, id: i64) -> Result<()> {
         let conn = self.conn.lock().unwrap_or_else(|e| e.into_inner());
-        conn.execute("DELETE FROM dictionary WHERE id = ?1", rusqlite::params![id])?;
+        conn.execute(
+            "DELETE FROM dictionary WHERE id = ?1",
+            rusqlite::params![id],
+        )?;
         Ok(())
     }
 

@@ -1,5 +1,5 @@
-pub mod keyboard;
 pub mod clipboard;
+pub mod keyboard;
 
 use anyhow::Result;
 use async_trait::async_trait;

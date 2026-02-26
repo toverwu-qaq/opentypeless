@@ -296,7 +296,10 @@ mod tests {
         // Selected text addon should come BEFORE translation
         let sel_pos = prompt.find("SELECTED TEXT MODE").unwrap();
         let trans_pos = prompt.find("AFTER applying").unwrap();
-        assert!(sel_pos < trans_pos, "SELECTED TEXT MODE should appear before translation instruction");
+        assert!(
+            sel_pos < trans_pos,
+            "SELECTED TEXT MODE should appear before translation instruction"
+        );
     }
 
     #[test]

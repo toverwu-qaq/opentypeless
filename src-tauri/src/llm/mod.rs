@@ -1,6 +1,6 @@
+pub mod cloud;
 pub mod openai;
 pub mod prompt;
-pub mod cloud;
 
 use anyhow::Result;
 use async_trait::async_trait;
@@ -42,19 +42,14 @@ pub struct PolishResponse {
     pub polished_text: String,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default)]
 pub enum AppType {
     Email,
     Chat,
     Code,
     Document,
+    #[default]
     General,
-}
-
-impl Default for AppType {
-    fn default() -> Self {
-        Self::General
-    }
 }
 
 /// Callback for streaming LLM chunks to the frontend
@@ -76,8 +71,6 @@ pub fn create_provider(provider_name: &str) -> Box<dyn LlmProvider> {
     match provider_name {
         "cloud" => Box::new(cloud::CloudLlmProvider::new()),
         // All other providers use OpenAI-compatible API with different base_url
-        "openai" | "claude" | "ollama" | "groq" | "openrouter" | _ => {
-            Box::new(openai::OpenAiProvider::new())
-        }
+        _ => Box::new(openai::OpenAiProvider::new()),
     }
 }

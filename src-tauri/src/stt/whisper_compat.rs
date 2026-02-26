@@ -80,13 +80,19 @@ impl SttProvider for WhisperCompatProvider {
         }
         self.stt_config = Some(config.clone());
         self.audio_buffer.clear();
-        tracing::info!("{} provider ready (buffering mode)", self.provider_config.provider_name);
+        tracing::info!(
+            "{} provider ready (buffering mode)",
+            self.provider_config.provider_name
+        );
         Ok(())
     }
 
     async fn send_audio(&mut self, chunk: &[u8]) -> Result<()> {
         if self.audio_buffer.len() + chunk.len() > MAX_AUDIO_BYTES {
-            anyhow::bail!("{}: audio exceeds maximum length (~12 min)", self.provider_config.provider_name);
+            anyhow::bail!(
+                "{}: audio exceeds maximum length (~12 min)",
+                self.provider_config.provider_name
+            );
         }
         self.audio_buffer.extend_from_slice(chunk);
         Ok(())
@@ -104,7 +110,10 @@ impl SttProvider for WhisperCompatProvider {
         };
 
         if self.audio_buffer.is_empty() {
-            tracing::info!("{}: no audio buffered, skipping", self.provider_config.provider_name);
+            tracing::info!(
+                "{}: no audio buffered, skipping",
+                self.provider_config.provider_name
+            );
             return Ok(None);
         }
 
@@ -137,7 +146,8 @@ impl SttProvider for WhisperCompatProvider {
             form = form.text(key.to_string(), value.to_string());
         }
 
-        let resp = self.client
+        let resp = self
+            .client
             .post(self.provider_config.endpoint)
             .header("Authorization", format!("Bearer {}", config.api_key))
             .multipart(form)
@@ -150,22 +160,41 @@ impl SttProvider for WhisperCompatProvider {
 
         if !status.is_success() {
             // Truncate at a valid UTF-8 char boundary to avoid panic on multi-byte chars
-            let truncate_at = body.char_indices()
+            let truncate_at = body
+                .char_indices()
                 .take_while(|&(i, _)| i < 200)
                 .last()
                 .map(|(i, c)| i + c.len_utf8())
                 .unwrap_or(body.len());
             let sanitized = &body[..truncate_at];
-            tracing::error!("{} HTTP {}: {}", self.provider_config.provider_name, status, sanitized);
-            anyhow::bail!("{} error ({}): {}", self.provider_config.provider_name, status, sanitized);
+            tracing::error!(
+                "{} HTTP {}: {}",
+                self.provider_config.provider_name,
+                status,
+                sanitized
+            );
+            anyhow::bail!(
+                "{} error ({}): {}",
+                self.provider_config.provider_name,
+                status,
+                sanitized
+            );
         }
 
         let v: serde_json::Value = serde_json::from_str(&body)?;
         let text = v["text"].as_str().unwrap_or("").trim().to_string();
 
-        tracing::info!("{} transcription: {} chars", self.provider_config.provider_name, text.len());
+        tracing::info!(
+            "{} transcription: {} chars",
+            self.provider_config.provider_name,
+            text.len()
+        );
 
-        if text.is_empty() { Ok(None) } else { Ok(Some(text)) }
+        if text.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(text))
+        }
     }
 
     fn name(&self) -> &str {

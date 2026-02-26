@@ -10,8 +10,8 @@ use crate::app_detector;
 use crate::audio::{AudioCaptureHandle, AudioConfig};
 use crate::llm::{self, LlmConfig, PolishRequest};
 use crate::output::{self, OutputMode};
-use crate::stt::{self, SttConfig, TranscriptEvent};
 use crate::storage;
+use crate::stt::{self, SttConfig, TranscriptEvent};
 use crate::SessionTokenStore;
 
 // ─── Timing constants ───
@@ -167,15 +167,21 @@ impl PipelineHandle {
 
     pub async fn start(&self) -> Result<()> {
         // Atomic CAS: only one caller can transition Idle → Recording
-        if self.state.compare_exchange(
-            PipelineState::Idle.as_u8(),
-            PipelineState::Recording.as_u8(),
-            Ordering::SeqCst,
-            Ordering::SeqCst,
-        ).is_err() {
+        if self
+            .state
+            .compare_exchange(
+                PipelineState::Idle.as_u8(),
+                PipelineState::Recording.as_u8(),
+                Ordering::SeqCst,
+                Ordering::SeqCst,
+            )
+            .is_err()
+        {
             return Ok(());
         }
-        let _ = self.app_handle.emit("pipeline:state", PipelineState::Recording);
+        let _ = self
+            .app_handle
+            .emit("pipeline:state", PipelineState::Recording);
         // Update tray for recording state
         if let Some(tray_handle) = self.app_handle.try_state::<crate::TrayHandle>() {
             if let Ok(t) = tray_handle.tray.lock() {
@@ -185,18 +191,30 @@ impl PipelineHandle {
         crate::refresh_tray(&self.app_handle);
 
         // Clear accumulated text
-        self.accumulated_text.lock().unwrap_or_else(|e| e.into_inner()).clear();
+        self.accumulated_text
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear();
 
         // P0-2: Load config BEFORE starting audio capture — fail fast on missing API key
         let config_data = self.load_config().await;
-        *self.preloaded_config.lock().unwrap_or_else(|e| e.into_inner()) = Some(config_data.clone());
-        *self.preloaded_app_ctx.lock().unwrap_or_else(|e| e.into_inner()) = Some(app_detector::detect_current_app());
+        *self
+            .preloaded_config
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(config_data.clone());
+        *self
+            .preloaded_app_ctx
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(app_detector::detect_current_app());
         let dict_words = self
             .app_handle
             .state::<storage::DictionaryStore>()
             .words()
             .await;
-        *self.preloaded_dictionary.lock().unwrap_or_else(|e| e.into_inner()) = Some(dict_words);
+        *self
+            .preloaded_dictionary
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(dict_words);
 
         tracing::debug!(
             "Pipeline using config: stt_provider={}, stt_key_len={}, stt_lang={}",
@@ -207,17 +225,34 @@ impl PipelineHandle {
 
         // Guard: empty API key — bail before starting audio (skip for cloud provider)
         if config_data.stt_api_key.is_empty() && config_data.stt_provider != "cloud" {
-            let _ = self.app_handle.emit("pipeline:error", "STT API key is not configured. Please set it in Settings → Speech Recognition.");
-            *self.preloaded_config.lock().unwrap_or_else(|e| e.into_inner()) = None;
-            *self.preloaded_app_ctx.lock().unwrap_or_else(|e| e.into_inner()) = None;
-            *self.preloaded_dictionary.lock().unwrap_or_else(|e| e.into_inner()) = None;
+            let _ = self.app_handle.emit(
+                "pipeline:error",
+                "STT API key is not configured. Please set it in Settings → Speech Recognition.",
+            );
+            *self
+                .preloaded_config
+                .lock()
+                .unwrap_or_else(|e| e.into_inner()) = None;
+            *self
+                .preloaded_app_ctx
+                .lock()
+                .unwrap_or_else(|e| e.into_inner()) = None;
+            *self
+                .preloaded_dictionary
+                .lock()
+                .unwrap_or_else(|e| e.into_inner()) = None;
             self.set_state(PipelineState::Idle);
             return Ok(());
         }
 
         // P0-3: Pre-connect STT provider before spawning task
         let stt_api_key = if config_data.stt_provider == "cloud" {
-            self.app_handle.state::<SessionTokenStore>().0.lock().unwrap_or_else(|e| e.into_inner()).clone()
+            self.app_handle
+                .state::<SessionTokenStore>()
+                .0
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .clone()
         } else {
             config_data.stt_api_key.clone()
         };
@@ -233,13 +268,25 @@ impl PipelineHandle {
             sample_rate: 16000,
         };
 
-        let mut provider = stt::create_provider(&config_data.stt_provider, Some(self.shared_client.clone()));
+        let mut provider =
+            stt::create_provider(&config_data.stt_provider, Some(self.shared_client.clone()));
         if let Err(e) = provider.connect(&stt_config).await {
             tracing::error!("STT connect failed: {}", e);
-            let _ = self.app_handle.emit("pipeline:error", format!("STT connection failed: {e}"));
-            *self.preloaded_config.lock().unwrap_or_else(|e| e.into_inner()) = None;
-            *self.preloaded_app_ctx.lock().unwrap_or_else(|e| e.into_inner()) = None;
-            *self.preloaded_dictionary.lock().unwrap_or_else(|e| e.into_inner()) = None;
+            let _ = self
+                .app_handle
+                .emit("pipeline:error", format!("STT connection failed: {e}"));
+            *self
+                .preloaded_config
+                .lock()
+                .unwrap_or_else(|e| e.into_inner()) = None;
+            *self
+                .preloaded_app_ctx
+                .lock()
+                .unwrap_or_else(|e| e.into_inner()) = None;
+            *self
+                .preloaded_dictionary
+                .lock()
+                .unwrap_or_else(|e| e.into_inner()) = None;
             self.set_state(PipelineState::Idle);
             return Ok(());
         }
@@ -253,7 +300,10 @@ impl PipelineHandle {
         *self.audio_volume.lock().unwrap_or_else(|e| e.into_inner()) = audio_vol;
         *self.audio_handle.lock().unwrap_or_else(|e| e.into_inner()) = Some(handle);
 
-        *self.recording_start.lock().unwrap_or_else(|e| e.into_inner()) = Some(std::time::Instant::now());
+        *self
+            .recording_start
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(std::time::Instant::now());
 
         // Volume monitoring task
         let app_handle = self.app_handle.clone();
@@ -278,7 +328,10 @@ impl PipelineHandle {
 
         // Selected text will be captured in stop() after hotkey is released,
         // so Ctrl+C simulation won't conflict with held keys.
-        *self.preloaded_selected_text.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        *self
+            .preloaded_selected_text
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = None;
 
         // STT streaming task — provider is already connected
         let app_handle = self.app_handle.clone();
@@ -350,15 +403,21 @@ impl PipelineHandle {
 
     pub async fn stop(&self) -> Result<()> {
         // Atomic CAS: only one caller can transition Recording → Transcribing
-        if self.state.compare_exchange(
-            PipelineState::Recording.as_u8(),
-            PipelineState::Transcribing.as_u8(),
-            Ordering::SeqCst,
-            Ordering::SeqCst,
-        ).is_err() {
+        if self
+            .state
+            .compare_exchange(
+                PipelineState::Recording.as_u8(),
+                PipelineState::Transcribing.as_u8(),
+                Ordering::SeqCst,
+                Ordering::SeqCst,
+            )
+            .is_err()
+        {
             return Ok(());
         }
-        let _ = self.app_handle.emit("pipeline:state", PipelineState::Transcribing);
+        let _ = self
+            .app_handle
+            .emit("pipeline:state", PipelineState::Transcribing);
         // Update tray for transcribing state
         if let Some(tray_handle) = self.app_handle.try_state::<crate::TrayHandle>() {
             if let Ok(t) = tray_handle.tray.lock() {
@@ -371,16 +430,29 @@ impl PipelineHandle {
 
         // Capture selected text now — hotkey is released so Ctrl+C won't conflict.
         // Small delay to ensure hotkey modifiers are fully released (especially in toggle mode).
-        let config_data = self.preloaded_config.lock().unwrap_or_else(|e| e.into_inner()).clone()
-            .unwrap_or_else(|| storage::AppConfig::default());
+        let config_data = self
+            .preloaded_config
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
+            .unwrap_or_default();
         let selected_text = if config_data.selected_text_enabled {
-            tokio::time::sleep(std::time::Duration::from_millis(SELECTED_TEXT_CAPTURE_DELAY_MS)).await;
+            tokio::time::sleep(std::time::Duration::from_millis(
+                SELECTED_TEXT_CAPTURE_DELAY_MS,
+            ))
+            .await;
             tokio::task::block_in_place(|| self.capture_selected_text())
         } else {
             None
         };
-        tracing::info!("Selected text result: len={}", selected_text.as_deref().map(|s| s.len()).unwrap_or(0));
-        *self.preloaded_selected_text.lock().unwrap_or_else(|e| e.into_inner()) = selected_text;
+        tracing::info!(
+            "Selected text result: len={}",
+            selected_text.as_deref().map(|s| s.len()).unwrap_or(0)
+        );
+        *self
+            .preloaded_selected_text
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = selected_text;
 
         // Stop audio capture (this drops the channel, signaling STT task to stop)
         {
@@ -392,24 +464,47 @@ impl PipelineHandle {
         }
 
         // P2-1: Pre-build LLM resources while waiting for STT
-        let preloaded_config = self.preloaded_config.lock().unwrap_or_else(|e| e.into_inner()).take();
+        let preloaded_config = self
+            .preloaded_config
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take();
         let config = match preloaded_config {
             Some(c) => c,
             None => self.load_config().await,
         };
-        let app_ctx = self.preloaded_app_ctx.lock().unwrap_or_else(|e| e.into_inner()).take()
-            .unwrap_or_else(|| app_detector::detect_current_app());
-        let dictionary_words = self.preloaded_dictionary.lock().unwrap_or_else(|e| e.into_inner()).take()
+        let app_ctx = self
+            .preloaded_app_ctx
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take()
+            .unwrap_or_else(app_detector::detect_current_app);
+        let dictionary_words = self
+            .preloaded_dictionary
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take()
             .unwrap_or_default();
-        let selected_text = self.preloaded_selected_text.lock().unwrap_or_else(|e| e.into_inner()).take();
+        let selected_text = self
+            .preloaded_selected_text
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take();
 
         let is_keyboard = config.output_mode == "keyboard";
         let mut is_keyboard_streaming = is_keyboard;
 
         // Pre-build LLM provider and Enigo while STT is still processing
-        let pre_llm = if config.polish_enabled && (!config.llm_api_key.is_empty() || config.llm_provider == "cloud") {
+        let pre_llm = if config.polish_enabled
+            && (!config.llm_api_key.is_empty() || config.llm_provider == "cloud")
+        {
             let llm_api_key = if config.llm_provider == "cloud" {
-                self.app_handle.state::<SessionTokenStore>().0.lock().unwrap_or_else(|e| e.into_inner()).clone()
+                self.app_handle
+                    .state::<SessionTokenStore>()
+                    .0
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .clone()
             } else {
                 config.llm_api_key.clone()
             };
@@ -445,12 +540,22 @@ impl PipelineHandle {
         }
 
         let stt_elapsed = stop_start.elapsed();
-        tracing::info!("[Pipeline Timing] STT finalize: {}ms", stt_elapsed.as_millis());
+        tracing::info!(
+            "[Pipeline Timing] STT finalize: {}ms",
+            stt_elapsed.as_millis()
+        );
 
-        let raw_text = self.accumulated_text.lock().unwrap_or_else(|e| e.into_inner()).trim().to_string();
+        let raw_text = self
+            .accumulated_text
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .trim()
+            .to_string();
 
         if raw_text.is_empty() {
-            let _ = self.app_handle.emit("pipeline:error", "No speech detected. Please try again.");
+            let _ = self
+                .app_handle
+                .emit("pipeline:error", "No speech detected. Please try again.");
             self.set_state(PipelineState::Idle);
             return Ok(());
         }
@@ -474,7 +579,8 @@ impl PipelineHandle {
                             // Transition to Outputting on first chunk
                             if !transitioned.swap(true, Ordering::Relaxed) {
                                 state.store(PipelineState::Outputting.as_u8(), Ordering::SeqCst);
-                                let _ = app_handle.emit("pipeline:state", PipelineState::Outputting);
+                                let _ =
+                                    app_handle.emit("pipeline:state", PipelineState::Outputting);
                             }
                             let _ = app_handle.emit("llm:chunk", chunk);
                             // Paste each chunk via clipboard to avoid dropped CJK characters
@@ -489,7 +595,9 @@ impl PipelineHandle {
                                         let _ = e.key(modifier, Direction::Press);
                                         let _ = e.key(Key::Unicode('v'), Direction::Click);
                                         let _ = e.key(modifier, Direction::Release);
-                                        std::thread::sleep(std::time::Duration::from_millis(STREAM_PASTE_DELAY_MS));
+                                        std::thread::sleep(std::time::Duration::from_millis(
+                                            STREAM_PASTE_DELAY_MS,
+                                        ));
                                     }
                                 }
                             }
@@ -522,7 +630,9 @@ impl PipelineHandle {
 
             // Backup clipboard before streaming overwrites it
             let clipboard_backup = if is_keyboard_streaming {
-                arboard::Clipboard::new().ok().and_then(|mut cb| cb.get_text().ok())
+                arboard::Clipboard::new()
+                    .ok()
+                    .and_then(|mut cb| cb.get_text().ok())
             } else {
                 None
             };
@@ -533,12 +643,17 @@ impl PipelineHandle {
                     llm_elapsed = llm_start.elapsed();
 
                     if is_keyboard_streaming {
-                        let _ = self.app_handle.emit("pipeline:target_app", &app_ctx.app_name);
-                    } else {
-                        if let Err(e) = self.output_text(&final_text, &app_ctx.app_name, &config).await {
-                            tracing::error!("Output failed: {}", e);
-                            let _ = self.app_handle.emit("pipeline:error", format!("Output failed: {e}"));
-                        }
+                        let _ = self
+                            .app_handle
+                            .emit("pipeline:target_app", &app_ctx.app_name);
+                    } else if let Err(e) = self
+                        .output_text(&final_text, &app_ctx.app_name, &config)
+                        .await
+                    {
+                        tracing::error!("Output failed: {}", e);
+                        let _ = self
+                            .app_handle
+                            .emit("pipeline:error", format!("Output failed: {e}"));
                     }
                 }
                 Err(e) => {
@@ -548,13 +663,25 @@ impl PipelineHandle {
 
                     if is_keyboard_streaming {
                         tracing::warn!("LLM failed mid-stream in keyboard mode, partial text may already be typed");
-                        let _ = self.app_handle.emit("pipeline:error", format!("LLM polishing failed mid-stream: {e}"));
-                        let _ = self.app_handle.emit("pipeline:target_app", &app_ctx.app_name);
+                        let _ = self.app_handle.emit(
+                            "pipeline:error",
+                            format!("LLM polishing failed mid-stream: {e}"),
+                        );
+                        let _ = self
+                            .app_handle
+                            .emit("pipeline:target_app", &app_ctx.app_name);
                     } else {
-                        let _ = self.app_handle.emit("pipeline:error", format!("LLM polishing failed: {e}"));
-                        if let Err(e) = self.output_text(&final_text, &app_ctx.app_name, &config).await {
+                        let _ = self
+                            .app_handle
+                            .emit("pipeline:error", format!("LLM polishing failed: {e}"));
+                        if let Err(e) = self
+                            .output_text(&final_text, &app_ctx.app_name, &config)
+                            .await
+                        {
                             tracing::error!("Output failed: {}", e);
-                            let _ = self.app_handle.emit("pipeline:error", format!("Output failed: {e}"));
+                            let _ = self
+                                .app_handle
+                                .emit("pipeline:error", format!("Output failed: {e}"));
                         }
                     }
                 }
@@ -569,20 +696,32 @@ impl PipelineHandle {
                 }
             }
 
-            tracing::info!("[Pipeline Timing] LLM polish: {}ms", llm_elapsed.as_millis());
+            tracing::info!(
+                "[Pipeline Timing] LLM polish: {}ms",
+                llm_elapsed.as_millis()
+            );
         } else {
             llm_elapsed = std::time::Duration::ZERO;
             final_text = raw_text.clone();
-            if let Err(e) = self.output_text(&final_text, &app_ctx.app_name, &config).await {
+            if let Err(e) = self
+                .output_text(&final_text, &app_ctx.app_name, &config)
+                .await
+            {
                 tracing::error!("Output failed: {}", e);
-                let _ = self.app_handle.emit("pipeline:error", format!("Output failed: {e}"));
+                let _ = self
+                    .app_handle
+                    .emit("pipeline:error", format!("Output failed: {e}"));
             }
         }
 
         let total_elapsed = stop_start.elapsed();
 
         // Compute recording duration
-        let duration_ms = self.recording_start.lock().unwrap_or_else(|e| e.into_inner()).take()
+        let duration_ms = self
+            .recording_start
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take()
             .map(|start| start.elapsed().as_millis() as i64);
 
         tracing::info!(
@@ -594,12 +733,15 @@ impl PipelineHandle {
         );
 
         // Emit timing to frontend
-        let _ = self.app_handle.emit("pipeline:timing", serde_json::json!({
-            "stt_ms": stt_elapsed.as_millis() as u64,
-            "llm_ms": llm_elapsed.as_millis() as u64,
-            "total_ms": total_elapsed.as_millis() as u64,
-            "recording_ms": duration_ms,
-        }));
+        let _ = self.app_handle.emit(
+            "pipeline:timing",
+            serde_json::json!({
+                "stt_ms": stt_elapsed.as_millis() as u64,
+                "llm_ms": llm_elapsed.as_millis() as u64,
+                "total_ms": total_elapsed.as_millis() as u64,
+                "recording_ms": duration_ms,
+            }),
+        );
 
         // Save to history
         let now = chrono::Local::now().format("%Y-%m-%dT%H:%M:%S").to_string();
@@ -626,7 +768,12 @@ impl PipelineHandle {
         Ok(())
     }
 
-    async fn output_text(&self, text: &str, app_name: &str, config: &storage::AppConfig) -> Result<()> {
+    async fn output_text(
+        &self,
+        text: &str,
+        app_name: &str,
+        config: &storage::AppConfig,
+    ) -> Result<()> {
         self.set_state(PipelineState::Outputting);
 
         let mode = if config.output_mode == "keyboard" {
@@ -651,7 +798,8 @@ impl PipelineHandle {
             "cloud" => {
                 let base = crate::api_base_url();
                 tracing::debug!("Pre-warming HTTP connection to {}/api/proxy/stt", base);
-                let _ = self.shared_client
+                let _ = self
+                    .shared_client
                     .head(format!("{}/api/proxy/stt", base))
                     .timeout(std::time::Duration::from_secs(5))
                     .send()
@@ -666,7 +814,8 @@ impl PipelineHandle {
             _ => "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions",
         };
         tracing::debug!("Pre-warming HTTP connection to {}", endpoint);
-        let _ = self.shared_client
+        let _ = self
+            .shared_client
             .head(endpoint)
             .timeout(std::time::Duration::from_secs(5))
             .send()

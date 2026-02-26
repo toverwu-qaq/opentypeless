@@ -9,6 +9,12 @@ pub struct OpenAiProvider {
     client: Client,
 }
 
+impl Default for OpenAiProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OpenAiProvider {
     pub fn new() -> Self {
         Self {
@@ -25,8 +31,10 @@ impl LlmProvider for OpenAiProvider {
         req: &PolishRequest,
         on_chunk: Option<&ChunkCallback>,
     ) -> Result<PolishResponse> {
-        let has_selected_text = req.selected_text.as_ref()
-            .map_or(false, |s| !s.trim().is_empty());
+        let has_selected_text = req
+            .selected_text
+            .as_ref()
+            .is_some_and(|s| !s.trim().is_empty());
 
         let system_prompt = prompt::build_system_prompt(
             req.app_type,
@@ -36,9 +44,7 @@ impl LlmProvider for OpenAiProvider {
             has_selected_text,
         );
 
-        let mut messages = vec![
-            serde_json::json!({ "role": "system", "content": system_prompt }),
-        ];
+        let mut messages = vec![serde_json::json!({ "role": "system", "content": system_prompt })];
         if has_selected_text {
             messages.push(serde_json::json!({
                 "role": "user",
@@ -84,7 +90,8 @@ impl LlmProvider for OpenAiProvider {
             let status = response.status();
             let text = response.text().await.unwrap_or_default();
             // Truncate at a valid UTF-8 char boundary to avoid panic on multi-byte chars
-            let truncate_at = text.char_indices()
+            let truncate_at = text
+                .char_indices()
                 .take_while(|&(i, _)| i < 200)
                 .last()
                 .map(|(i, c)| i + c.len_utf8())
@@ -109,8 +116,7 @@ impl LlmProvider for OpenAiProvider {
                     let line = buffer[..line_end].trim().to_string();
                     buffer = buffer[line_end + 1..].to_string();
 
-                    if line.starts_with("data: ") {
-                        let data = &line[6..];
+                    if let Some(data) = line.strip_prefix("data: ") {
                         if data == "[DONE]" {
                             break;
                         }
@@ -139,7 +145,10 @@ impl LlmProvider for OpenAiProvider {
             // If content was empty but reasoning_content had text, use it as output.
             // This handles GLM thinking-mode where the API puts all output in reasoning_content.
             if full_text.is_empty() && !reasoning_text.is_empty() {
-                tracing::warn!("LLM content empty, using reasoning_content ({} chars) as output", reasoning_text.len());
+                tracing::warn!(
+                    "LLM content empty, using reasoning_content ({} chars) as output",
+                    reasoning_text.len()
+                );
                 callback(&reasoning_text);
                 full_text = reasoning_text;
             } else if full_text.is_empty() {
@@ -158,7 +167,10 @@ impl LlmProvider for OpenAiProvider {
                 .to_string();
 
             if text.is_empty() {
-                tracing::warn!("LLM non-streaming returned empty content, full response: {}", v);
+                tracing::warn!(
+                    "LLM non-streaming returned empty content, full response: {}",
+                    v
+                );
             }
 
             Ok(PolishResponse {
