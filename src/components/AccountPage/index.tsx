@@ -138,7 +138,7 @@ function AuthForm() {
         provider,
         callbackURL,
         fetchOptions: {
-          redirect: false,
+          redirect: 'manual' as RequestRedirect,
         },
       })
       if (data?.url) {
