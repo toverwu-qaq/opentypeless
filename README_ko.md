@@ -13,7 +13,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/tover0314-w/opentypeless/actions"><img src="https://github.com/tover0314-w/opentypeless/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/tover0314-w/opentypeless/releases"><img src="https://img.shields.io/github/v/release/tover0314-w/opentypeless?color=2ABBA7" alt="릴리스" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/tover0314-w/opentypeless" alt="라이선스" /></a>
   <a href="https://github.com/tover0314-w/opentypeless/stargazers"><img src="https://img.shields.io/github/stars/tover0314-w/opentypeless?style=social" alt="Stars" /></a>
