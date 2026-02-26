@@ -142,7 +142,8 @@
     "github": "GitHub",
     "framework": "框架",
     "tauriReact": "Tauri v2 + React",
-    "view": "查看"
+    "view": "查看",
+    "maxRecordingDuration": "最大录音时长"
   },
   "dictionary": {
     "word": "词语",

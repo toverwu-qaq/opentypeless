@@ -142,7 +142,8 @@
     "github": "GitHub",
     "framework": "Framework",
     "tauriReact": "Tauri v2 + React",
-    "view": "View"
+    "view": "View",
+    "maxRecordingDuration": "Max Recording Duration"
   },
   "dictionary": {
     "word": "Word",

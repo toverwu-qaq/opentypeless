@@ -1,4 +1,8 @@
 <p align="center">
+  <strong>English</strong> | <a href="README_zh.md">中文</a>
+</p>
+
+<p align="center">
   <img src="src-tauri/icons/128x128@2x.png" width="128" height="128" alt="OpenTypeless Logo" />
 </p>
 
@@ -9,15 +13,28 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nicepkg/opentypeless/actions"><img src="https://github.com/nicepkg/opentypeless/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="https://github.com/nicepkg/opentypeless/releases"><img src="https://img.shields.io/github/v/release/nicepkg/opentypeless?color=2ABBA7" alt="Release" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/nicepkg/opentypeless" alt="License" /></a>
-  <a href="https://github.com/nicepkg/opentypeless/stargazers"><img src="https://img.shields.io/github/stars/nicepkg/opentypeless?style=social" alt="Stars" /></a>
+  <a href="https://github.com/tover0314-w/opentypeless/actions"><img src="https://github.com/tover0314-w/opentypeless/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/tover0314-w/opentypeless/releases"><img src="https://img.shields.io/github/v/release/tover0314-w/opentypeless?color=2ABBA7" alt="Release" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/tover0314-w/opentypeless" alt="License" /></a>
+  <a href="https://github.com/tover0314-w/opentypeless/stargazers"><img src="https://img.shields.io/github/stars/tover0314-w/opentypeless?style=social" alt="Stars" /></a>
 </p>
 
 <p align="center">
-  <img src="landing-desktop.png" width="720" alt="OpenTypeless Screenshot" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/app-main-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="docs/images/app-main-light.png" />
+    <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless" />
+  </picture>
 </p>
+
+<details>
+<summary>More screenshots</summary>
+
+| Capsule (Recording) | Settings | History |
+|---|---|---|
+| <img src="docs/images/app-capsule-recording.png" width="240" /> | <img src="docs/images/app-settings.png" width="360" /> | <img src="docs/images/app-history.png" width="360" /> |
+
+</details>
 
 ---
 
@@ -139,15 +156,15 @@ src-tauri/src/        # Rust backend
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
-Looking for a place to start? Check out issues labeled [`good first issue`](https://github.com/nicepkg/opentypeless/labels/good%20first%20issue).
+Looking for a place to start? Check out issues labeled [`good first issue`](https://github.com/tover0314-w/opentypeless/labels/good%20first%20issue).
 
 ## Star History
 
-<a href="https://star-history.com/#nicepkg/opentypeless&Date">
+<a href="https://star-history.com/#tover0314-w/opentypeless&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=nicepkg/opentypeless&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=nicepkg/opentypeless&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=nicepkg/opentypeless&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=tover0314-w/opentypeless&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=tover0314-w/opentypeless&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=tover0314-w/opentypeless&type=Date" />
   </picture>
 </a>
 
