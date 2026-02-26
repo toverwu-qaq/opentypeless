@@ -17,9 +17,9 @@ use crate::SessionTokenStore;
 // ─── Timing constants ───
 
 /// Delay before capturing selected text to ensure hotkey modifiers are released.
-const SELECTED_TEXT_CAPTURE_DELAY_MS: u64 = 100;
+const SELECTED_TEXT_CAPTURE_DELAY_MS: u64 = 60;
 /// Delay after simulating Ctrl+C to let the clipboard update.
-const CLIPBOARD_COPY_SETTLE_MS: u64 = 150;
+const CLIPBOARD_COPY_SETTLE_MS: u64 = 100;
 /// Interval for polling audio volume during recording.
 const VOLUME_POLL_INTERVAL_MS: u64 = 50;
 /// Timeout for STT finalization after recording stops.
@@ -516,7 +516,7 @@ impl PipelineHandle {
                 max_tokens: 4096,
                 temperature: 0.3,
             };
-            let provider = llm::create_provider(&config.llm_provider);
+            let provider = llm::create_provider(&config.llm_provider, Some(self.shared_client.clone()));
             let enigo_result = if is_keyboard {
                 Some(Enigo::new(&EnigoSettings::default()))
             } else {
@@ -794,32 +794,44 @@ impl PipelineHandle {
     /// Call once after app startup to avoid cold-start TLS handshake on first recording.
     pub async fn pre_warm(&self) {
         let config = self.load_config().await;
-        let endpoint = match config.stt_provider.as_str() {
+
+        // Pre-warm STT endpoint
+        let stt_endpoint = match config.stt_provider.as_str() {
             "cloud" => {
                 let base = crate::api_base_url();
-                tracing::debug!("Pre-warming HTTP connection to {}/api/proxy/stt", base);
-                let _ = self
-                    .shared_client
-                    .head(format!("{}/api/proxy/stt", base))
-                    .timeout(std::time::Duration::from_secs(5))
-                    .send()
-                    .await;
-                tracing::debug!("HTTP connection pre-warm complete");
-                return;
+                format!("{}/api/proxy/stt", base)
             }
-            "glm-asr" => "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions",
-            "openai-whisper" => "https://api.openai.com/v1/audio/transcriptions",
-            "groq-whisper" => "https://api.groq.com/openai/v1/audio/transcriptions",
-            "siliconflow" => "https://api.siliconflow.cn/v1/audio/transcriptions",
-            _ => "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions",
+            "glm-asr" => "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions".to_string(),
+            "openai-whisper" => "https://api.openai.com/v1/audio/transcriptions".to_string(),
+            "groq-whisper" => "https://api.groq.com/openai/v1/audio/transcriptions".to_string(),
+            "siliconflow" => "https://api.siliconflow.cn/v1/audio/transcriptions".to_string(),
+            _ => "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions".to_string(),
         };
-        tracing::debug!("Pre-warming HTTP connection to {}", endpoint);
+        tracing::debug!("Pre-warming HTTP connection to {}", stt_endpoint);
         let _ = self
             .shared_client
-            .head(endpoint)
+            .head(&stt_endpoint)
             .timeout(std::time::Duration::from_secs(5))
             .send()
             .await;
-        tracing::debug!("HTTP connection pre-warm complete");
+        tracing::debug!("STT connection pre-warm complete");
+
+        // Pre-warm LLM endpoint if polish is enabled
+        if config.polish_enabled {
+            let llm_url = if config.llm_provider == "cloud" {
+                let base = crate::api_base_url();
+                format!("{}/api/proxy/llm", base)
+            } else {
+                config.llm_base_url.clone()
+            };
+            tracing::debug!("Pre-warming LLM connection to {}", llm_url);
+            let _ = self
+                .shared_client
+                .head(&llm_url)
+                .timeout(std::time::Duration::from_secs(5))
+                .send()
+                .await;
+            tracing::debug!("LLM connection pre-warm complete");
+        }
     }
 }

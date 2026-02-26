@@ -21,6 +21,10 @@ impl OpenAiProvider {
             client: Client::new(),
         }
     }
+
+    pub fn with_client(client: Client) -> Self {
+        Self { client }
+    }
 }
 
 #[async_trait]
