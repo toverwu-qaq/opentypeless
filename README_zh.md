@@ -60,6 +60,16 @@
 
 🎙️ 全局热键（按住录音或切换模式） · 💊 浮动胶囊组件 · 🗣️ 6+ 语音识别服务商（Deepgram、AssemblyAI、Whisper、Groq、GLM-ASR、SiliconFlow） · 🤖 多 LLM 润色（OpenAI、DeepSeek、Claude、Gemini、Ollama…） · ⚡ 实时流式输出 · ⌨️ 键盘模拟或剪贴板输出 · 📝 选中文本上下文 · 🌐 翻译模式 · 📖 自定义词典 · 🔍 应用检测 · 📜 本地历史记录与搜索 · 🌗 深色 / 浅色 / 跟随系统主题 · 🚀 开机自启
 
+> [!TIP]
+> **推荐配置（开箱即用最佳体验）**
+>
+> | | 服务商 | 模型 |
+> |---|---|---|
+> | 🗣️ 语音识别 | Groq | `whisper-large-v3-turbo` |
+> | 🤖 AI 润色 | Google | `gemini-2.5-flash-preview` |
+>
+> 这套组合转录速度快、准确率高，文本润色质量出色，而且两者都提供慷慨的免费额度。
+
 ## 前置要求
 
 - [Node.js](https://nodejs.org/) 20+

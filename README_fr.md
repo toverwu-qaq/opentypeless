@@ -60,6 +60,16 @@
 
 🎙️ Raccourci global (maintenir pour enregistrer ou basculer) · 💊 Widget capsule flottant · 🗣️ 6+ fournisseurs STT (Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow) · 🤖 Polissage multi-LLM (OpenAI, DeepSeek, Claude, Gemini, Ollama…) · ⚡ Sortie en streaming temps réel · ⌨️ Sortie clavier ou presse-papiers · 📝 Contexte du texte sélectionné · 🌐 Mode traduction · 📖 Dictionnaire personnalisé · 🔍 Détection par application · 📜 Historique local avec recherche · 🌗 Thème sombre / clair / système · 🚀 Démarrage automatique à la connexion
 
+> [!TIP]
+> **Configuration recommandée pour la meilleure expérience**
+>
+> | | Fournisseur | Modèle |
+> |---|---|---|
+> | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
+> | 🤖 Polissage IA | Google | `gemini-2.5-flash-preview` |
+>
+> Cette combinaison offre une transcription rapide et précise avec un polissage de texte de haute qualité — et les deux proposent des niveaux gratuits généreux.
+
 ## Prérequis
 
 - [Node.js](https://nodejs.org/) 20+

@@ -60,6 +60,16 @@
 
 🎙️ Tecla de atalho global (manter para gravar ou alternar) · 💊 Widget cápsula flutuante · 🗣️ 6+ provedores STT (Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow) · 🤖 Polimento multi-LLM (OpenAI, DeepSeek, Claude, Gemini, Ollama…) · ⚡ Saída em streaming em tempo real · ⌨️ Saída por teclado ou área de transferência · 📝 Contexto de texto selecionado · 🌐 Modo tradução · 📖 Dicionário personalizado · 🔍 Detecção por aplicativo · 📜 Histórico local com busca · 🌗 Tema escuro / claro / sistema · 🚀 Início automático no login
 
+> [!TIP]
+> **Configuração recomendada para a melhor experiência**
+>
+> | | Provedor | Modelo |
+> |---|---|---|
+> | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
+> | 🤖 Polimento IA | Google | `gemini-2.5-flash-preview` |
+>
+> Esta combinação oferece transcrição rápida e precisa com polimento de texto de alta qualidade — e ambos oferecem generosos níveis gratuitos.
+
 ## Pré-requisitos
 
 - [Node.js](https://nodejs.org/) 20+

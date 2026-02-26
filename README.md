@@ -60,6 +60,16 @@
 
 🎙️ Global hotkey (hold-to-record or toggle) · 💊 Floating capsule widget · 🗣️ 6+ STT providers (Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow) · 🤖 Multi-LLM polish (OpenAI, DeepSeek, Claude, Gemini, Ollama…) · ⚡ Real-time streaming output · ⌨️ Keyboard or clipboard output · 📝 Selected text context · 🌐 Translation mode · 📖 Custom dictionary · 🔍 Per-app detection · 📜 Local history with search · 🌗 Dark / light / system theme · 🚀 Auto-start on login
 
+> [!TIP]
+> **Recommended Configuration for Best Experience**
+>
+> | | Provider | Model |
+> |---|---|---|
+> | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
+> | 🤖 AI Polish | Google | `gemini-2.5-flash-preview` |
+>
+> This combo delivers fast, accurate transcription with high-quality text polishing — and both offer generous free tiers.
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 20+

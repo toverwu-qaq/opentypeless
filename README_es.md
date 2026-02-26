@@ -60,6 +60,16 @@
 
 🎙️ Tecla de acceso rápido global (mantener para grabar o alternar) · 💊 Widget cápsula flotante · 🗣️ 6+ proveedores STT (Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow) · 🤖 Pulido multi-LLM (OpenAI, DeepSeek, Claude, Gemini, Ollama…) · ⚡ Salida en streaming en tiempo real · ⌨️ Salida por teclado o portapapeles · 📝 Contexto de texto seleccionado · 🌐 Modo traducción · 📖 Diccionario personalizado · 🔍 Detección por aplicación · 📜 Historial local con búsqueda · 🌗 Tema oscuro / claro / sistema · 🚀 Inicio automático al iniciar sesión
 
+> [!TIP]
+> **Configuración recomendada para la mejor experiencia**
+>
+> | | Proveedor | Modelo |
+> |---|---|---|
+> | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
+> | 🤖 Pulido IA | Google | `gemini-2.5-flash-preview` |
+>
+> Esta combinación ofrece transcripción rápida y precisa con pulido de texto de alta calidad — y ambos ofrecen generosos niveles gratuitos.
+
 ## Requisitos previos
 
 - [Node.js](https://nodejs.org/) 20+

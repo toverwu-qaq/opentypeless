@@ -60,6 +60,16 @@
 
 🎙️ Globaler Hotkey (Halten zum Aufnehmen oder Umschalten) · 💊 Schwebendes Kapsel-Widget · 🗣️ 6+ STT-Anbieter (Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow) · 🤖 Multi-LLM-Verfeinerung (OpenAI, DeepSeek, Claude, Gemini, Ollama…) · ⚡ Echtzeit-Streaming-Ausgabe · ⌨️ Tastatur- oder Zwischenablage-Ausgabe · 📝 Ausgewählter Textkontext · 🌐 Übersetzungsmodus · 📖 Benutzerwörterbuch · 🔍 App-Erkennung · 📜 Lokaler Verlauf mit Suche · 🌗 Dunkles / Helles / System-Theme · 🚀 Autostart bei Anmeldung
 
+> [!TIP]
+> **Empfohlene Konfiguration für das beste Erlebnis**
+>
+> | | Anbieter | Modell |
+> |---|---|---|
+> | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
+> | 🤖 KI-Verfeinerung | Google | `gemini-2.5-flash-preview` |
+>
+> Diese Kombination bietet schnelle, präzise Transkription mit hochwertiger Textverfeinerung — und beide bieten großzügige kostenlose Kontingente.
+
 ## Voraussetzungen
 
 - [Node.js](https://nodejs.org/) 20+

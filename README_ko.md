@@ -60,6 +60,16 @@
 
 🎙️ 글로벌 단축키 (길게 눌러 녹음 또는 토글) · 💊 플로팅 캡슐 위젯 · 🗣️ 6개 이상의 STT 제공자 (Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow) · 🤖 다중 LLM 다듬기 (OpenAI, DeepSeek, Claude, Gemini, Ollama…) · ⚡ 실시간 스트리밍 출력 · ⌨️ 키보드 또는 클립보드 출력 · 📝 선택 텍스트 컨텍스트 · 🌐 번역 모드 · 📖 사용자 사전 · 🔍 앱별 감지 · 📜 로컬 기록 및 검색 · 🌗 다크 / 라이트 / 시스템 테마 · 🚀 로그인 시 자동 시작
 
+> [!TIP]
+> **최고의 경험을 위한 추천 설정**
+>
+> | | 제공자 | 모델 |
+> |---|---|---|
+> | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
+> | 🤖 AI 다듬기 | Google | `gemini-2.5-flash-preview` |
+>
+> 이 조합은 빠르고 정확한 전사와 고품질 텍스트 다듬기를 제공하며, 둘 다 넉넉한 무료 티어를 제공합니다.
+
 ## 사전 요구사항
 
 - [Node.js](https://nodejs.org/) 20+
