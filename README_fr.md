@@ -58,7 +58,19 @@
 
 ## Fonctionnalités
 
-🎙️ Raccourci global (maintenir pour enregistrer ou basculer) · 💊 Widget capsule flottant · 🗣️ 6+ fournisseurs STT (Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow) · 🤖 Polissage multi-LLM (OpenAI, DeepSeek, Claude, Gemini, Ollama…) · ⚡ Sortie en streaming temps réel · ⌨️ Sortie clavier ou presse-papiers · 📝 Contexte du texte sélectionné · 🌐 Mode traduction · 📖 Dictionnaire personnalisé · 🔍 Détection par application · 📜 Historique local avec recherche · 🌗 Thème sombre / clair / système · 🚀 Démarrage automatique à la connexion
+- 🎙️ Raccourci global — maintenir pour enregistrer ou basculer
+- 💊 Widget capsule flottant, toujours au premier plan
+- 🗣️ 6+ fournisseurs STT : Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow
+- 🤖 Polissage de texte via plusieurs LLMs : OpenAI, DeepSeek, Claude, Gemini, Ollama, etc.
+- ⚡ Sortie en streaming — le texte apparaît au fur et à mesure de la génération
+- ⌨️ Sortie par simulation clavier ou presse-papiers
+- 📝 Sélectionnez du texte avant d'enregistrer pour donner du contexte au LLM
+- 🌐 Mode traduction : parlez dans une langue, obtenez la sortie dans une autre (20+ langues)
+- 📖 Dictionnaire personnalisé pour les termes spécialisés
+- 🔍 Détection par application pour adapter le formatage
+- 📜 Historique local avec recherche en texte intégral
+- 🌗 Thème sombre / clair / système
+- 🚀 Démarrage automatique à la connexion
 
 > [!TIP]
 > **Configuration recommandée pour la meilleure expérience**

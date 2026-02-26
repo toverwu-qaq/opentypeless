@@ -58,7 +58,19 @@
 
 ## Funktionen
 
-🎙️ Globaler Hotkey (Halten zum Aufnehmen oder Umschalten) · 💊 Schwebendes Kapsel-Widget · 🗣️ 6+ STT-Anbieter (Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow) · 🤖 Multi-LLM-Verfeinerung (OpenAI, DeepSeek, Claude, Gemini, Ollama…) · ⚡ Echtzeit-Streaming-Ausgabe · ⌨️ Tastatur- oder Zwischenablage-Ausgabe · 📝 Ausgewählter Textkontext · 🌐 Übersetzungsmodus · 📖 Benutzerwörterbuch · 🔍 App-Erkennung · 📜 Lokaler Verlauf mit Suche · 🌗 Dunkles / Helles / System-Theme · 🚀 Autostart bei Anmeldung
+- 🎙️ Globaler Hotkey — Halten zum Aufnehmen oder Umschalten
+- 💊 Schwebendes Kapsel-Widget, immer im Vordergrund
+- 🗣️ 6+ STT-Anbieter: Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow
+- 🤖 Textverfeinerung über mehrere LLMs: OpenAI, DeepSeek, Claude, Gemini, Ollama u.a.
+- ⚡ Streaming-Ausgabe — Text erscheint während der Generierung
+- ⌨️ Tastatur-Simulation oder Zwischenablage-Ausgabe
+- 📝 Text markieren vor der Aufnahme als Kontext für das LLM
+- 🌐 Übersetzungsmodus: in einer Sprache sprechen, in einer anderen ausgeben (20+ Sprachen)
+- 📖 Benutzerwörterbuch für Fachbegriffe
+- 🔍 App-Erkennung zur Anpassung der Formatierung
+- 📜 Lokaler Verlauf mit Volltextsuche
+- 🌗 Dunkles / Helles / System-Theme
+- 🚀 Autostart bei Anmeldung
 
 > [!TIP]
 > **Empfohlene Konfiguration für das beste Erlebnis**

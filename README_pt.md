@@ -58,7 +58,19 @@
 
 ## Funcionalidades
 
-🎙️ Tecla de atalho global (manter para gravar ou alternar) · 💊 Widget cápsula flutuante · 🗣️ 6+ provedores STT (Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow) · 🤖 Polimento multi-LLM (OpenAI, DeepSeek, Claude, Gemini, Ollama…) · ⚡ Saída em streaming em tempo real · ⌨️ Saída por teclado ou área de transferência · 📝 Contexto de texto selecionado · 🌐 Modo tradução · 📖 Dicionário personalizado · 🔍 Detecção por aplicativo · 📜 Histórico local com busca · 🌗 Tema escuro / claro / sistema · 🚀 Início automático no login
+- 🎙️ Tecla de atalho global — manter para gravar ou alternar
+- 💊 Widget cápsula flutuante, sempre visível
+- 🗣️ 6+ provedores STT: Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow
+- 🤖 Polimento de texto com múltiplos LLMs: OpenAI, DeepSeek, Claude, Gemini, Ollama e mais
+- ⚡ Saída em streaming — o texto aparece conforme o LLM gera
+- ⌨️ Saída por simulação de teclado ou área de transferência
+- 📝 Selecione texto antes de gravar para dar contexto ao LLM
+- 🌐 Modo tradução: fale em um idioma, obtenha a saída em outro (20+ idiomas)
+- 📖 Dicionário personalizado para termos específicos
+- 🔍 Detecção por aplicativo para adaptar a formatação
+- 📜 Histórico local com busca em texto completo
+- 🌗 Tema escuro / claro / sistema
+- 🚀 Início automático no login
 
 > [!TIP]
 > **Configuração recomendada para a melhor experiência**

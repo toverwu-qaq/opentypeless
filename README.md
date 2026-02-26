@@ -58,19 +58,19 @@
 
 ## Features
 
-- Global hotkey recording — hold-to-record or toggle mode
-- Floating capsule widget that stays on top
-- 6+ STT providers: Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow
-- Text polishing via multiple LLMs: OpenAI, DeepSeek, Claude, Gemini, Ollama, and more
-- Streaming output — text appears as the LLM generates it
-- Keyboard simulation or clipboard output
-- Highlight text before recording to give the LLM context
-- Translation mode: speak in one language, output in another (20+ languages)
-- Custom dictionary for domain-specific terms
-- Per-app detection to adapt formatting
-- Local history with full-text search
-- Dark / light / system theme
-- Auto-start on login
+- 🎙️ Global hotkey recording — hold-to-record or toggle mode
+- 💊 Floating capsule widget that stays on top
+- 🗣️ 6+ STT providers: Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow
+- 🤖 Text polishing via multiple LLMs: OpenAI, DeepSeek, Claude, Gemini, Ollama, and more
+- ⚡ Streaming output — text appears as the LLM generates it
+- ⌨️ Keyboard simulation or clipboard output
+- 📝 Highlight text before recording to give the LLM context
+- 🌐 Translation mode: speak in one language, output in another (20+ languages)
+- 📖 Custom dictionary for domain-specific terms
+- 🔍 Per-app detection to adapt formatting
+- 📜 Local history with full-text search
+- 🌗 Dark / light / system theme
+- 🚀 Auto-start on login
 
 > [!TIP]
 > **Recommended Configuration for Best Experience**
