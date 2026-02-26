@@ -12,7 +12,7 @@ export const PRO_PLAN = {
   period: 'month',
   features: [
     { label: 'Official STT Quota', detail: '10h / month' },
-    { label: 'Official LLM Quota', detail: '~500k tokens / month' },
+    { label: 'Official LLM Quota', detail: '~5M tokens / month' },
     { label: 'Cloud Backup & Restore', detail: 'History, dictionary, settings' },
     { label: 'Pro Scene Packs', detail: 'Professional prompt templates' },
   ],

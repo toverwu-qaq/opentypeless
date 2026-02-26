@@ -100,7 +100,7 @@ OpenTypeless 还提供可选的 Pro 订阅，提供托管的 STT 和 LLM 配额�
 | | BYOK 模式 | Cloud（Pro）模式 |
 |---|---|---|
 | STT | 自己的 API 密钥（Deepgram、AssemblyAI 等） | 托管配额（10小时/月） |
-| LLM | 自己的 API 密钥（OpenAI、DeepSeek 等） | 托管配额（约50万 tokens/月） |
+| LLM | 自己的 API 密钥（OpenAI、DeepSeek 等） | 托管配额（约500万 tokens/月） |
 | 云依赖 | 无 — 所有请求直接发送到你的服务商 | 需要连接 talkmore.ai |
 | 费用 | 直接向服务商付费 | $4.99/月订阅 |
 

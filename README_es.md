@@ -100,7 +100,7 @@ OpenTypeless también ofrece una suscripción Pro opcional que proporciona cuota
 | | Modo BYOK | Modo Cloud (Pro) |
 |---|---|---|
 | STT | Tu propia clave API (Deepgram, AssemblyAI, etc.) | Cuota gestionada (10h/mes) |
-| LLM | Tu propia clave API (OpenAI, DeepSeek, etc.) | Cuota gestionada (~500k tokens/mes) |
+| LLM | Tu propia clave API (OpenAI, DeepSeek, etc.) | Cuota gestionada (~5M tokens/mes) |
 | Dependencia de la nube | Ninguna — todas las solicitudes van directamente a tu proveedor | Requiere conexión a talkmore.ai |
 | Coste | Pagas directamente a tu proveedor | Suscripción de $4.99/mes |
 

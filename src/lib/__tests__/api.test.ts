@@ -27,7 +27,7 @@ describe('request() via getSubscriptionStatus', () => {
             sttSecondsUsed: 100,
             sttSecondsLimit: 36000,
             llmTokensUsed: 5000,
-            llmTokensLimit: 500000,
+            llmTokensLimit: 5000000,
           }),
       }),
     )

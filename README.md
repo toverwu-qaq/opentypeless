@@ -100,7 +100,7 @@ OpenTypeless also offers an optional Pro subscription that provides managed STT 
 | | BYOK Mode | Cloud (Pro) Mode |
 |---|---|---|
 | STT | Your own API key (Deepgram, AssemblyAI, etc.) | Managed quota (10h/month) |
-| LLM | Your own API key (OpenAI, DeepSeek, etc.) | Managed quota (~500k tokens/month) |
+| LLM | Your own API key (OpenAI, DeepSeek, etc.) | Managed quota (~5M tokens/month) |
 | Cloud dependency | None — all requests go directly to your provider | Requires connection to talkmore.ai |
 | Cost | Pay your provider directly | $4.99/month subscription |
 

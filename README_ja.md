@@ -100,7 +100,7 @@ OpenTypelessは、自分のAPIキーが不要なマネージドSTTおよびLLM�
 | | BYOKモード | Cloud（Pro）モード |
 |---|---|---|
 | STT | 自分のAPIキー（Deepgram、AssemblyAIなど） | 管理されたクォータ（10時間/月） |
-| LLM | 自分のAPIキー（OpenAI、DeepSeekなど） | 管理されたクォータ（約50万トークン/月） |
+| LLM | 自分のAPIキー（OpenAI、DeepSeekなど） | 管理されたクォータ（約500万トークン/月） |
 | クラウド依存 | なし — すべてのリクエストはプロバイダーに直接送信 | talkmore.aiへの接続が必要 |
 | コスト | プロバイダーに直接支払い | $4.99/月のサブスクリプション |
 

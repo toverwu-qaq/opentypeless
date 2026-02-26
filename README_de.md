@@ -100,7 +100,7 @@ OpenTypeless bietet auch ein optionales Pro-Abonnement an, das verwaltetes STT- 
 | | BYOK-Modus | Cloud (Pro) Modus |
 |---|---|---|
 | STT | Eigener API-Schlüssel (Deepgram, AssemblyAI usw.) | Verwaltetes Kontingent (10 Std./Monat) |
-| LLM | Eigener API-Schlüssel (OpenAI, DeepSeek usw.) | Verwaltetes Kontingent (~500k Token/Monat) |
+| LLM | Eigener API-Schlüssel (OpenAI, DeepSeek usw.) | Verwaltetes Kontingent (~5M Token/Monat) |
 | Cloud-Abhängigkeit | Keine — alle Anfragen gehen direkt an Ihren Anbieter | Erfordert Verbindung zu talkmore.ai |
 | Kosten | Direkte Bezahlung an Ihren Anbieter | 4,99 $/Monat Abonnement |
 

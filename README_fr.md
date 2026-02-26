@@ -100,7 +100,7 @@ OpenTypeless propose également un abonnement Pro optionnel qui fournit un quota
 | | Mode BYOK | Mode Cloud (Pro) |
 |---|---|---|
 | STT | Votre propre clé API (Deepgram, AssemblyAI, etc.) | Quota géré (10h/mois) |
-| LLM | Votre propre clé API (OpenAI, DeepSeek, etc.) | Quota géré (~500k tokens/mois) |
+| LLM | Votre propre clé API (OpenAI, DeepSeek, etc.) | Quota géré (~5M tokens/mois) |
 | Dépendance cloud | Aucune — toutes les requêtes vont directement à votre fournisseur | Nécessite une connexion à talkmore.ai |
 | Coût | Payez votre fournisseur directement | Abonnement 4,99 $/mois |
 

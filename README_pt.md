@@ -100,7 +100,7 @@ O OpenTypeless também oferece uma assinatura Pro opcional que fornece cota gere
 | | Modo BYOK | Modo Cloud (Pro) |
 |---|---|---|
 | STT | Sua própria chave de API (Deepgram, AssemblyAI, etc.) | Cota gerenciada (10h/mês) |
-| LLM | Sua própria chave de API (OpenAI, DeepSeek, etc.) | Cota gerenciada (~500k tokens/mês) |
+| LLM | Sua própria chave de API (OpenAI, DeepSeek, etc.) | Cota gerenciada (~5M tokens/mês) |
 | Dependência de nuvem | Nenhuma — todas as requisições vão diretamente ao seu provedor | Requer conexão com talkmore.ai |
 | Custo | Pague diretamente ao seu provedor | Assinatura de $4,99/mês |
 

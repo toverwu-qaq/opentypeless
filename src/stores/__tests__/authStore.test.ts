@@ -56,7 +56,7 @@ describe('authStore', () => {
       sttSecondsUsed: 100,
       sttSecondsLimit: 36000,
       llmTokensUsed: 5000,
-      llmTokensLimit: 500000,
+      llmTokensLimit: 5000000,
     })
   })
 
@@ -78,7 +78,7 @@ describe('authStore', () => {
         sttSecondsUsed: 100,
         sttSecondsLimit: 36000,
         llmTokensUsed: 5000,
-        llmTokensLimit: 500000,
+        llmTokensLimit: 5000000,
       })
 
       await getState().signOut()
@@ -104,7 +104,7 @@ describe('authStore', () => {
       expect(getState().sttSecondsUsed).toBe(100)
       expect(getState().sttSecondsLimit).toBe(36000)
       expect(getState().llmTokensUsed).toBe(5000)
-      expect(getState().llmTokensLimit).toBe(500000)
+      expect(getState().llmTokensLimit).toBe(5000000)
     })
   })
 
