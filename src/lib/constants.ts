@@ -11,10 +11,11 @@ export const PRO_PLAN = {
   price: '$4.99',
   period: 'month',
   features: [
-    { label: 'Official STT Quota', detail: '10h / month' },
-    { label: 'Official LLM Quota', detail: '~5M tokens / month' },
+    { label: 'Millisecond STT', detail: '10h/month, 99 languages' },
+    { label: 'Instant AI Rewrite', detail: '~5M tokens/month' },
     { label: 'Cloud Backup & Restore', detail: 'History, dictionary, settings' },
     { label: 'Pro Scene Packs', detail: 'Professional prompt templates' },
+    { label: 'Zero-config', detail: 'No API key needed' },
   ],
 } as const
 
