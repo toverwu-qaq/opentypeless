@@ -2,28 +2,36 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in OpenTypeless, please report it responsibly.
+Please report security vulnerabilities through [GitHub Security Advisories](https://github.com/tover0314-w/opentypeless/security/advisories/new).
 
-**Do not open a public issue.**
+**Do not open a public issue for security vulnerabilities.**
 
-Instead, email the maintainers at: **security@opentypeless.com** (or open a private security advisory on GitHub).
+Your report should include:
 
-Please include:
-- Description of the vulnerability
+- A descriptive title
+- Severity assessment (Critical / High / Medium / Low)
+- Affected component(s)
 - Steps to reproduce
-- Potential impact
-- Suggested fix (if any)
+- Impact description
 
-We will acknowledge receipt within 48 hours and aim to provide a fix or mitigation plan within 7 days for critical issues.
+We will acknowledge your report within 72 hours and aim to release a fix within 14 days for critical issues.
 
-## Scope
+## Security Model
 
-This policy covers the OpenTypeless desktop application and its build/release infrastructure. Third-party STT/LLM provider APIs are out of scope — report those to the respective providers.
+OpenTypeless follows a **Bring Your Own Key (BYOK)** model:
 
-## Security Design
-
-- API keys are stored locally via `tauri-plugin-store` (not transmitted to OpenTypeless servers)
-- All STT/LLM requests go directly to the configured provider (BYOK mode)
+- All API keys are stored locally on the user's machine via `tauri-plugin-store`
+- No cloud account or server-side storage is required for the core product
+- Audio data is sent directly from the user's machine to the chosen STT/LLM provider
 - Cloud proxy mode requires authentication via session token
-- SQL queries use parameterized statements
+- The application does not collect telemetry or usage data
 - CSP is enabled in the Tauri webview
+
+## Out of Scope
+
+The following are not considered vulnerabilities:
+
+- Prompt injection in LLM responses (no security boundary to bypass)
+- Users exposing their own API keys through misconfiguration
+- Issues requiring physical access to the user's machine
+- Vulnerabilities in third-party STT/LLM provider APIs
