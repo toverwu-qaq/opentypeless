@@ -69,16 +69,16 @@ impl AudioCaptureHandle {
     pub fn stop(&mut self) {
         // Signal the capture thread to stop
         self.stop_tx = None;
-        *self.volume.lock().expect("audio volume mutex poisoned") = 0.0;
-        *self.state.lock().expect("audio state mutex poisoned") = CaptureState::Idle;
+        *self.volume.lock().unwrap_or_else(|e| e.into_inner()) = 0.0;
+        *self.state.lock().unwrap_or_else(|e| e.into_inner()) = CaptureState::Idle;
     }
 
     pub fn get_volume(&self) -> f32 {
-        *self.volume.lock().expect("audio volume mutex poisoned")
+        *self.volume.lock().unwrap_or_else(|e| e.into_inner())
     }
 
     pub fn state(&self) -> CaptureState {
-        *self.state.lock().expect("audio state mutex poisoned")
+        *self.state.lock().unwrap_or_else(|e| e.into_inner())
     }
 }
 
@@ -178,7 +178,7 @@ fn run_capture(
             };
 
             // Convert f32 to i16 PCM and buffer
-            let mut buf = buffer.lock().expect("audio buffer mutex poisoned");
+            let mut buf = buffer.lock().unwrap_or_else(|e| e.into_inner());
             for &sample in &resampled {
                 if buf.len() >= MAX_BUFFER_SAMPLES {
                     break;
@@ -204,7 +204,7 @@ fn run_capture(
     )?;
 
     stream.play()?;
-    *state.lock().expect("audio state mutex poisoned") = CaptureState::Recording;
+    *state.lock().unwrap_or_else(|e| e.into_inner()) = CaptureState::Recording;
     tracing::info!("Audio capture started (device: {}Hz {}ch -> target: {}Hz {}ch)",
         device_sample_rate, device_channels, target_rate, target_channels);
 
@@ -213,7 +213,7 @@ fn run_capture(
 
     // Stream is dropped here, stopping capture
     drop(stream);
-    *state.lock().expect("audio state mutex poisoned") = CaptureState::Idle;
+    *state.lock().unwrap_or_else(|e| e.into_inner()) = CaptureState::Idle;
     tracing::info!("Audio capture stopped");
     Ok(())
 }

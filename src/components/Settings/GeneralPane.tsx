@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '../../stores/appStore'
 import type { HotkeyMode, OutputMode } from '../../stores/appStore'
@@ -6,29 +6,57 @@ import { updateHotkey, pauseHotkey, resumeHotkey, setAutoStart } from '../../lib
 import { SegmentedControl } from './shared/SegmentedControl'
 import { Toggle } from './shared/Toggle'
 
+// Keys that can be used as hotkeys without a modifier
+const STANDALONE_KEYS = new Set([
+  'Space', 'Tab', 'Enter', 'Backspace', 'Escape', 'Delete', 'Insert',
+  'Home', 'End', 'PageUp', 'PageDown', 'Up', 'Down', 'Left', 'Right',
+  'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
+])
+
 function HotkeyRecorder() {
   const config = useAppStore((s) => s.config)
   const updateConfig = useAppStore((s) => s.updateConfig)
   const { t } = useTranslation()
   const [recording, setRecording] = useState(false)
   const [pending, setPending] = useState<string | null>(null)
+  const [modifierHint, setModifierHint] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const autoConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const confirmHotkey = useCallback((hotkey: string) => {
+    setRecording(false)
+    setError(null)
+    setModifierHint(null)
+    updateHotkey(hotkey)
+      .then(() => {
+        updateConfig({ hotkey })
+        setPending(null)
+      })
+      .catch((e) => {
+        setError(String(e))
+        setPending(null)
+        resumeHotkey().catch(() => {})
+      })
+  }, [updateConfig])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     e.preventDefault()
     e.stopPropagation()
 
-    // Ignore lone modifier keys
-    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return
-
+    // Build modifier prefix
     const parts: string[] = []
     if (e.ctrlKey) parts.push('Ctrl')
     if (e.altKey) parts.push('Alt')
     if (e.shiftKey) parts.push('Shift')
     if (e.metaKey) parts.push('Meta')
 
-    // Must have at least one modifier
-    if (parts.length === 0) return
+    // If only modifier keys are pressed, show hint like "Alt+..."
+    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) {
+      setModifierHint(parts.length > 0 ? parts.join('+') + '+...' : null)
+      return
+    }
+
+    setModifierHint(null)
 
     const keyMap: Record<string, string> = {
       ' ': 'Space',
@@ -49,40 +77,48 @@ function HotkeyRecorder() {
     }
 
     let keyName = keyMap[e.key] || e.key
-    // Normalize single letters to uppercase
     if (keyName.length === 1) keyName = keyName.toUpperCase()
-    // F-keys are already correct (F1, F2, etc.)
+
+    // Letters and digits require at least one modifier to avoid interfering with typing
+    if (parts.length === 0 && !STANDALONE_KEYS.has(keyName)) return
 
     parts.push(keyName)
-    setPending(parts.join('+'))
+    const combo = parts.join('+')
+    setPending(combo)
+
+    // Auto-confirm after 1.5 seconds
+    if (autoConfirmTimer.current) clearTimeout(autoConfirmTimer.current)
+    autoConfirmTimer.current = setTimeout(() => {
+      confirmHotkey(combo)
+    }, 1500)
+  }, [confirmHotkey])
+
+  const handleKeyUp = useCallback(() => {
+    setModifierHint(null)
   }, [])
 
   useEffect(() => {
     if (!recording) return
     window.addEventListener('keydown', handleKeyDown, true)
-    return () => window.removeEventListener('keydown', handleKeyDown, true)
-  }, [recording, handleKeyDown])
+    window.addEventListener('keyup', handleKeyUp, true)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, true)
+      window.removeEventListener('keyup', handleKeyUp, true)
+      if (autoConfirmTimer.current) clearTimeout(autoConfirmTimer.current)
+    }
+  }, [recording, handleKeyDown, handleKeyUp])
 
   const handleClick = () => {
     if (recording && pending) {
-      // Confirm the pending hotkey
-      setRecording(false)
-      setError(null)
-      updateHotkey(pending)
-        .then(() => {
-          updateConfig({ hotkey: pending })
-          setPending(null)
-        })
-        .catch((e) => {
-          setError(String(e))
-          setPending(null)
-          // Re-register the old hotkey on failure
-          resumeHotkey().catch(() => {})
-        })
+      // Confirm immediately on click
+      if (autoConfirmTimer.current) clearTimeout(autoConfirmTimer.current)
+      confirmHotkey(pending)
     } else if (recording) {
       // Cancel recording — re-register the old hotkey
       setRecording(false)
       setPending(null)
+      setModifierHint(null)
+      if (autoConfirmTimer.current) clearTimeout(autoConfirmTimer.current)
       resumeHotkey().catch(() => {})
     } else {
       // Start recording — unregister global shortcut so webview can capture keys
@@ -103,7 +139,7 @@ function HotkeyRecorder() {
             : 'bg-bg-secondary border-transparent text-text-primary hover:border-border'
         }`}
       >
-        {recording ? pending || t('settings.pressKeyCombination') : config.hotkey}
+        {recording ? pending || modifierHint || t('settings.pressKeyCombination') : config.hotkey}
       </button>
       {recording && pending && (
         <p className="text-[11px] text-text-tertiary mt-1.5">{t('settings.clickToConfirm')}</p>
@@ -145,30 +181,49 @@ export function GeneralPane() {
         />
       </Section>
 
-      <Section title={t('settings.other')}>
-        <Toggle
-          checked={config.auto_start}
-          onChange={(checked) => {
-            updateConfig({ auto_start: checked })
-            setAutoStart(checked).catch(() => {
-              // Revert on failure
-              updateConfig({ auto_start: !checked })
-            })
-          }}
-          label={t('settings.launchAtStartup')}
-        />
-        {config.auto_start && (
-          <Toggle
-            checked={config.start_minimized}
-            onChange={(checked) => updateConfig({ start_minimized: checked })}
-            label={t('settings.startMinimized')}
+      <Section title={t('settings.maxRecordingDuration', 'Max Recording Duration')}>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={10}
+            max={300}
+            step={10}
+            value={config.max_recording_seconds}
+            onChange={(e) => updateConfig({ max_recording_seconds: Number(e.target.value) })}
+            className="flex-1 accent-accent"
           />
-        )}
-        <Toggle
-          checked={config.close_to_tray}
-          onChange={(checked) => updateConfig({ close_to_tray: checked })}
-          label={t('settings.closeToTray')}
-        />
+          <span className="text-[13px] text-text-secondary font-mono w-12 text-right">
+            {config.max_recording_seconds}s
+          </span>
+        </div>
+      </Section>
+
+      <Section title={t('settings.other')}>
+        <div className="space-y-3">
+          <Toggle
+            checked={config.auto_start}
+            onChange={(checked) => {
+              updateConfig({ auto_start: checked })
+              setAutoStart(checked).catch(() => {
+                // Revert on failure
+                updateConfig({ auto_start: !checked })
+              })
+            }}
+            label={t('settings.launchAtStartup')}
+          />
+          {config.auto_start && (
+            <Toggle
+              checked={config.start_minimized}
+              onChange={(checked) => updateConfig({ start_minimized: checked })}
+              label={t('settings.startMinimized')}
+            />
+          )}
+          <Toggle
+            checked={config.close_to_tray}
+            onChange={(checked) => updateConfig({ close_to_tray: checked })}
+            label={t('settings.closeToTray')}
+          />
+        </div>
       </Section>
     </div>
   )

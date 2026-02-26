@@ -128,8 +128,8 @@ async fn update_config(
     close_tray_cache: tauri::State<'_, CloseToTrayCache>,
     config: storage::AppConfig,
 ) -> Result<(), String> {
-    *cache.0.lock().expect("hotkey mode cache mutex poisoned") = config.hotkey_mode.clone();
-    *close_tray_cache.0.lock().expect("close_to_tray cache mutex poisoned") = config.close_to_tray;
+    *cache.0.lock().unwrap_or_else(|e| e.into_inner()) = config.hotkey_mode.clone();
+    *close_tray_cache.0.lock().unwrap_or_else(|e| e.into_inner()) = config.close_to_tray;
     state.save(&config).await.map_err(|e| e.to_string())
 }
 
@@ -145,7 +145,7 @@ async fn test_stt_connection(
 
     // Cloud provider: verify session token + Pro status via API
     if provider == "cloud" {
-        let token = token_store.0.lock().expect("session token mutex poisoned").clone();
+        let token = token_store.0.lock().unwrap_or_else(|e| e.into_inner()).clone();
         if token.is_empty() {
             return Ok(false);
         }
@@ -235,7 +235,7 @@ async fn test_llm_connection(
 
     // Cloud provider: verify session token + Pro status via API
     if provider == "cloud" {
-        let token = token_store.0.lock().expect("session token mutex poisoned").clone();
+        let token = token_store.0.lock().unwrap_or_else(|e| e.into_inner()).clone();
         if token.is_empty() {
             return Ok(false);
         }
@@ -392,7 +392,7 @@ async fn set_session_token(
     state: tauri::State<'_, SessionTokenStore>,
     token: String,
 ) -> Result<(), String> {
-    *state.0.lock().expect("session token mutex poisoned") = token;
+    *state.0.lock().unwrap_or_else(|e| e.into_inner()) = token;
     Ok(())
 }
 
@@ -464,7 +464,7 @@ fn build_shortcut_handler(app_handle: tauri::AppHandle) -> impl Fn(&tauri::AppHa
         let handle = app_handle.clone();
         match event.state {
             ShortcutState::Pressed => {
-                let hotkey_mode = handle.state::<HotkeyModeCache>().0.lock().expect("hotkey mode cache mutex poisoned").clone();
+                let hotkey_mode = handle.state::<HotkeyModeCache>().0.lock().unwrap_or_else(|e| e.into_inner()).clone();
                 tauri::async_runtime::spawn(async move {
                     let pipeline = handle.state::<pipeline::PipelineHandle>();
 
@@ -489,7 +489,7 @@ fn build_shortcut_handler(app_handle: tauri::AppHandle) -> impl Fn(&tauri::AppHa
                 });
             }
             ShortcutState::Released => {
-                let hotkey_mode = handle.state::<HotkeyModeCache>().0.lock().expect("hotkey mode cache mutex poisoned").clone();
+                let hotkey_mode = handle.state::<HotkeyModeCache>().0.lock().unwrap_or_else(|e| e.into_inner()).clone();
                 if hotkey_mode != "toggle" {
                     tauri::async_runtime::spawn(async move {
                         let pipeline = handle.state::<pipeline::PipelineHandle>();
@@ -692,7 +692,7 @@ mod tests {
 }
 pub fn run() {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env().add_directive("opentypeless=debug".parse().unwrap()))
+        .with_env_filter(EnvFilter::from_default_env().add_directive("opentypeless=debug".parse().expect("static directive is valid")))
         .init();
 
     tauri::Builder::default()
@@ -840,12 +840,18 @@ pub fn run() {
                     _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click {
-                        button: MouseButton::Left,
-                        button_state: MouseButtonState::Up,
-                        ..
-                    } = event
-                    {
+                    let should_show = matches!(
+                        event,
+                        TrayIconEvent::Click {
+                            button: MouseButton::Left,
+                            button_state: MouseButtonState::Up,
+                            ..
+                        } | TrayIconEvent::DoubleClick {
+                            button: MouseButton::Left,
+                            ..
+                        }
+                    );
+                    if should_show {
                         let app = tray.app_handle();
                         if let Some(window) = app.get_webview_window("main") {
                             let _ = window.show();
@@ -869,22 +875,24 @@ pub fn run() {
                             .state::<CloseToTrayCache>()
                             .0
                             .lock()
-                            .expect("close_to_tray cache mutex poisoned");
+                            .unwrap_or_else(|e| e.into_inner());
                         if close_to_tray {
                             api.prevent_close();
-                            // Save window state before hiding
+                            // Save window state before hiding (skip if minimized)
                             if let Some(w) = handle.get_webview_window("main") {
                                 if let (Ok(pos), Ok(size)) = (w.outer_position(), w.outer_size()) {
-                                    let ws = WindowState {
-                                        x: pos.x,
-                                        y: pos.y,
-                                        width: size.width,
-                                        height: size.height,
-                                    };
-                                    if let Ok(store) = handle.store("settings.json") {
-                                        if let Ok(val) = serde_json::to_value(&ws) {
-                                            store.set("window_state", val);
-                                            let _ = store.save();
+                                    if pos.x > -1000 && pos.y > -1000 && size.width >= 720 && size.height >= 480 {
+                                        let ws = WindowState {
+                                            x: pos.x,
+                                            y: pos.y,
+                                            width: size.width,
+                                            height: size.height,
+                                        };
+                                        if let Ok(store) = handle.store("settings.json") {
+                                            if let Ok(val) = serde_json::to_value(&ws) {
+                                                store.set("window_state", val);
+                                                let _ = store.save();
+                                            }
                                         }
                                     }
                                 }
@@ -900,13 +908,16 @@ pub fn run() {
             if let Ok(store) = app.handle().store("settings.json") {
                 if let Some(val) = store.get("window_state") {
                     if let Ok(ws) = serde_json::from_value::<WindowState>(val.clone()) {
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.set_position(tauri::Position::Physical(
-                                tauri::PhysicalPosition::new(ws.x, ws.y),
-                            ));
-                            let _ = window.set_size(tauri::Size::Physical(
-                                tauri::PhysicalSize::new(ws.width, ws.height),
-                            ));
+                        // Validate: skip if coordinates are off-screen (e.g. -32000 from minimized state)
+                        if ws.x > -1000 && ws.y > -1000 && ws.width >= 720 && ws.height >= 480 {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.set_position(tauri::Position::Physical(
+                                    tauri::PhysicalPosition::new(ws.x, ws.y),
+                                ));
+                                let _ = window.set_size(tauri::Size::Physical(
+                                    tauri::PhysicalSize::new(ws.width, ws.height),
+                                ));
+                            }
                         }
                     }
                 }

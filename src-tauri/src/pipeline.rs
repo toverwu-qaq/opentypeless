@@ -185,18 +185,18 @@ impl PipelineHandle {
         crate::refresh_tray(&self.app_handle);
 
         // Clear accumulated text
-        self.accumulated_text.lock().expect("accumulated_text mutex poisoned").clear();
+        self.accumulated_text.lock().unwrap_or_else(|e| e.into_inner()).clear();
 
         // P0-2: Load config BEFORE starting audio capture — fail fast on missing API key
         let config_data = self.load_config().await;
-        *self.preloaded_config.lock().expect("preloaded_config mutex poisoned") = Some(config_data.clone());
-        *self.preloaded_app_ctx.lock().expect("preloaded_app_ctx mutex poisoned") = Some(app_detector::detect_current_app());
+        *self.preloaded_config.lock().unwrap_or_else(|e| e.into_inner()) = Some(config_data.clone());
+        *self.preloaded_app_ctx.lock().unwrap_or_else(|e| e.into_inner()) = Some(app_detector::detect_current_app());
         let dict_words = self
             .app_handle
             .state::<storage::DictionaryStore>()
             .words()
             .await;
-        *self.preloaded_dictionary.lock().expect("preloaded_dictionary mutex poisoned") = Some(dict_words);
+        *self.preloaded_dictionary.lock().unwrap_or_else(|e| e.into_inner()) = Some(dict_words);
 
         tracing::debug!(
             "Pipeline using config: stt_provider={}, stt_key_len={}, stt_lang={}",
@@ -208,16 +208,16 @@ impl PipelineHandle {
         // Guard: empty API key — bail before starting audio (skip for cloud provider)
         if config_data.stt_api_key.is_empty() && config_data.stt_provider != "cloud" {
             let _ = self.app_handle.emit("pipeline:error", "STT API key is not configured. Please set it in Settings → Speech Recognition.");
-            *self.preloaded_config.lock().expect("preloaded_config mutex poisoned") = None;
-            *self.preloaded_app_ctx.lock().expect("preloaded_app_ctx mutex poisoned") = None;
-            *self.preloaded_dictionary.lock().expect("preloaded_dictionary mutex poisoned") = None;
+            *self.preloaded_config.lock().unwrap_or_else(|e| e.into_inner()) = None;
+            *self.preloaded_app_ctx.lock().unwrap_or_else(|e| e.into_inner()) = None;
+            *self.preloaded_dictionary.lock().unwrap_or_else(|e| e.into_inner()) = None;
             self.set_state(PipelineState::Idle);
             return Ok(());
         }
 
         // P0-3: Pre-connect STT provider before spawning task
         let stt_api_key = if config_data.stt_provider == "cloud" {
-            self.app_handle.state::<SessionTokenStore>().0.lock().expect("session token mutex poisoned").clone()
+            self.app_handle.state::<SessionTokenStore>().0.lock().unwrap_or_else(|e| e.into_inner()).clone()
         } else {
             config_data.stt_api_key.clone()
         };
@@ -237,9 +237,9 @@ impl PipelineHandle {
         if let Err(e) = provider.connect(&stt_config).await {
             tracing::error!("STT connect failed: {}", e);
             let _ = self.app_handle.emit("pipeline:error", format!("STT connection failed: {e}"));
-            *self.preloaded_config.lock().expect("preloaded_config mutex poisoned") = None;
-            *self.preloaded_app_ctx.lock().expect("preloaded_app_ctx mutex poisoned") = None;
-            *self.preloaded_dictionary.lock().expect("preloaded_dictionary mutex poisoned") = None;
+            *self.preloaded_config.lock().unwrap_or_else(|e| e.into_inner()) = None;
+            *self.preloaded_app_ctx.lock().unwrap_or_else(|e| e.into_inner()) = None;
+            *self.preloaded_dictionary.lock().unwrap_or_else(|e| e.into_inner()) = None;
             self.set_state(PipelineState::Idle);
             return Ok(());
         }
@@ -250,10 +250,10 @@ impl PipelineHandle {
 
         // Store the audio handle's volume reference
         let audio_vol = handle.get_volume();
-        *self.audio_volume.lock().expect("audio_volume mutex poisoned") = audio_vol;
-        *self.audio_handle.lock().expect("audio_handle mutex poisoned") = Some(handle);
+        *self.audio_volume.lock().unwrap_or_else(|e| e.into_inner()) = audio_vol;
+        *self.audio_handle.lock().unwrap_or_else(|e| e.into_inner()) = Some(handle);
 
-        *self.recording_start.lock().expect("recording_start mutex poisoned") = Some(std::time::Instant::now());
+        *self.recording_start.lock().unwrap_or_else(|e| e.into_inner()) = Some(std::time::Instant::now());
 
         // Volume monitoring task
         let app_handle = self.app_handle.clone();
@@ -268,7 +268,7 @@ impl PipelineHandle {
                 }
                 let vol = audio_handle_ref
                     .lock()
-                    .expect("audio_handle mutex poisoned")
+                    .unwrap_or_else(|e| e.into_inner())
                     .as_ref()
                     .map(|h| h.get_volume())
                     .unwrap_or(0.0);
@@ -278,7 +278,7 @@ impl PipelineHandle {
 
         // Selected text will be captured in stop() after hotkey is released,
         // so Ctrl+C simulation won't conflict with held keys.
-        *self.preloaded_selected_text.lock().expect("preloaded_selected_text mutex poisoned") = None;
+        *self.preloaded_selected_text.lock().unwrap_or_else(|e| e.into_inner()) = None;
 
         // STT streaming task — provider is already connected
         let app_handle = self.app_handle.clone();
@@ -298,7 +298,7 @@ impl PipelineHandle {
                                 // Audio channel closed — disconnect and capture final transcript
                                 match provider.disconnect().await {
                                     Ok(Some(text)) => {
-                                        let mut acc = accumulated.lock().expect("accumulated_text mutex poisoned");
+                                        let mut acc = accumulated.lock().unwrap_or_else(|e| e.into_inner());
                                         acc.push_str(&text);
                                         let current = acc.clone();
                                         drop(acc);
@@ -320,7 +320,7 @@ impl PipelineHandle {
                                 let _ = app_handle.emit("stt:partial", &text);
                             }
                             Ok(Some(TranscriptEvent::Final { text, .. })) => {
-                                let mut acc = accumulated.lock().expect("accumulated_text mutex poisoned");
+                                let mut acc = accumulated.lock().unwrap_or_else(|e| e.into_inner());
                                 acc.push_str(&text);
                                 acc.push(' ');
                                 let current = acc.clone();
@@ -371,7 +371,7 @@ impl PipelineHandle {
 
         // Capture selected text now — hotkey is released so Ctrl+C won't conflict.
         // Small delay to ensure hotkey modifiers are fully released (especially in toggle mode).
-        let config_data = self.preloaded_config.lock().expect("preloaded_config mutex poisoned").clone()
+        let config_data = self.preloaded_config.lock().unwrap_or_else(|e| e.into_inner()).clone()
             .unwrap_or_else(|| storage::AppConfig::default());
         let selected_text = if config_data.selected_text_enabled {
             tokio::time::sleep(std::time::Duration::from_millis(SELECTED_TEXT_CAPTURE_DELAY_MS)).await;
@@ -380,11 +380,11 @@ impl PipelineHandle {
             None
         };
         tracing::info!("Selected text result: len={}", selected_text.as_deref().map(|s| s.len()).unwrap_or(0));
-        *self.preloaded_selected_text.lock().expect("preloaded_selected_text mutex poisoned") = selected_text;
+        *self.preloaded_selected_text.lock().unwrap_or_else(|e| e.into_inner()) = selected_text;
 
         // Stop audio capture (this drops the channel, signaling STT task to stop)
         {
-            let mut handle = self.audio_handle.lock().expect("audio_handle mutex poisoned");
+            let mut handle = self.audio_handle.lock().unwrap_or_else(|e| e.into_inner());
             if let Some(ref mut h) = *handle {
                 h.stop();
             }
@@ -392,16 +392,16 @@ impl PipelineHandle {
         }
 
         // P2-1: Pre-build LLM resources while waiting for STT
-        let preloaded_config = self.preloaded_config.lock().expect("preloaded_config mutex poisoned").take();
+        let preloaded_config = self.preloaded_config.lock().unwrap_or_else(|e| e.into_inner()).take();
         let config = match preloaded_config {
             Some(c) => c,
             None => self.load_config().await,
         };
-        let app_ctx = self.preloaded_app_ctx.lock().expect("preloaded_app_ctx mutex poisoned").take()
+        let app_ctx = self.preloaded_app_ctx.lock().unwrap_or_else(|e| e.into_inner()).take()
             .unwrap_or_else(|| app_detector::detect_current_app());
-        let dictionary_words = self.preloaded_dictionary.lock().expect("preloaded_dictionary mutex poisoned").take()
+        let dictionary_words = self.preloaded_dictionary.lock().unwrap_or_else(|e| e.into_inner()).take()
             .unwrap_or_default();
-        let selected_text = self.preloaded_selected_text.lock().expect("preloaded_selected_text mutex poisoned").take();
+        let selected_text = self.preloaded_selected_text.lock().unwrap_or_else(|e| e.into_inner()).take();
 
         let is_keyboard = config.output_mode == "keyboard";
         let mut is_keyboard_streaming = is_keyboard;
@@ -409,7 +409,7 @@ impl PipelineHandle {
         // Pre-build LLM provider and Enigo while STT is still processing
         let pre_llm = if config.polish_enabled && (!config.llm_api_key.is_empty() || config.llm_provider == "cloud") {
             let llm_api_key = if config.llm_provider == "cloud" {
-                self.app_handle.state::<SessionTokenStore>().0.lock().expect("session token mutex poisoned").clone()
+                self.app_handle.state::<SessionTokenStore>().0.lock().unwrap_or_else(|e| e.into_inner()).clone()
             } else {
                 config.llm_api_key.clone()
             };
@@ -447,7 +447,7 @@ impl PipelineHandle {
         let stt_elapsed = stop_start.elapsed();
         tracing::info!("[Pipeline Timing] STT finalize: {}ms", stt_elapsed.as_millis());
 
-        let raw_text = self.accumulated_text.lock().expect("accumulated_text mutex poisoned").trim().to_string();
+        let raw_text = self.accumulated_text.lock().unwrap_or_else(|e| e.into_inner()).trim().to_string();
 
         if raw_text.is_empty() {
             let _ = self.app_handle.emit("pipeline:error", "No speech detected. Please try again.");
@@ -582,7 +582,7 @@ impl PipelineHandle {
         let total_elapsed = stop_start.elapsed();
 
         // Compute recording duration
-        let duration_ms = self.recording_start.lock().expect("recording_start mutex poisoned").take()
+        let duration_ms = self.recording_start.lock().unwrap_or_else(|e| e.into_inner()).take()
             .map(|start| start.elapsed().as_millis() as i64);
 
         tracing::info!(

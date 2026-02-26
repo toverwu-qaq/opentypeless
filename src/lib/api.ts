@@ -19,7 +19,7 @@ async function request<T>(path: string, options?: RequestInit & { timeoutMs?: nu
     })
 
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}))
+      const body = await res.json().catch(() => ({ error: res.statusText }))
       throw new ApiError(res.status, body.error ?? res.statusText)
     }
 
@@ -80,7 +80,7 @@ export async function proxyStt(audioBlob: Blob, language: string): Promise<{ tex
     })
 
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}))
+      const body = await res.json().catch(() => ({ error: res.statusText }))
       throw new ApiError(res.status, body.error ?? res.statusText)
     }
 

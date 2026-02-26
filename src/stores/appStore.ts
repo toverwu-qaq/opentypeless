@@ -44,6 +44,7 @@ export interface AppConfig {
   auto_start: boolean
   close_to_tray: boolean
   start_minimized: boolean
+  max_recording_seconds: number
 }
 
 export type TestStatus = 'idle' | 'testing' | 'success' | 'error'
@@ -129,6 +130,7 @@ const defaultConfig: AppConfig = {
   auto_start: false,
   close_to_tray: true,
   start_minimized: false,
+  max_recording_seconds: 30,
 }
 
 export const useAppStore = create<AppState>((set) => ({

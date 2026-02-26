@@ -29,7 +29,9 @@ function CapsuleApp() {
         import('@tauri-apps/api/window').then(async ({ getCurrentWindow }) => {
           await getCurrentWindow().show()
           setReady(true)
-        }).catch(() => {})
+        }).catch((e: unknown) => {
+          console.error('Failed to show window:', e)
+        })
       })
     })
   }, [])

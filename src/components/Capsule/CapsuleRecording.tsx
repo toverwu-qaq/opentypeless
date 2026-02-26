@@ -1,14 +1,11 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { X } from 'lucide-react'
-import { useAppStore } from '../../stores/appStore'
 import { useRecording } from '../../hooks/useRecording'
 import { Waveform } from './Waveform'
 import { DurationTimer } from './DurationTimer'
 
 export function CapsuleRecording() {
   const { stopRecording } = useRecording()
-  const resetRecording = useAppStore((s) => s.resetRecording)
-  const setPipelineState = useAppStore((s) => s.setPipelineState)
   const reduced = useReducedMotion()
 
   const handleCancel = async (e: React.MouseEvent) => {
@@ -17,9 +14,6 @@ export function CapsuleRecording() {
       await stopRecording()
     } catch (err) {
       console.error('Failed to stop recording:', err)
-    } finally {
-      resetRecording()
-      setPipelineState('idle')
     }
   }
 
