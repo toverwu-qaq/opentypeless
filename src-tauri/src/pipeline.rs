@@ -525,7 +525,7 @@ impl PipelineHandle {
             };
             let provider = llm::create_provider(&config.llm_provider, Some(self.shared_client.clone()));
             let enigo_result = if is_keyboard {
-                Some(Enigo::new(&EnigoSettings::default()))
+                Some(Enigo::new(&EnigoSettings::default()).map(SendSyncEnigo))
             } else {
                 None
             };
@@ -578,7 +578,7 @@ impl PipelineHandle {
             let on_chunk: llm::ChunkCallback = if is_keyboard {
                 match enigo_result.expect("enigo_result should be Some when is_keyboard is true") {
                     Ok(enigo_instance) => {
-                        let enigo = Arc::new(Mutex::new(SendSyncEnigo(enigo_instance)));
+                        let enigo = Arc::new(Mutex::new(enigo_instance));
                         let app_handle = self.app_handle.clone();
                         let state = self.state.clone();
                         let transitioned = Arc::new(AtomicBool::new(false));
