@@ -1,0 +1,141 @@
+import { useEffect, useState } from 'react'
+import { useTauriEvents } from './hooks/useTauriEvents'
+import { useTheme } from './hooks/useTheme'
+import { useAppStore } from './stores/appStore'
+import { useAuthStore } from './stores/authStore'
+import { useRoute } from './lib/router'
+import { loadOnboardingCompleted, getConfig, getHistory, getDictionary } from './lib/tauri'
+import { initDeepLinkListener } from './lib/deep-link'
+import { Capsule } from './components/Capsule'
+import { Settings } from './components/Settings'
+import { History } from './components/History'
+import { Onboarding } from './components/Onboarding'
+import { MainLayout } from './components/MainLayout'
+import { HomePage } from './components/HomePage'
+import { UpgradePage } from './components/UpgradePage'
+import { AccountPage } from './components/AccountPage'
+import { ToastContainer } from './components/Toast'
+
+function CapsuleApp() {
+  useTauriEvents()
+  useTheme()
+
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    // Let React paint first, then show the window
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        import('@tauri-apps/api/window').then(async ({ getCurrentWindow }) => {
+          await getCurrentWindow().show()
+          setReady(true)
+        }).catch(() => {})
+      })
+    })
+  }, [])
+
+  // Always render Capsule so it paints before window shows
+  return <div style={{ opacity: ready ? 1 : 0 }}><Capsule /></div>
+}
+
+function MainApp() {
+  useTauriEvents()
+  useTheme()
+
+  const onboardingCompleted = useAppStore((s) => s.onboardingCompleted)
+  const setOnboardingCompleted = useAppStore((s) => s.setOnboardingCompleted)
+  const setConfig = useAppStore((s) => s.setConfig)
+  const setSavedConfig = useAppStore((s) => s.setSavedConfig)
+  const setHistory = useAppStore((s) => s.setHistory)
+  const setDictionary = useAppStore((s) => s.setDictionary)
+  const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const { route } = useRoute()
+
+  useEffect(() => {
+    loadOnboardingCompleted().then(async (done) => {
+      setOnboardingCompleted(done)
+      if (done) {
+        try {
+          const [config, history, dictionary] = await Promise.all([
+            getConfig(),
+            getHistory(200, 0),
+            getDictionary(),
+          ])
+          setConfig(config)
+          setSavedConfig(config)
+          setHistory(history)
+          setDictionary(dictionary)
+        } catch (e) {
+          console.error('Failed to load initial data:', e)
+          setLoadError(true)
+        }
+      }
+      setLoaded(true)
+    })
+
+    // Initialize auth session (non-blocking)
+    useAuthStore.getState().initialize()
+
+    // Initialize deep-link listener
+    initDeepLinkListener()
+  }, [setOnboardingCompleted, setConfig, setSavedConfig, setHistory, setDictionary])
+
+  const user = useAuthStore((s) => s.user)
+
+  // Periodically refresh subscription status + refresh on window focus
+  useEffect(() => {
+    if (!loaded || !user) return
+
+    const interval = setInterval(() => {
+      useAuthStore.getState().refreshSubscription()
+    }, 5 * 60 * 1000)
+
+    const onFocus = () => {
+      useAuthStore.getState().refreshSubscription()
+    }
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [loaded, user])
+
+  if (!loaded) return (
+    <div className="flex items-center justify-center h-screen">
+      <span className="text-text-tertiary text-[13px]">Loading...</span>
+    </div>
+  )
+  if (loadError) return (
+    <div className="flex flex-col items-center justify-center h-screen gap-3">
+      <span className="text-error text-[13px]">Failed to load application data.</span>
+      <button
+        onClick={() => window.location.reload()}
+        className="px-4 py-2 bg-accent text-white rounded-[10px] text-[13px] border-none cursor-pointer hover:bg-accent-hover transition-colors"
+      >
+        Retry
+      </button>
+    </div>
+  )
+  if (!onboardingCompleted) return <Onboarding />
+
+  return (
+    <MainLayout>
+      {route === 'home' && <HomePage />}
+      {route === 'settings' && <Settings />}
+      {route === 'history' && <History />}
+      {route === 'upgrade' && <UpgradePage />}
+      {route === 'account' && <AccountPage />}
+      <ToastContainer />
+    </MainLayout>
+  )
+}
+
+function App() {
+  // Capsule window loads with #capsule hash — detect synchronously, no race condition
+  if (window.location.hash === '#capsule') return <CapsuleApp />
+  return <MainApp />
+}
+
+export default App
