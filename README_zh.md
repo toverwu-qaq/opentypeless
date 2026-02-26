@@ -58,7 +58,19 @@
 
 ## 功能特性
 
-🎙️ 全局热键（按住录音或切换模式） · 💊 浮动胶囊组件 · 🗣️ 6+ 语音识别服务商（Deepgram、AssemblyAI、Whisper、Groq、GLM-ASR、SiliconFlow） · 🤖 多 LLM 润色（OpenAI、DeepSeek、Claude、Gemini、Ollama…） · ⚡ 实时流式输出 · ⌨️ 键盘模拟或剪贴板输出 · 📝 选中文本上下文 · 🌐 翻译模式 · 📖 自定义词典 · 🔍 应用检测 · 📜 本地历史记录与搜索 · 🌗 深色 / 浅色 / 跟随系统主题 · 🚀 开机自启
+- 全局热键录音，支持按住和切换两种模式
+- 浮动胶囊悬浮窗，随时可见录音状态
+- 接入 6+ 语音识别服务商：Deepgram、AssemblyAI、Whisper、Groq、GLM-ASR、SiliconFlow
+- 多种大模型润色文本：OpenAI、DeepSeek、Claude、Gemini、Ollama 等
+- 流式输出，边生成边打字
+- 支持键盘模拟和剪贴板两种输出方式
+- 选中文本后录音，可作为上下文传给大模型
+- 翻译模式：说中文，输出英文（或其他 20+ 语言）
+- 自定义词典，提升专业术语识别率
+- 自动识别当前应用，适配不同场景
+- 本地历史记录，支持全文搜索
+- 深色 / 浅色 / 跟随系统主题
+- 开机自启
 
 > [!TIP]
 > **推荐配置（开箱即用最佳体验）**
@@ -113,7 +125,7 @@ OpenTypeless 还提供可选的 Pro 订阅，提供托管的 STT 和 LLM 配额�
 |---|---|---|
 | STT | 自己的 API 密钥（Deepgram、AssemblyAI 等） | 托管配额（10小时/月） |
 | LLM | 自己的 API 密钥（OpenAI、DeepSeek 等） | 托管配额（约500万 tokens/月） |
-| 云依赖 | 无 — 所有请求直接发送到你的服务商 | 需要连接 opentypeless.com |
+| 云依赖 | 无 — 所有请求直接发送到你的服务商 | 需要连接 www.opentypeless.com |
 | 费用 | 直接向服务商付费 | $4.99/月订阅 |
 
 所有核心功能 — 录音、转录、AI 润色、键盘/剪贴板输出、词典、历史记录 — 在 BYOK 模式下完全不依赖 OpenTypeless 服务器。
@@ -124,14 +136,14 @@ OpenTypeless 还提供可选的 Pro 订阅，提供托管的 STT 和 LLM 配额�
 
 1. 在设置中选择任意非 Cloud 的 STT 和 LLM 服务商
 2. 输入你自己的 API 密钥
-3. 完成 — 无需账户或连接 opentypeless.com
+3. 完成 — 无需账户或连接 www.opentypeless.com
 
 如果你想将可选的云功能指向自己的后端，在构建前设置以下环境变量：
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://opentypeless.com` | 前端云 API 基础 URL |
-| `API_BASE_URL` | `https://opentypeless.com` | Rust 后端云 API 基础 URL |
+| `VITE_API_BASE_URL` | `https://www.www.opentypeless.com` | 前端云 API 基础 URL |
+| `API_BASE_URL` | `https://www.www.opentypeless.com` | Rust 后端云 API 基础 URL |
 
 ```bash
 # 示例：使用自定义后端构建

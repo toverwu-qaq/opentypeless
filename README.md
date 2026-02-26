@@ -58,7 +58,19 @@
 
 ## Features
 
-🎙️ Global hotkey (hold-to-record or toggle) · 💊 Floating capsule widget · 🗣️ 6+ STT providers (Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow) · 🤖 Multi-LLM polish (OpenAI, DeepSeek, Claude, Gemini, Ollama…) · ⚡ Real-time streaming output · ⌨️ Keyboard or clipboard output · 📝 Selected text context · 🌐 Translation mode · 📖 Custom dictionary · 🔍 Per-app detection · 📜 Local history with search · 🌗 Dark / light / system theme · 🚀 Auto-start on login
+- Global hotkey recording — hold-to-record or toggle mode
+- Floating capsule widget that stays on top
+- 6+ STT providers: Deepgram, AssemblyAI, Whisper, Groq, GLM-ASR, SiliconFlow
+- Text polishing via multiple LLMs: OpenAI, DeepSeek, Claude, Gemini, Ollama, and more
+- Streaming output — text appears as the LLM generates it
+- Keyboard simulation or clipboard output
+- Highlight text before recording to give the LLM context
+- Translation mode: speak in one language, output in another (20+ languages)
+- Custom dictionary for domain-specific terms
+- Per-app detection to adapt formatting
+- Local history with full-text search
+- Dark / light / system theme
+- Auto-start on login
 
 > [!TIP]
 > **Recommended Configuration for Best Experience**
@@ -113,7 +125,7 @@ OpenTypeless also offers an optional Pro subscription that provides managed STT 
 |---|---|---|
 | STT | Your own API key (Deepgram, AssemblyAI, etc.) | Managed quota (10h/month) |
 | LLM | Your own API key (OpenAI, DeepSeek, etc.) | Managed quota (~5M tokens/month) |
-| Cloud dependency | None — all requests go directly to your provider | Requires connection to opentypeless.com |
+| Cloud dependency | None — all requests go directly to your provider | Requires connection to www.opentypeless.com |
 | Cost | Pay your provider directly | $4.99/month subscription |
 
 All core features — recording, transcription, AI polish, keyboard/clipboard output, dictionary, history — work entirely offline from OpenTypeless servers in BYOK mode.
@@ -124,14 +136,14 @@ To run OpenTypeless without any cloud dependency:
 
 1. Choose any non-Cloud STT and LLM provider in Settings
 2. Enter your own API keys
-3. That's it — no account or internet connection to opentypeless.com is needed
+3. That's it — no account or internet connection to www.opentypeless.com is needed
 
 If you want to point the optional cloud features at your own backend, set these environment variables before building:
 
 | Variable | Default | Description |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://opentypeless.com` | Frontend cloud API base URL |
-| `API_BASE_URL` | `https://opentypeless.com` | Rust backend cloud API base URL |
+| `VITE_API_BASE_URL` | `https://www.opentypeless.com` | Frontend cloud API base URL |
+| `API_BASE_URL` | `https://www.opentypeless.com` | Rust backend cloud API base URL |
 
 ```bash
 # Example: build with a custom backend

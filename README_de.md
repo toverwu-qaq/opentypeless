@@ -113,7 +113,7 @@ OpenTypeless bietet auch ein optionales Pro-Abonnement an, das verwaltetes STT- 
 |---|---|---|
 | STT | Eigener API-Schlüssel (Deepgram, AssemblyAI usw.) | Verwaltetes Kontingent (10 Std./Monat) |
 | LLM | Eigener API-Schlüssel (OpenAI, DeepSeek usw.) | Verwaltetes Kontingent (~5M Token/Monat) |
-| Cloud-Abhängigkeit | Keine — alle Anfragen gehen direkt an Ihren Anbieter | Erfordert Verbindung zu opentypeless.com |
+| Cloud-Abhängigkeit | Keine — alle Anfragen gehen direkt an Ihren Anbieter | Erfordert Verbindung zu www.opentypeless.com |
 | Kosten | Direkte Bezahlung an Ihren Anbieter | 4,99 $/Monat Abonnement |
 
 Alle Kernfunktionen — Aufnahme, Transkription, KI-Verfeinerung, Tastatur-/Zwischenablage-Ausgabe, Wörterbuch, Verlauf — funktionieren im BYOK-Modus vollständig ohne OpenTypeless-Server.
@@ -130,8 +130,8 @@ Wenn Sie die optionalen Cloud-Funktionen auf Ihr eigenes Backend umleiten möcht
 
 | Variable | Standard | Beschreibung |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://opentypeless.com` | Frontend-Cloud-API-Basis-URL |
-| `API_BASE_URL` | `https://opentypeless.com` | Rust-Backend-Cloud-API-Basis-URL |
+| `VITE_API_BASE_URL` | `https://www.opentypeless.com` | Frontend-Cloud-API-Basis-URL |
+| `API_BASE_URL` | `https://www.opentypeless.com` | Rust-Backend-Cloud-API-Basis-URL |
 
 ```bash
 # Beispiel: Kompilieren mit eigenem Backend

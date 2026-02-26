@@ -113,7 +113,7 @@ OpenTypeless propose également un abonnement Pro optionnel qui fournit un quota
 |---|---|---|
 | STT | Votre propre clé API (Deepgram, AssemblyAI, etc.) | Quota géré (10h/mois) |
 | LLM | Votre propre clé API (OpenAI, DeepSeek, etc.) | Quota géré (~5M tokens/mois) |
-| Dépendance cloud | Aucune — toutes les requêtes vont directement à votre fournisseur | Nécessite une connexion à opentypeless.com |
+| Dépendance cloud | Aucune — toutes les requêtes vont directement à votre fournisseur | Nécessite une connexion à www.opentypeless.com |
 | Coût | Payez votre fournisseur directement | Abonnement 4,99 $/mois |
 
 Toutes les fonctionnalités principales — enregistrement, transcription, polissage IA, sortie clavier/presse-papiers, dictionnaire, historique — fonctionnent entièrement sans connexion aux serveurs OpenTypeless en mode BYOK.
@@ -130,8 +130,8 @@ Si vous souhaitez rediriger les fonctionnalités cloud optionnelles vers votre p
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://opentypeless.com` | URL de base de l'API cloud pour le frontend |
-| `API_BASE_URL` | `https://opentypeless.com` | URL de base de l'API cloud pour le backend Rust |
+| `VITE_API_BASE_URL` | `https://www.opentypeless.com` | URL de base de l'API cloud pour le frontend |
+| `API_BASE_URL` | `https://www.opentypeless.com` | URL de base de l'API cloud pour le backend Rust |
 
 ```bash
 # Exemple : compiler avec un backend personnalisé

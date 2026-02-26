@@ -113,7 +113,7 @@ OpenTypeless는 자체 API 키 없이도 관리형 STT 및 LLM 할당량을 제�
 |---|---|---|
 | STT | 자체 API 키 (Deepgram, AssemblyAI 등) | 관리형 할당량 (10시간/월) |
 | LLM | 자체 API 키 (OpenAI, DeepSeek 등) | 관리형 할당량 (~50만 토큰/월) |
-| 클라우드 의존성 | 없음 — 모든 요청이 제공자에게 직접 전송 | opentypeless.com 연결 필요 |
+| 클라우드 의존성 | 없음 — 모든 요청이 제공자에게 직접 전송 | www.opentypeless.com 연결 필요 |
 | 비용 | 제공자에게 직접 지불 | $4.99/월 구독 |
 
 모든 핵심 기능 — 녹음, 전사, AI 다듬기, 키보드/클립보드 출력, 사전, 기록 — 은 BYOK 모드에서 OpenTypeless 서버 없이 완전히 오프라인으로 작동합니다.
@@ -124,14 +124,14 @@ OpenTypeless는 자체 API 키 없이도 관리형 STT 및 LLM 할당량을 제�
 
 1. 설정에서 Cloud가 아닌 STT 및 LLM 제공자를 선택
 2. 자체 API 키를 입력
-3. 끝 — opentypeless.com에 대한 계정이나 인터넷 연결이 필요하지 않습니다
+3. 끝 — www.opentypeless.com에 대한 계정이나 인터넷 연결이 필요하지 않습니다
 
 선택적 클라우드 기능을 자체 백엔드로 연결하려면 빌드 전에 다음 환경 변수를 설정하세요:
 
 | 변수 | 기본값 | 설명 |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://opentypeless.com` | 프론트엔드 클라우드 API 기본 URL |
-| `API_BASE_URL` | `https://opentypeless.com` | Rust 백엔드 클라우드 API 기본 URL |
+| `VITE_API_BASE_URL` | `https://www.opentypeless.com` | 프론트엔드 클라우드 API 기본 URL |
+| `API_BASE_URL` | `https://www.opentypeless.com` | Rust 백엔드 클라우드 API 기본 URL |
 
 ```bash
 # 예시: 커스텀 백엔드로 빌드

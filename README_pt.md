@@ -113,7 +113,7 @@ O OpenTypeless também oferece uma assinatura Pro opcional que fornece cota gere
 |---|---|---|
 | STT | Sua própria chave de API (Deepgram, AssemblyAI, etc.) | Cota gerenciada (10h/mês) |
 | LLM | Sua própria chave de API (OpenAI, DeepSeek, etc.) | Cota gerenciada (~5M tokens/mês) |
-| Dependência de nuvem | Nenhuma — todas as requisições vão diretamente ao seu provedor | Requer conexão com opentypeless.com |
+| Dependência de nuvem | Nenhuma — todas as requisições vão diretamente ao seu provedor | Requer conexão com www.opentypeless.com |
 | Custo | Pague diretamente ao seu provedor | Assinatura de $4,99/mês |
 
 Todas as funcionalidades principais — gravação, transcrição, polimento IA, saída por teclado/área de transferência, dicionário, histórico — funcionam totalmente independentes dos servidores do OpenTypeless no modo BYOK.
@@ -124,14 +124,14 @@ Para executar o OpenTypeless sem nenhuma dependência de nuvem:
 
 1. Escolha qualquer provedor STT e LLM que não seja Cloud nas Configurações
 2. Insira suas próprias chaves de API
-3. Pronto — nenhuma conta ou conexão com opentypeless.com é necessária
+3. Pronto — nenhuma conta ou conexão com www.opentypeless.com é necessária
 
 Se você quiser apontar os recursos opcionais de nuvem para seu próprio backend, defina estas variáveis de ambiente antes de compilar:
 
 | Variável | Padrão | Descrição |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://opentypeless.com` | URL base da API cloud do frontend |
-| `API_BASE_URL` | `https://opentypeless.com` | URL base da API cloud do backend Rust |
+| `VITE_API_BASE_URL` | `https://www.opentypeless.com` | URL base da API cloud do frontend |
+| `API_BASE_URL` | `https://www.opentypeless.com` | URL base da API cloud do backend Rust |
 
 ```bash
 # Exemplo: compilar com um backend personalizado

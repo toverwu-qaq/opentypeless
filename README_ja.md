@@ -113,7 +113,7 @@ OpenTypelessは、自分のAPIキーが不要なマネージドSTTおよびLLM�
 |---|---|---|
 | STT | 自分のAPIキー（Deepgram、AssemblyAIなど） | 管理されたクォータ（10時間/月） |
 | LLM | 自分のAPIキー（OpenAI、DeepSeekなど） | 管理されたクォータ（約500万トークン/月） |
-| クラウド依存 | なし — すべてのリクエストはプロバイダーに直接送信 | opentypeless.comへの接続が必要 |
+| クラウド依存 | なし — すべてのリクエストはプロバイダーに直接送信 | www.opentypeless.comへの接続が必要 |
 | コスト | プロバイダーに直接支払い | $4.99/月のサブスクリプション |
 
 すべてのコア機能 — 録音、文字起こし、AI校正、キーボード/クリップボード出力、辞書、履歴 — はBYOKモードでOpenTypelessサーバーから完全にオフラインで動作します。
@@ -124,14 +124,14 @@ OpenTypelessは、自分のAPIキーが不要なマネージドSTTおよびLLM�
 
 1. 設定でCloud以外のSTTおよびLLMプロバイダーを選択
 2. 自分のAPIキーを入力
-3. 以上です — opentypeless.comへのアカウントやインターネット接続は不要です
+3. 以上です — www.opentypeless.comへのアカウントやインターネット接続は不要です
 
 オプションのクラウド機能を自分のバックエンドに向けたい場合は、ビルド前にこれらの環境変数を設定してください：
 
 | 変数 | デフォルト | 説明 |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://opentypeless.com` | フロントエンドクラウドAPIベースURL |
-| `API_BASE_URL` | `https://opentypeless.com` | RustバックエンドクラウドAPIベースURL |
+| `VITE_API_BASE_URL` | `https://www.opentypeless.com` | フロントエンドクラウドAPIベースURL |
+| `API_BASE_URL` | `https://www.opentypeless.com` | RustバックエンドクラウドAPIベースURL |
 
 ```bash
 # 例：カスタムバックエンドでビルド
