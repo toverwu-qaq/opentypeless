@@ -133,11 +133,11 @@ function AuthForm() {
       setLocalError(null)
       const state = generateOAuthState()
       const callbackURL = `${API_BASE_URL}/auth/callback?from=desktop&state=${state}`
-      // Open Better Auth's GET endpoint directly in the system browser so that
-      // the state cookie and the OAuth callback share the same browser context.
-      // Previously fetch() was used here, which stored the cookie in Tauri's
-      // process-level jar — unreachable by the system browser on callback.
-      const url = `${API_BASE_URL}/api/auth/sign-in/social?provider=${provider}&callbackURL=${encodeURIComponent(callbackURL)}`
+      // Open the desktop-oauth bridge route in the system browser. The server
+      // internally POSTs to Better Auth, then 302-redirects the browser to the
+      // OAuth provider while forwarding the state cookie — keeping cookie and
+      // callback in the same browser context.
+      const url = `${API_BASE_URL}/api/auth/desktop-oauth?provider=${provider}&callbackURL=${encodeURIComponent(callbackURL)}`
       await openUrl(url)
     } catch {
       setOauthPending(null)
