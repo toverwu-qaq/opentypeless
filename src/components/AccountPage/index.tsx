@@ -133,19 +133,12 @@ function AuthForm() {
       setLocalError(null)
       const state = generateOAuthState()
       const callbackURL = `${API_BASE_URL}/auth/callback?from=desktop&state=${state}`
-      const res = await fetch(`${API_BASE_URL}/api/auth/sign-in/social`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, callbackURL }),
-        redirect: 'manual',
-      })
-      const url = res.status === 200 ? (await res.json()).url : null
-      if (url) {
-        await openUrl(url)
-      } else {
-        setOauthPending(null)
-        setLocalError(`Failed to start ${provider} sign in`)
-      }
+      // Open Better Auth's GET endpoint directly in the system browser so that
+      // the state cookie and the OAuth callback share the same browser context.
+      // Previously fetch() was used here, which stored the cookie in Tauri's
+      // process-level jar — unreachable by the system browser on callback.
+      const url = `${API_BASE_URL}/api/auth/sign-in/social?provider=${provider}&callbackURL=${encodeURIComponent(callbackURL)}`
+      await openUrl(url)
     } catch {
       setOauthPending(null)
       setLocalError(`Failed to start ${provider} sign in`)
