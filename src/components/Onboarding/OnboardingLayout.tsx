@@ -72,7 +72,9 @@ export function OnboardingLayout({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-8">{children}</div>
+      <div className="flex-1 overflow-y-auto px-8">
+        <div className="max-w-[340px] mx-auto pb-6">{children}</div>
+      </div>
 
       {/* Navigation — jelly buttons */}
       <div className="flex items-center justify-between px-8 py-4">

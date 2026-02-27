@@ -635,15 +635,6 @@ impl PipelineHandle {
                 selected_text,
             };
 
-            // Backup clipboard before streaming overwrites it
-            let clipboard_backup = if is_keyboard_streaming {
-                arboard::Clipboard::new()
-                    .ok()
-                    .and_then(|mut cb| cb.get_text().ok())
-            } else {
-                None
-            };
-
             match provider.polish(&llm_config, &req, Some(&on_chunk)).await {
                 Ok(response) => {
                     final_text = response.polished_text;
@@ -690,15 +681,6 @@ impl PipelineHandle {
                                 .app_handle
                                 .emit("pipeline:error", format!("Output failed: {e}"));
                         }
-                    }
-                }
-            }
-
-            // Restore clipboard content after streaming output is done
-            if is_keyboard_streaming {
-                if let Some(ref backup) = clipboard_backup {
-                    if let Ok(mut cb) = arboard::Clipboard::new() {
-                        let _ = cb.set_text(backup);
                     }
                 }
             }

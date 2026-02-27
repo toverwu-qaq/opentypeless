@@ -7,6 +7,11 @@ export const APP_LICENSE_URL = 'https://github.com/tover0314-w/opentypeless/blob
 // All core features (BYOK mode) work without any cloud connection.
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://www.opentypeless.com'
 
+export const FREE_PLAN = {
+  sttMinutes: 15,
+  llmTokens: 100_000,
+} as const
+
 export const PRO_PLAN = {
   price: '$4.99',
   period: 'month',
@@ -26,7 +31,7 @@ export const STT_PROVIDERS = [
   { value: 'openai-whisper', label: 'OpenAI Whisper' },
   { value: 'groq-whisper', label: 'Groq Whisper' },
   { value: 'siliconflow', label: 'SiliconFlow (硅基流动)' },
-  { value: 'cloud', label: 'OpenTypeless Cloud (Pro)' },
+  { value: 'cloud', label: 'OpenTypeless Cloud' },
 ] as const
 
 export const LLM_PROVIDERS = [
@@ -41,7 +46,7 @@ export const LLM_PROVIDERS = [
   { value: 'claude', label: 'Claude' },
   { value: 'ollama', label: 'Ollama (Local)' },
   { value: 'openrouter', label: 'OpenRouter' },
-  { value: 'cloud', label: 'OpenTypeless Cloud (Pro)' },
+  { value: 'cloud', label: 'OpenTypeless Cloud' },
 ] as const
 
 export const LLM_DEFAULT_CONFIG: Record<string, { baseUrl: string; model: string }> = {

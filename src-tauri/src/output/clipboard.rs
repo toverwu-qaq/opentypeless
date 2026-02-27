@@ -6,8 +6,6 @@ use super::{OutputMode, TextOutput};
 
 /// Delay after writing to clipboard before simulating paste.
 const CLIPBOARD_SETTLE_MS: u64 = 20;
-/// Delay after paste before restoring the original clipboard content.
-const PASTE_RESTORE_DELAY_MS: u64 = 50;
 
 pub struct ClipboardOutput;
 
@@ -30,8 +28,6 @@ impl TextOutput for ClipboardOutput {
         tokio::task::spawn_blocking(move || {
             let mut clipboard = arboard::Clipboard::new()
                 .map_err(|e| anyhow::anyhow!("Failed to access clipboard: {}", e))?;
-
-            let backup = clipboard.get_text().ok();
 
             clipboard
                 .set_text(&text)
@@ -56,12 +52,6 @@ impl TextOutput for ClipboardOutput {
             enigo
                 .key(modifier, Direction::Release)
                 .map_err(|e| anyhow::anyhow!("Key release error: {:?}", e))?;
-
-            std::thread::sleep(std::time::Duration::from_millis(PASTE_RESTORE_DELAY_MS));
-
-            if let Some(backup_text) = backup {
-                let _ = clipboard.set_text(&backup_text);
-            }
 
             Ok(())
         })

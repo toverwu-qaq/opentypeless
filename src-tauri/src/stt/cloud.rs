@@ -5,7 +5,7 @@ use super::whisper_compat::WhisperCompatProvider;
 use super::{SttConfig, SttProvider, TranscriptEvent};
 
 /// Cloud STT provider that proxies audio through the talkmore-web API.
-/// Requires a Pro subscription — auth token is passed via the api_key field.
+/// Auth token is passed via the api_key field. Quota is enforced server-side.
 pub struct CloudSttProvider {
     stt_config: Option<SttConfig>,
     audio_buffer: Vec<u8>,

@@ -6,7 +6,7 @@ use reqwest::Client;
 use super::{prompt, ChunkCallback, LlmConfig, LlmProvider, PolishRequest, PolishResponse};
 
 /// Cloud LLM provider that proxies requests through the talkmore-web API.
-/// Requires a Pro subscription — auth token is passed via the api_key field in LlmConfig.
+/// Auth token is passed via the api_key field in LlmConfig. Quota is enforced server-side.
 pub struct CloudLlmProvider {
     client: Client,
 }

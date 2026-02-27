@@ -20,6 +20,7 @@ export function UpgradePage() {
     setError(null)
     try {
       const { url } = await createCheckout('desktop')
+      useAuthStore.setState({ checkoutPending: true })
       await openUrl(url)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create checkout')

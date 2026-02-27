@@ -31,6 +31,9 @@ interface AuthState {
   emailVerificationPending: boolean
   pendingEmail: string | null
 
+  // Checkout flow
+  checkoutPending: boolean
+
   // Actions
   initialize: () => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
@@ -53,6 +56,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
   emailVerificationPending: false,
   pendingEmail: null,
+  checkoutPending: false,
 
   initialize: async () => {
     try {
@@ -189,6 +193,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error: null,
         emailVerificationPending: false,
         pendingEmail: null,
+        checkoutPending: false,
       })
       sttWarningShown = false
       llmWarningShown = false
@@ -206,23 +211,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         llmTokensUsed: status.llmTokensUsed,
         llmTokensLimit: status.llmTokensLimit,
       })
-      if (status.plan === 'pro') {
-        if (
-          status.sttSecondsLimit > 0 &&
-          status.sttSecondsUsed / status.sttSecondsLimit >= 0.9 &&
-          !sttWarningShown
-        ) {
-          toast('STT quota is above 90%. Consider switching to BYOK mode.', 'error')
-          sttWarningShown = true
-        }
-        if (
-          status.llmTokensLimit > 0 &&
-          status.llmTokensUsed / status.llmTokensLimit >= 0.9 &&
-          !llmWarningShown
-        ) {
-          toast('LLM quota is above 90%. Consider switching to BYOK mode.', 'error')
-          llmWarningShown = true
-        }
+      // Clear checkout pending flag after first post-checkout refresh
+      if (get().checkoutPending) {
+        set({ checkoutPending: false })
+      }
+      if (
+        status.sttSecondsLimit > 0 &&
+        status.sttSecondsUsed / status.sttSecondsLimit >= 0.9 &&
+        !sttWarningShown
+      ) {
+        toast('STT quota is above 90%. Consider switching to BYOK mode.', 'error')
+        sttWarningShown = true
+      }
+      if (
+        status.llmTokensLimit > 0 &&
+        status.llmTokensUsed / status.llmTokensLimit >= 0.9 &&
+        !llmWarningShown
+      ) {
+        toast('LLM quota is above 90%. Consider switching to BYOK mode.', 'error')
+        llmWarningShown = true
       }
     } catch (e) {
       console.warn('Failed to refresh subscription status:', e instanceof Error ? e.message : e)

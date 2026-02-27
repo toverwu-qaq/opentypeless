@@ -20,9 +20,15 @@ function CapsuleApp() {
   useTauriEvents()
   useTheme()
 
+  const setConfig = useAppStore((s) => s.setConfig)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
+    // Load config so DurationTimer gets the correct max_recording_seconds
+    getConfig().then(setConfig).catch((e) => {
+      console.error('Failed to load config in capsule:', e)
+    })
+
     // Let React paint first, then show the window
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -36,7 +42,7 @@ function CapsuleApp() {
           })
       })
     })
-  }, [])
+  }, [setConfig])
 
   // Always render Capsule so it paints before window shows
   return (
@@ -98,7 +104,9 @@ function MainApp() {
     let lastRefresh = 0
     const throttledRefresh = () => {
       const now = Date.now()
-      if (now - lastRefresh < 30_000) return // at most once per 30s
+      const { checkoutPending } = useAuthStore.getState()
+      // Skip throttle if user just came back from checkout
+      if (!checkoutPending && now - lastRefresh < 30_000) return
       lastRefresh = now
       useAuthStore.getState().refreshSubscription()
     }

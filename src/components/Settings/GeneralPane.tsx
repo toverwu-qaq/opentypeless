@@ -248,11 +248,6 @@ export function GeneralPane() {
               label={t('settings.startMinimized')}
             />
           )}
-          <Toggle
-            checked={config.close_to_tray}
-            onChange={(checked) => updateConfig({ close_to_tray: checked })}
-            label={t('settings.closeToTray')}
-          />
         </div>
       </Section>
     </div>
