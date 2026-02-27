@@ -14,7 +14,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/nicepkg/opentypeless"
+    "url": "https://github.com/tover0314-w/opentypeless"
+  },
+  "homepage": "https://www.opentypeless.com",
+  "bugs": {
+    "url": "https://github.com/tover0314-w/opentypeless/issues"
   },
   "author": "OpenTypeless Contributors",
   "license": "MIT",

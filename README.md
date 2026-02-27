@@ -1,5 +1,5 @@
 <p align="center">
-  <strong>English</strong> | <a href="README_zh.md">中文</a> | <a href="README_ja.md">日本語</a> | <a href="README_ko.md">한국어</a> | <a href="README_es.md">Español</a> | <a href="README_fr.md">Français</a> | <a href="README_de.md">Deutsch</a> | <a href="README_pt.md">Português</a>
+  <strong>English</strong> | <a href="README_zh.md">中文</a> | <a href="README_ja.md">日本語</a> | <a href="README_ko.md">한국어</a> | <a href="README_es.md">Español</a> | <a href="README_fr.md">Français</a> | <a href="README_de.md">Deutsch</a> | <a href="README_pt.md">Português</a> | <a href="README_ru.md">Русский</a> | <a href="README_ar.md">العربية</a> | <a href="README_hi.md">हिन्दी</a> | <a href="README_it.md">Italiano</a> | <a href="README_tr.md">Türkçe</a> | <a href="README_vi.md">Tiếng Việt</a> | <a href="README_th.md">ภาษาไทย</a> | <a href="README_id.md">Bahasa Indonesia</a> | <a href="README_pl.md">Polski</a> | <a href="README_nl.md">Nederlands</a>
 </p>
 
 <p align="center">
@@ -10,6 +10,12 @@
 
 <p align="center">
   Open-source AI voice input for desktop. Speak naturally, get polished text in any app.
+</p>
+
+<p align="center">
+  Whether you're writing emails, coding, chatting, or taking notes — just press a hotkey,<br/>
+  speak your mind, and OpenTypeless transcribes and polishes your words with AI,<br/>
+  then types them directly into whatever app you're using.
 </p>
 
 <p align="center">
@@ -28,11 +34,7 @@
 <summary>More screenshots</summary>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/app-main-dark.png" />
-    <source media="(prefers-color-scheme: light)" srcset="docs/images/app-main-light.png" />
-    <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless Main Window" />
-  </picture>
+  <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless Main Window" />
 </p>
 
 | Settings | History |
@@ -82,6 +84,19 @@
 >
 > This combo delivers fast, accurate transcription with high-quality text polishing — and both offer generous free tiers.
 
+## Download
+
+Download the latest version for your platform:
+
+**[Download from Releases](https://github.com/tover0314-w/opentypeless/releases)**
+
+| Platform | File |
+|----------|------|
+| Windows | `.msi` installer |
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Linux | `.AppImage` / `.deb` |
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 20+
@@ -119,6 +134,8 @@ API keys are stored locally via `tauri-plugin-store`. No keys are sent to OpenTy
 
 OpenTypeless also offers an optional Pro subscription that provides managed STT and LLM quota so you don't need your own API keys. This is entirely optional — the app is fully functional with your own keys.
 
+[Learn more about Pro](https://www.opentypeless.com)
+
 ### BYOK (Bring Your Own Key) vs Cloud
 
 | | BYOK Mode | Cloud (Pro) Mode |
@@ -152,6 +169,12 @@ VITE_API_BASE_URL=https://my-server.example.com API_BASE_URL=https://my-server.e
 
 ## Architecture
 
+**Data Flow Pipeline:**
+
+```
+Microphone → Audio Capture → STT Provider → Raw Transcript → LLM Polish → Keyboard/Clipboard Output
+```
+
 ```
 src/                  # React frontend (TypeScript)
 ├── components/       # UI components (Settings, History, Capsule, etc.)
@@ -173,11 +196,25 @@ src-tauri/src/        # Rust backend
 ## Roadmap
 
 - [ ] Plugin system for custom STT/LLM integrations
-- [ ] More languages (French, Japanese, Korean, Spanish…)
+- [ ] Improved multi-language STT accuracy and dialect support
 - [ ] Voice commands (e.g. "delete last sentence")
 - [ ] Customizable hotkey combinations
 - [ ] Improved onboarding experience
 - [ ] Mobile companion app
+
+## FAQ
+
+**Is my audio sent to the cloud?**
+In BYOK mode, audio goes directly to your chosen STT provider (e.g., Groq, Deepgram). Nothing passes through OpenTypeless servers. In Cloud (Pro) mode, audio is sent to our managed proxy for transcription.
+
+**Can I use it offline?**
+With a local STT provider (Whisper via Ollama) and a local LLM (Ollama), the app works entirely offline. No internet connection needed.
+
+**Which languages are supported?**
+STT supports 99+ languages depending on the provider. AI polish and translation support 20+ target languages.
+
+**Is the app free?**
+Yes. The app is fully functional with your own API keys (BYOK). The Cloud Pro subscription ($4.99/month) is optional.
 
 ## Community
 

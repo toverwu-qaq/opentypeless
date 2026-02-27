@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="README.md">English</a> | <a href="README_zh.md">中文</a> | <a href="README_ja.md">日本語</a> | <strong>한국어</strong> | <a href="README_es.md">Español</a> | <a href="README_fr.md">Français</a> | <a href="README_de.md">Deutsch</a> | <a href="README_pt.md">Português</a>
+  <a href="README.md">English</a> | <a href="README_zh.md">中文</a> | <a href="README_ja.md">日本語</a> | <strong>한국어</strong> | <a href="README_es.md">Español</a> | <a href="README_fr.md">Français</a> | <a href="README_de.md">Deutsch</a> | <a href="README_pt.md">Português</a> | <a href="README_ru.md">Русский</a> | <a href="README_ar.md">العربية</a> | <a href="README_hi.md">हिन्दी</a> | <a href="README_it.md">Italiano</a> | <a href="README_tr.md">Türkçe</a> | <a href="README_vi.md">Tiếng Việt</a> | <a href="README_th.md">ภาษาไทย</a> | <a href="README_id.md">Bahasa Indonesia</a> | <a href="README_pl.md">Polski</a> | <a href="README_nl.md">Nederlands</a>
 </p>
 
 <p align="center">
@@ -10,6 +10,12 @@
 
 <p align="center">
   데스크톱을 위한 오픈소스 AI 음성 입력. 자연스럽게 말하면, 모든 앱에서 다듬어진 텍스트를 얻으세요.
+</p>
+
+<p align="center">
+  이메일 작성, 코딩, 채팅, 메모 등 — 단축키를 누르고<br/>
+  생각을 말하면 OpenTypeless가 AI로 음성을 전사하고 텍스트를 다듬어<br/>
+  사용 중인 앱에 직접 입력합니다.
 </p>
 
 <p align="center">
@@ -28,11 +34,7 @@
 <summary>더 많은 스크린샷</summary>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/app-main-dark.png" />
-    <source media="(prefers-color-scheme: light)" srcset="docs/images/app-main-light.png" />
-    <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless 메인 윈도우" />
-  </picture>
+  <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless 메인 윈도우" />
 </p>
 
 | 설정 | 기록 |
@@ -82,6 +84,19 @@
 >
 > 이 조합은 빠르고 정확한 전사와 고품질 텍스트 다듬기를 제공하며, 둘 다 넉넉한 무료 티어를 제공합니다.
 
+## 다운로드
+
+플랫폼에 맞는 최신 버전을 다운로드하세요:
+
+**[Releases에서 다운로드](https://github.com/tover0314-w/opentypeless/releases)**
+
+| 플랫폼 | 파일 |
+|--------|------|
+| Windows | `.msi` 설치 프로그램 |
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Linux | `.AppImage` / `.deb` |
+
 ## 사전 요구사항
 
 - [Node.js](https://nodejs.org/) 20+
@@ -119,6 +134,8 @@ API 키는 `tauri-plugin-store`를 통해 로컬에 저장됩니다. OpenTypeles
 
 OpenTypeless는 자체 API 키 없이도 관리형 STT 및 LLM 할당량을 제공하는 선택적 Pro 구독도 제공합니다. 이는 완전히 선택 사항입니다 — 앱은 자체 키만으로도 완전히 작동합니다.
 
+[Pro에 대해 자세히 알아보기](https://www.opentypeless.com)
+
 ### BYOK (Bring Your Own Key) vs Cloud
 
 | | BYOK 모드 | Cloud (Pro) 모드 |
@@ -152,6 +169,12 @@ VITE_API_BASE_URL=https://my-server.example.com API_BASE_URL=https://my-server.e
 
 ## 아키텍처
 
+**데이터 흐름 파이프라인:**
+
+```
+마이크 → 오디오 캡처 → STT 제공자 → 원시 전사 → LLM 다듬기 → 키보드/클립보드 출력
+```
+
 ```
 src/                  # React 프론트엔드 (TypeScript)
 ├── components/       # UI 컴포넌트 (설정, 기록, 캡슐 등)
@@ -173,11 +196,25 @@ src-tauri/src/        # Rust 백엔드
 ## 로드맵
 
 - [ ] 커스텀 STT/LLM 통합을 위한 플러그인 시스템
-- [ ] 더 많은 언어 지원
+- [ ] 다국어 STT 정확도 및 방언 지원 개선
 - [ ] 음성 명령
 - [ ] 사용자 정의 단축키 조합
 - [ ] 온보딩 경험 개선
 - [ ] 모바일 컴패니언 앱
+
+## 자주 묻는 질문
+
+**내 오디오가 클라우드로 전송되나요?**
+BYOK 모드에서는 오디오가 선택한 STT 제공자(예: Groq, Deepgram)에게 직접 전송됩니다. OpenTypeless 서버를 거치지 않습니다. Cloud(Pro) 모드에서는 오디오가 관리형 프록시로 전송되어 전사됩니다.
+
+**오프라인에서 사용할 수 있나요?**
+로컬 STT 제공자(Ollama를 통한 Whisper)와 로컬 LLM(Ollama)을 사용하면 완전히 오프라인으로 작동합니다. 인터넷 연결이 필요 없습니다.
+
+**어떤 언어가 지원되나요?**
+STT는 제공자에 따라 99개 이상의 언어를 지원합니다. AI 다듬기와 번역은 20개 이상의 대상 언어를 지원합니다.
+
+**앱은 무료인가요?**
+네. 자체 API 키(BYOK)로 모든 기능을 사용할 수 있습니다. Cloud Pro 구독($4.99/월)은 선택 사항입니다.
 
 ## 커뮤니티
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="README.md">English</a> | <strong>中文</strong> | <a href="README_ja.md">日本語</a> | <a href="README_ko.md">한국어</a> | <a href="README_es.md">Español</a> | <a href="README_fr.md">Français</a> | <a href="README_de.md">Deutsch</a> | <a href="README_pt.md">Português</a>
+  <a href="README.md">English</a> | <strong>中文</strong> | <a href="README_ja.md">日本語</a> | <a href="README_ko.md">한국어</a> | <a href="README_es.md">Español</a> | <a href="README_fr.md">Français</a> | <a href="README_de.md">Deutsch</a> | <a href="README_pt.md">Português</a> | <a href="README_ru.md">Русский</a> | <a href="README_ar.md">العربية</a> | <a href="README_hi.md">हिन्दी</a> | <a href="README_it.md">Italiano</a> | <a href="README_tr.md">Türkçe</a> | <a href="README_vi.md">Tiếng Việt</a> | <a href="README_th.md">ภาษาไทย</a> | <a href="README_id.md">Bahasa Indonesia</a> | <a href="README_pl.md">Polski</a> | <a href="README_nl.md">Nederlands</a>
 </p>
 
 <p align="center">
@@ -10,6 +10,12 @@
 
 <p align="center">
   开源桌面端 AI 语音输入工具。自然说话，在任意应用中获得润色后的文本。
+</p>
+
+<p align="center">
+  无论你在写邮件、写代码、聊天还是做笔记 — 只需按下热键，<br/>
+  说出你的想法，OpenTypeless 会用 AI 转录并润色你的语音，<br/>
+  然后直接输入到你正在使用的任何应用中。
 </p>
 
 <p align="center">
@@ -28,11 +34,7 @@
 <summary>更多截图</summary>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/app-main-dark.png" />
-    <source media="(prefers-color-scheme: light)" srcset="docs/images/app-main-light.png" />
-    <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless 主窗口" />
-  </picture>
+  <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless 主窗口" />
 </p>
 
 | 设置 | 历史记录 |
@@ -82,6 +84,19 @@
 >
 > 这套组合转录速度快、准确率高，文本润色质量出色，而且两者都提供慷慨的免费额度。
 
+## 下载安装
+
+下载适用于你平台的最新版本：
+
+**[前往 Releases 下载](https://github.com/tover0314-w/opentypeless/releases)**
+
+| 平台 | 文件 |
+|------|------|
+| Windows | `.msi` 安装包 |
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Linux | `.AppImage` / `.deb` |
+
 ## 前置要求
 
 - [Node.js](https://nodejs.org/) 20+
@@ -119,6 +134,8 @@ API 密钥通过 `tauri-plugin-store` 存储在本地。密钥不会发送到 Op
 
 OpenTypeless 还提供可选的 Pro 订阅，提供托管的 STT 和 LLM 配额，无需自备 API 密钥。这完全是可选的 — 使用自己的密钥即可完整使用所有功能。
 
+[了解更多关于 Pro 的信息](https://www.opentypeless.com)
+
 ### BYOK（自备密钥）vs Cloud
 
 | | BYOK 模式 | Cloud（Pro）模式 |
@@ -142,8 +159,8 @@ OpenTypeless 还提供可选的 Pro 订阅，提供托管的 STT 和 LLM 配额�
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://www.www.opentypeless.com` | 前端云 API 基础 URL |
-| `API_BASE_URL` | `https://www.www.opentypeless.com` | Rust 后端云 API 基础 URL |
+| `VITE_API_BASE_URL` | `https://www.opentypeless.com` | 前端云 API 基础 URL |
+| `API_BASE_URL` | `https://www.opentypeless.com` | Rust 后端云 API 基础 URL |
 
 ```bash
 # 示例：使用自定义后端构建
@@ -151,6 +168,12 @@ VITE_API_BASE_URL=https://my-server.example.com API_BASE_URL=https://my-server.e
 ```
 
 ## 架构
+
+**数据流 Pipeline：**
+
+```
+麦克风 → 音频采集 → STT 服务商 → 原始转录文本 → LLM 润色 → 键盘/剪贴板输出
+```
 
 ```
 src/                  # React 前端（TypeScript）
@@ -173,11 +196,25 @@ src-tauri/src/        # Rust 后端
 ## 路线图
 
 - [ ] 插件系统，支持自定义 STT/LLM 集成
-- [ ] 更多语言支持（法语、日语、韩语、西班牙语…）
+- [ ] 提升多语言 STT 准确率和方言支持
 - [ ] 语音命令（如"删除上一句"）
 - [ ] 可自定义热键组合
 - [ ] 改进新手引导体验
 - [ ] 移动端伴侣应用
+
+## 常见问题
+
+**我的音频会上传到云端吗？**
+在 BYOK 模式下，音频直接发送到你选择的 STT 服务商（如 Groq、Deepgram），不经过 OpenTypeless 服务器。在 Cloud（Pro）模式下，音频会发送到我们的托管代理进行转录。
+
+**可以离线使用吗？**
+使用本地 STT 服务商（通过 Ollama 运行 Whisper）和本地 LLM（Ollama），应用可以完全离线工作，无需网络连接。
+
+**支持哪些语言？**
+STT 根据服务商不同支持 99+ 种语言。AI 润色和翻译支持 20+ 种目标语言。
+
+**应用免费吗？**
+是的。使用自己的 API 密钥（BYOK）即可完整使用所有功能。Cloud Pro 订阅（$4.99/月）是可选的。
 
 ## 社区
 

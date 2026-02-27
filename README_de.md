@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="README.md">English</a> | <a href="README_zh.md">中文</a> | <a href="README_ja.md">日本語</a> | <a href="README_ko.md">한국어</a> | <a href="README_es.md">Español</a> | <a href="README_fr.md">Français</a> | <strong>Deutsch</strong> | <a href="README_pt.md">Português</a>
+  <a href="README.md">English</a> | <a href="README_zh.md">中文</a> | <a href="README_ja.md">日本語</a> | <a href="README_ko.md">한국어</a> | <a href="README_es.md">Español</a> | <a href="README_fr.md">Français</a> | <strong>Deutsch</strong> | <a href="README_pt.md">Português</a> | <a href="README_ru.md">Русский</a> | <a href="README_ar.md">العربية</a> | <a href="README_hi.md">हिन्दी</a> | <a href="README_it.md">Italiano</a> | <a href="README_tr.md">Türkçe</a> | <a href="README_vi.md">Tiếng Việt</a> | <a href="README_th.md">ภาษาไทย</a> | <a href="README_id.md">Bahasa Indonesia</a> | <a href="README_pl.md">Polski</a> | <a href="README_nl.md">Nederlands</a>
 </p>
 
 <p align="center">
@@ -10,6 +10,12 @@
 
 <p align="center">
   Open-Source-KI-Spracheingabe für den Desktop. Sprechen Sie natürlich, erhalten Sie polierten Text in jeder Anwendung.
+</p>
+
+<p align="center">
+  Ob Sie E-Mails schreiben, programmieren, chatten oder Notizen machen — drücken Sie einfach einen Hotkey,<br/>
+  sprechen Sie Ihre Gedanken aus, und OpenTypeless transkribiert und verfeinert Ihre Worte mit KI,<br/>
+  und tippt sie direkt in die Anwendung ein, die Sie gerade verwenden.
 </p>
 
 <p align="center">
@@ -28,11 +34,7 @@
 <summary>Weitere Screenshots</summary>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/app-main-dark.png" />
-    <source media="(prefers-color-scheme: light)" srcset="docs/images/app-main-light.png" />
-    <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless Hauptfenster" />
-  </picture>
+  <img src="docs/images/app-main-light.png" width="720" alt="OpenTypeless Hauptfenster" />
 </p>
 
 | Einstellungen | Verlauf |
@@ -82,6 +84,19 @@
 >
 > Diese Kombination bietet schnelle, präzise Transkription mit hochwertiger Textverfeinerung — und beide bieten großzügige kostenlose Kontingente.
 
+## Herunterladen
+
+Laden Sie die neueste Version für Ihre Plattform herunter:
+
+**[Von Releases herunterladen](https://github.com/tover0314-w/opentypeless/releases)**
+
+| Plattform | Datei |
+|-----------|-------|
+| Windows | `.msi`-Installer |
+| macOS (Apple Silicon) | `.dmg` |
+| macOS (Intel) | `.dmg` |
+| Linux | `.AppImage` / `.deb` |
+
 ## Voraussetzungen
 
 - [Node.js](https://nodejs.org/) 20+
@@ -119,6 +134,8 @@ API-Schlüssel werden lokal über `tauri-plugin-store` gespeichert. Es werden ke
 
 OpenTypeless bietet auch ein optionales Pro-Abonnement an, das verwaltetes STT- und LLM-Kontingent bereitstellt, sodass Sie keine eigenen API-Schlüssel benötigen. Dies ist vollständig optional — die App ist mit Ihren eigenen Schlüsseln voll funktionsfähig.
 
+[Mehr über Pro erfahren](https://www.opentypeless.com)
+
 ### BYOK (Bring Your Own Key) vs Cloud
 
 | | BYOK-Modus | Cloud (Pro) Modus |
@@ -152,6 +169,12 @@ VITE_API_BASE_URL=https://my-server.example.com API_BASE_URL=https://my-server.e
 
 ## Architektur
 
+**Datenfluss-Pipeline:**
+
+```
+Mikrofon → Audioaufnahme → STT-Anbieter → Rohtranskript → LLM-Verfeinerung → Tastatur-/Zwischenablage-Ausgabe
+```
+
 ```
 src/                  # React-Frontend (TypeScript)
 ├── components/       # UI-Komponenten (Einstellungen, Verlauf, Kapsel usw.)
@@ -173,11 +196,25 @@ src-tauri/src/        # Rust-Backend
 ## Roadmap
 
 - [ ] Plugin-System für benutzerdefinierte STT/LLM-Integrationen
-- [ ] Mehr Sprachen
+- [ ] Verbesserte mehrsprachige STT-Genauigkeit und Dialektunterstützung
 - [ ] Sprachbefehle
 - [ ] Anpassbare Hotkey-Kombinationen
 - [ ] Verbesserte Onboarding-Erfahrung
 - [ ] Mobile Begleit-App
+
+## FAQ
+
+**Wird mein Audio in die Cloud gesendet?**
+Im BYOK-Modus wird Audio direkt an Ihren gewählten STT-Anbieter gesendet (z.B. Groq, Deepgram). Nichts passiert die OpenTypeless-Server. Im Cloud (Pro) Modus wird Audio an unseren verwalteten Proxy zur Transkription gesendet.
+
+**Kann ich es offline nutzen?**
+Mit einem lokalen STT-Anbieter (Whisper über Ollama) und einem lokalen LLM (Ollama) funktioniert die App vollständig offline. Keine Internetverbindung erforderlich.
+
+**Welche Sprachen werden unterstützt?**
+STT unterstützt je nach Anbieter über 99 Sprachen. KI-Verfeinerung und Übersetzung unterstützen über 20 Zielsprachen.
+
+**Ist die App kostenlos?**
+Ja. Die App ist mit Ihren eigenen API-Schlüsseln (BYOK) voll funktionsfähig. Das Cloud Pro-Abonnement (4,99 $/Monat) ist optional.
 
 ## Community
 

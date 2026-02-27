@@ -1,8 +1,9 @@
 [package]
 name = "opentypeless"
 version = "0.1.0"
-description = "Open-source AI voice input tool"
+description = "AI-powered speech-to-text and text polishing desktop app"
 authors = ["OpenTypeless Contributors"]
+license = "MIT"
 edition = "2021"
 
 [lib]
