@@ -6,7 +6,8 @@ interface CapsuleSize {
   height: number
 }
 
-function getSizeForState(state: PipelineState, expanded: boolean, hasError: boolean): CapsuleSize {
+function getSizeForState(state: PipelineState, expanded: boolean, hasError: boolean, contextMenuOpen: boolean): CapsuleSize {
+  if (contextMenuOpen) return { width: 220, height: 220 }
   if (hasError) return { width: 200, height: 36 }
   if (expanded) return { width: 220, height: 90 }
   switch (state) {
@@ -28,13 +29,15 @@ export function useCapsuleResize() {
   const pipelineState = useAppStore((s) => s.pipelineState)
   const capsuleExpanded = useAppStore((s) => s.capsuleExpanded)
   const pipelineError = useAppStore((s) => s.pipelineError)
+  const contextMenuOpen = useAppStore((s) => s.contextMenuOpen)
+  const setContextMenuReady = useAppStore((s) => s.setContextMenuReady)
   const initialized = useRef(false)
   const prevWindowSize = useRef<{ width: number; height: number } | null>(null)
 
   const hasError = pipelineError !== null
 
   useEffect(() => {
-    const size = getSizeForState(pipelineState, capsuleExpanded, hasError)
+    const size = getSizeForState(pipelineState, capsuleExpanded, hasError, contextMenuOpen)
     const windowWidth = size.width + 24
     const windowHeight = size.height + 24
 
@@ -43,7 +46,7 @@ export function useCapsuleResize() {
         const win = getCurrentWindow()
 
         if (!initialized.current) {
-          // First mount: center at bottom of screen
+          // First mount: position at bottom-center of screen
           await win.setSize(new LogicalSize(windowWidth, windowHeight)).catch(() => {})
           try {
             const monitor = await currentMonitor()
@@ -62,19 +65,21 @@ export function useCapsuleResize() {
           return
         }
 
-        // Subsequent resizes: adjust position to keep center point stable
+        // Subsequent resizes: left edge + vertical center stay fixed.
+        // Since content is always padded 12px each side, the capsule at x=12
+        // is identical to a centered capsule — so the mic icon never moves.
         const prev = prevWindowSize.current
         if (prev) {
           const pos = await win.outerPosition().catch(() => null)
           if (pos) {
             const monitor = await currentMonitor()
             const scale = monitor?.scaleFactor ?? 1
-            const oldCenterX = pos.x / scale + prev.width / 2
+            const oldLeftX = pos.x / scale
             const oldCenterY = pos.y / scale + prev.height / 2
-            const newX = Math.round(oldCenterX - windowWidth / 2)
+            const newX = Math.round(oldLeftX)
             const newY = Math.round(oldCenterY - windowHeight / 2)
-            await win.setSize(new LogicalSize(windowWidth, windowHeight)).catch(() => {})
             await win.setPosition(new LogicalPosition(newX, newY)).catch(() => {})
+            await win.setSize(new LogicalSize(windowWidth, windowHeight)).catch(() => {})
           } else {
             await win.setSize(new LogicalSize(windowWidth, windowHeight)).catch(() => {})
           }
@@ -83,9 +88,14 @@ export function useCapsuleResize() {
         }
 
         prevWindowSize.current = { width: windowWidth, height: windowHeight }
+
+        // Signal that the window has finished resizing for context menu
+        if (contextMenuOpen) {
+          setContextMenuReady(true)
+        }
       })
       .catch(() => {})
-  }, [pipelineState, capsuleExpanded, hasError])
+  }, [pipelineState, capsuleExpanded, hasError, contextMenuOpen, setContextMenuReady])
 
-  return getSizeForState(pipelineState, capsuleExpanded, hasError)
+  return getSizeForState(pipelineState, capsuleExpanded, hasError, contextMenuOpen)
 }

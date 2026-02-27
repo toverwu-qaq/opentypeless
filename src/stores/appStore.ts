@@ -106,6 +106,8 @@ interface AppState {
   setOnboardingCompleted: (done: boolean) => void
   onboardingStep: number
   setOnboardingStep: (step: number) => void
+  onboardingMode: 'cloud' | 'byok' | null
+  setOnboardingMode: (mode: 'cloud' | 'byok' | null) => void
 
   // Capsule
   capsuleExpanded: boolean
@@ -120,6 +122,12 @@ interface AppState {
   // Pipeline error
   pipelineError: string | null
   setPipelineError: (error: string | null) => void
+
+  // Context menu
+  contextMenuOpen: boolean
+  setContextMenuOpen: (open: boolean) => void
+  contextMenuReady: boolean
+  setContextMenuReady: (ready: boolean) => void
 
   // Reset recording state
   resetRecording: () => void
@@ -184,6 +192,8 @@ export const useAppStore = create<AppState>((set) => ({
   setOnboardingCompleted: (onboardingCompleted) => set({ onboardingCompleted }),
   onboardingStep: 0,
   setOnboardingStep: (onboardingStep) => set({ onboardingStep }),
+  onboardingMode: null,
+  setOnboardingMode: (onboardingMode) => set({ onboardingMode }),
 
   capsuleExpanded: false,
   setCapsuleExpanded: (capsuleExpanded) => set({ capsuleExpanded }),
@@ -195,6 +205,11 @@ export const useAppStore = create<AppState>((set) => ({
 
   pipelineError: null,
   setPipelineError: (pipelineError) => set({ pipelineError }),
+
+  contextMenuOpen: false,
+  setContextMenuOpen: (contextMenuOpen) => set({ contextMenuOpen }),
+  contextMenuReady: false,
+  setContextMenuReady: (contextMenuReady) => set({ contextMenuReady }),
 
   resetRecording: () =>
     set({

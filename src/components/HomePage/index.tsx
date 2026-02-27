@@ -15,7 +15,8 @@ export function HomePage() {
   const { t } = useTranslation()
   const isPro = plan === 'pro'
 
-  const today = new Date().toISOString().split('T')[0]
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const todayCount = history.filter((h) => h.created_at.startsWith(today)).length
 
   return (
@@ -81,15 +82,35 @@ export function HomePage() {
               </div>
             </>
           ) : (
-            <div className="flex items-center justify-between">
-              <span className="text-[13px] text-text-secondary">{t('home.freePlan')}</span>
-              <button
-                onClick={() => navigate('upgrade')}
-                className="text-[12px] text-accent font-medium bg-transparent border-none cursor-pointer hover:underline"
-              >
-                {t('home.upgradeToPro')}
-              </button>
-            </div>
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-[13px] font-medium">{t('home.freePlan')}</h3>
+                <button
+                  onClick={() => navigate('upgrade')}
+                  className="text-[12px] text-accent font-medium bg-transparent border-none cursor-pointer hover:underline"
+                >
+                  {t('home.upgradeToPro')}
+                </button>
+              </div>
+              {sttSecondsLimit > 0 && (
+                <div className="space-y-3 mt-3">
+                  <QuotaBar
+                    label={t('upgrade.stt')}
+                    used={sttSecondsUsed}
+                    limit={sttSecondsLimit}
+                    unit="min"
+                    divisor={60}
+                  />
+                  <QuotaBar
+                    label={t('upgrade.llm')}
+                    used={llmTokensUsed}
+                    limit={llmTokensLimit}
+                    unit="k tokens"
+                    divisor={1000}
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

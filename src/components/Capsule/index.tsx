@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useRef, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAppStore } from '../../stores/appStore'
 import { useRecording } from '../../hooks/useRecording'
@@ -21,8 +21,11 @@ function getCapsuleState(pipelineState: string, hasError: boolean) {
 export function Capsule() {
   const pipelineState = useAppStore((s) => s.pipelineState)
   const pipelineError = useAppStore((s) => s.pipelineError)
+  const contextMenuOpen = useAppStore((s) => s.contextMenuOpen)
+  const setContextMenuOpen = useAppStore((s) => s.setContextMenuOpen)
+  const contextMenuReady = useAppStore((s) => s.contextMenuReady)
+  const setContextMenuReady = useAppStore((s) => s.setContextMenuReady)
   const { startRecording, stopRecording, isRecording, isProcessing } = useRecording()
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
 
   const dragStart = useRef<{ x: number; y: number } | null>(null)
   const isDragging = useRef(false)
@@ -33,6 +36,7 @@ export function Capsule() {
   const capsuleState = getCapsuleState(pipelineState, hasError)
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.button !== 0) return
     dragStart.current = { x: e.clientX, y: e.clientY }
     isDragging.current = false
   }, [])
@@ -54,7 +58,8 @@ export function Capsule() {
     }
   }, [])
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (e.button !== 0) return
     if (isDragging.current) {
       isDragging.current = false
       dragStart.current = null
@@ -71,17 +76,24 @@ export function Capsule() {
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
-    setContextMenu({ x: e.clientX, y: e.clientY })
+    if (!contextMenuOpen) {
+      setContextMenuOpen(true)
+    }
+  }
+
+  const handleCloseMenu = () => {
+    setContextMenuReady(false)
+    setContextMenuOpen(false)
   }
 
   return (
     <div
-      className="w-full h-full flex items-center justify-center"
+      className="w-full h-full flex items-center justify-start pl-3"
       onContextMenu={handleContextMenu}
     >
       {/* Persistent outer shell — jelly capsule */}
       <motion.div
-        className={`rounded-full pointer-events-auto ${
+        className={`rounded-full pointer-events-auto shrink-0 ${
           capsuleState === 'error'
             ? 'jelly-capsule-error'
             : capsuleState === 'idle'
@@ -110,12 +122,11 @@ export function Capsule() {
         </AnimatePresence>
       </motion.div>
 
-      {contextMenu && (
-        <CapsuleContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onClose={() => setContextMenu(null)}
-        />
+      {/* Context menu appears to the right of capsule */}
+      {contextMenuOpen && contextMenuReady && (
+        <div className="ml-2">
+          <CapsuleContextMenu onClose={handleCloseMenu} />
+        </div>
       )}
     </div>
   )

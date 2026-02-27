@@ -1,12 +1,10 @@
 import { Settings, History, LogOut, CircleUser, Crown, AppWindow } from 'lucide-react'
 
 interface Props {
-  x: number
-  y: number
   onClose: () => void
 }
 
-export function CapsuleContextMenu({ x, y, onClose }: Props) {
+export function CapsuleContextMenu({ onClose }: Props) {
   const openMainWindow = async (hash: string) => {
     try {
       const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
@@ -81,8 +79,7 @@ export function CapsuleContextMenu({ x, y, onClose }: Props) {
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div
-        className="fixed z-50 min-w-[140px] py-1 rounded-[14px] jelly-card shadow-float"
-        style={{ left: x, top: y }}
+        className="relative z-50 min-w-[140px] py-1 rounded-[14px] jelly-card shadow-float"
         role="menu"
       >
         {items.map((item, i) => {
