@@ -812,7 +812,12 @@ impl PipelineHandle {
             "openai-whisper" => "https://api.openai.com/v1/audio/transcriptions".to_string(),
             "groq-whisper" => "https://api.groq.com/openai/v1/audio/transcriptions".to_string(),
             "siliconflow" => "https://api.siliconflow.cn/v1/audio/transcriptions".to_string(),
-            _ => "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions".to_string(),
+            "deepgram" => "https://api.deepgram.com/v1/listen".to_string(),
+            "assemblyai" => "https://api.assemblyai.com/v2/transcript".to_string(),
+            _ => {
+                tracing::debug!("Unknown STT provider '{}', skipping pre-warm", config.stt_provider);
+                return;
+            }
         };
         tracing::debug!("Pre-warming HTTP connection to {}", stt_endpoint);
         let _ = self

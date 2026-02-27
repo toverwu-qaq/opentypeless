@@ -42,6 +42,7 @@ function isValidToken(token: string): boolean {
 }
 
 async function handleDeepLinkUrl(rawUrl: string) {
+  console.log('[deep-link] received URL:', rawUrl)
   let url: URL
   try {
     url = new URL(rawUrl)

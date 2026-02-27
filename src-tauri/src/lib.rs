@@ -197,6 +197,17 @@ async fn test_stt_connection(
                 .map_err(|e| e.to_string())?;
             Ok(resp.status().is_success())
         }
+        "assemblyai" => {
+            let client = reqwest::Client::new();
+            let resp = client
+                .get("https://api.assemblyai.com/v2/transcript?limit=1")
+                .header("Authorization", api_key)
+                .timeout(std::time::Duration::from_secs(10))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(resp.status().is_success())
+        }
         "glm-asr" | "openai-whisper" | "groq-whisper" | "siliconflow" => {
             // All four use Whisper-compatible file upload API
             let (endpoint, model, extra_fields): (&str, &str, &[(&str, &str)]) =

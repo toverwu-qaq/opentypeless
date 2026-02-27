@@ -6,7 +6,6 @@ import { useAuthStore } from '../../stores/authStore'
 import { useAppStore } from '../../stores/appStore'
 import { API_BASE_URL } from '../../lib/constants'
 import { uploadBackup, downloadBackup, createPortalSession } from '../../lib/api'
-import { authClient } from '../../lib/auth-client'
 import { generateOAuthState, clearOAuthState } from '../../lib/deep-link'
 
 type Tab = 'signin' | 'signup'
@@ -134,15 +133,15 @@ function AuthForm() {
       setLocalError(null)
       const state = generateOAuthState()
       const callbackURL = `${API_BASE_URL}/auth/callback?from=desktop&state=${state}`
-      const { data } = await authClient.signIn.social({
-        provider,
-        callbackURL,
-        fetchOptions: {
-          redirect: 'manual' as RequestRedirect,
-        },
+      const res = await fetch(`${API_BASE_URL}/api/auth/sign-in/social`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider, callbackURL }),
+        redirect: 'manual',
       })
-      if (data?.url) {
-        await openUrl(data.url)
+      const url = res.status === 200 ? (await res.json()).url : null
+      if (url) {
+        await openUrl(url)
       } else {
         setOauthPending(null)
         setLocalError(`Failed to start ${provider} sign in`)
