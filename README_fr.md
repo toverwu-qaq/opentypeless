@@ -78,7 +78,7 @@
 > | | Fournisseur | Modèle |
 > |---|---|---|
 > | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
-> | 🤖 Polissage IA | Google | `gemini-2.5-flash-preview` |
+> | 🤖 Polissage IA | Google | `gemini-2.5-flash` |
 >
 > Cette combinaison offre une transcription rapide et précise avec un polissage de texte de haute qualité — et les deux proposent des niveaux gratuits généreux.
 

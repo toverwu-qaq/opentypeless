@@ -78,7 +78,7 @@
 > | | Provider | Model |
 > |---|---|---|
 > | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
-> | 🤖 AI Polish | Google | `gemini-2.5-flash-preview` |
+> | 🤖 AI Polish | Google | `gemini-2.5-flash` |
 >
 > This combo delivers fast, accurate transcription with high-quality text polishing — and both offer generous free tiers.
 

@@ -78,7 +78,7 @@
 > | | 제공자 | 모델 |
 > |---|---|---|
 > | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
-> | 🤖 AI 다듬기 | Google | `gemini-2.5-flash-preview` |
+> | 🤖 AI 다듬기 | Google | `gemini-2.5-flash` |
 >
 > 이 조합은 빠르고 정확한 전사와 고품질 텍스트 다듬기를 제공하며, 둘 다 넉넉한 무료 티어를 제공합니다.
 

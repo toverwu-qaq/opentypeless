@@ -78,7 +78,7 @@
 > | | Anbieter | Modell |
 > |---|---|---|
 > | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
-> | 🤖 KI-Verfeinerung | Google | `gemini-2.5-flash-preview` |
+> | 🤖 KI-Verfeinerung | Google | `gemini-2.5-flash` |
 >
 > Diese Kombination bietet schnelle, präzise Transkription mit hochwertiger Textverfeinerung — und beide bieten großzügige kostenlose Kontingente.
 

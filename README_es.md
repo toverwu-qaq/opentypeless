@@ -78,7 +78,7 @@
 > | | Proveedor | Modelo |
 > |---|---|---|
 > | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
-> | 🤖 Pulido IA | Google | `gemini-2.5-flash-preview` |
+> | 🤖 Pulido IA | Google | `gemini-2.5-flash` |
 >
 > Esta combinación ofrece transcripción rápida y precisa con pulido de texto de alta calidad — y ambos ofrecen generosos niveles gratuitos.
 

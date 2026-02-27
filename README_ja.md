@@ -78,7 +78,7 @@
 > | | プロバイダー | モデル |
 > |---|---|---|
 > | 🗣️ STT | Groq | `whisper-large-v3-turbo` |
-> | 🤖 AI校正 | Google | `gemini-2.5-flash-preview` |
+> | 🤖 AI校正 | Google | `gemini-2.5-flash` |
 >
 > この組み合わせは、高速で正確な文字起こしと高品質なテキスト校正を実現します。どちらも寛大な無料枠を提供しています。
 
