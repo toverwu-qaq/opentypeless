@@ -15,7 +15,7 @@
         "label": "main",
         "title": "OpenTypeless",
         "width": 900,
-        "height": 640,
+        "height": 700,
         "minWidth": 720,
         "minHeight": 480,
         "resizable": true,
@@ -42,7 +42,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.opentypeless.com http://localhost:3002 https://accounts.google.com https://github.com"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.opentypeless.com https://accounts.google.com https://github.com"
     }
   },
   "plugins": {

@@ -363,7 +363,8 @@ function AccountDetails() {
     setBackupLoading(true)
     setBackupMsg(null)
     try {
-      await uploadBackup({ history, dictionary, settings: config })
+      const { stt_api_key, llm_api_key, ...safeConfig } = config
+      await uploadBackup({ history, dictionary, settings: safeConfig })
       setBackupMsg('Backup uploaded successfully')
     } catch (e) {
       setBackupMsg(e instanceof Error ? e.message : 'Backup failed')
@@ -419,12 +420,12 @@ function AccountDetails() {
         )}
       </div>
 
-      {/* Quota (Pro) */}
-      {isPro && (
+      {/* Quota */}
+      {sttSecondsLimit > 0 && (
         <div className="border border-border rounded-[10px] overflow-hidden">
           <div className="px-3 py-2.5 bg-bg-secondary/50 border-b border-border">
             <h3 className="text-[13px] font-medium text-text-primary">
-              {t('account.usageThisMonth')}
+              {isPro ? t('account.usageThisMonth') : t('account.freeCredit', 'Free Credit')}
             </h3>
           </div>
           <div className="px-3 py-3 space-y-3">
@@ -432,8 +433,8 @@ function AccountDetails() {
               label={t('upgrade.stt')}
               used={sttSecondsUsed}
               limit={sttSecondsLimit}
-              unit="hours"
-              divisor={3600}
+              unit={sttSecondsLimit >= 3600 ? 'hours' : 'min'}
+              divisor={sttSecondsLimit >= 3600 ? 3600 : 60}
             />
             <QuotaBar
               label={t('upgrade.llm')}
