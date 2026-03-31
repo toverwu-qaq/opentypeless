@@ -16,6 +16,8 @@ extend-exclude = [
   "*.min.css",
   "CHANGELOG.md",
   "README_it.md",
+  "README_de.md",
+  "README_id.md",
 ]
 
 [default.extend-identifiers]
