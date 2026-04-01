@@ -79,6 +79,6 @@ jobs:
           releaseBody: 'See the assets below to download and install.'
           releaseDraft: true
           prerelease: false
-          owner: tover0314-w
-          repo: opentypeless
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
           args: ${{ matrix.args }}
