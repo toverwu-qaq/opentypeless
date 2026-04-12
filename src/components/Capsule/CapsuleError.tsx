@@ -5,17 +5,21 @@ import { useAppStore } from '../../stores/appStore'
 export function CapsuleError() {
   const pipelineError = useAppStore((s) => s.pipelineError)
   const setPipelineError = useAppStore((s) => s.setPipelineError)
-  const setPipelineState = useAppStore((s) => s.setPipelineState)
   const resetRecording = useAppStore((s) => s.resetRecording)
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setPipelineError(null)
-      resetRecording()
-      setPipelineState('idle')
+      // Only reset recording state if the pipeline is actually idle.
+      // If the user started a new recording during the 2.5s error window,
+      // don't overwrite the active pipeline state.
+      const currentState = useAppStore.getState().pipelineState
+      if (currentState === 'idle') {
+        resetRecording()
+      }
     }, 2500)
     return () => clearTimeout(timer)
-  }, [setPipelineError, resetRecording, setPipelineState])
+  }, [setPipelineError, resetRecording, pipelineError])
 
   return (
     <motion.div

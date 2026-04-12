@@ -90,6 +90,11 @@ pub struct PipelineHandle {
     preloaded_selected_text: Arc<Mutex<Option<String>>>,
     recording_start: Arc<Mutex<Option<std::time::Instant>>>,
     shared_client: reqwest::Client,
+    /// Serializes start()/stop() so that stop() waits for start() to finish
+    /// its setup before reading shared state (preloaded_config, audio_handle, etc.).
+    /// Without this, a quick press-release in hold mode causes stop() to run
+    /// while start() is still connecting to STT, finding empty fields.
+    pipeline_lock: tokio::sync::Mutex<()>,
 }
 
 impl PipelineHandle {
@@ -108,6 +113,7 @@ impl PipelineHandle {
             preloaded_selected_text: Arc::new(Mutex::new(None)),
             recording_start: Arc::new(Mutex::new(None)),
             shared_client: reqwest::Client::new(),
+            pipeline_lock: tokio::sync::Mutex::new(()),
         }
     }
 
@@ -225,6 +231,10 @@ impl PipelineHandle {
     }
 
     pub async fn start(&self) -> Result<()> {
+        // Hold pipeline_lock for the entire setup so stop() cannot read
+        // partially-initialised state (preloaded_config, audio_handle, etc.).
+        let _guard = self.pipeline_lock.lock().await;
+
         // Reset abort flag for new recording
         self.abort_flag.store(false, Ordering::SeqCst);
 
@@ -355,9 +365,40 @@ impl PipelineHandle {
 
         // Start audio capture on dedicated thread
         let config = AudioConfig::default();
-        let (handle, mut audio_rx) = AudioCaptureHandle::start(config)?;
+        let (handle, mut audio_rx) = match AudioCaptureHandle::start(config) {
+            Ok(result) => result,
+            Err(e) => {
+                tracing::error!("Audio capture failed: {}", e);
+                let _ = self.app_handle.emit(
+                    "pipeline:error",
+                    format!("Audio capture failed: {e}"),
+                );
+                *self
+                    .preloaded_config
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner()) = None;
+                *self
+                    .preloaded_app_ctx
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner()) = None;
+                *self
+                    .preloaded_dictionary
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner()) = None;
+                self.set_state(PipelineState::Idle);
+                return Ok(());
+            }
+        };
 
-        // Store the audio handle's volume reference
+        // Store the audio handle's volume reference.
+        // Check abort_flag first — if abort() was called while we were connecting
+        // to STT, don't store the handle (it would be orphaned with nobody to stop it).
+        if self.abort_flag.load(Ordering::SeqCst) {
+            tracing::info!("Pipeline aborted during setup, discarding audio capture");
+            // handle drops here, stopping the capture thread
+            self.set_state(PipelineState::Idle);
+            return Ok(());
+        }
         let audio_vol = handle.get_volume();
         *self.audio_volume.lock().unwrap_or_else(|e| e.into_inner()) = audio_vol;
         *self.audio_handle.lock().unwrap_or_else(|e| e.into_inner()) = Some(handle);
@@ -445,6 +486,10 @@ impl PipelineHandle {
                             Ok(Some(TranscriptEvent::Error { message })) => {
                                 tracing::error!("STT error: {}", message);
                                 let _ = app_handle.emit("pipeline:error", format!("STT error: {message}"));
+                                // Break out of the loop — STT has failed, no point
+                                // continuing. Without break, the loop keeps running
+                                // and the pipeline stays stuck in Recording forever.
+                                break;
                             }
                             Err(e) => {
                                 tracing::error!("STT recv error: {}", e);
@@ -464,6 +509,11 @@ impl PipelineHandle {
     }
 
     pub async fn stop(&self) -> Result<()> {
+        // Acquire pipeline_lock so we wait for start() to finish its setup
+        // (load_config, connect STT, start audio) before reading shared state.
+        // Released before the long stt_done wait so start() isn't blocked 120s.
+        let guard = self.pipeline_lock.lock().await;
+
         // Atomic CAS: only one caller can transition Recording → Transcribing
         if self
             .state
@@ -552,6 +602,10 @@ impl PipelineHandle {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .take();
+
+        // All shared state has been taken — release the lock so a new start()
+        // isn't blocked by the long stt_done wait that follows.
+        drop(guard);
 
         // Always use batch output: keyboard mode uses output_text() after full LLM
         // response arrives. Streaming chunk-by-chunk clipboard paste was unreliable

@@ -40,8 +40,14 @@ export function useTauriEvents() {
     addListener<string>('llm:chunk', appendPolishedChunk)
     addListener<PipelineState>('pipeline:state', (state) => {
       setPipelineState(state)
-      if (state === 'idle') {
+      if (state === 'recording') {
+        // Clear any previous error when starting a new pipeline run
         setPipelineError(null)
+      }
+      if (state === 'idle') {
+        // Don't clear pipelineError here — CapsuleError auto-resets after 2.5s.
+        // Clearing here would swallow errors from failed start() calls that
+        // transition Recording → Idle in rapid succession.
         getHistory(200, 0)
           .then(setHistory)
           .catch((err) => {
