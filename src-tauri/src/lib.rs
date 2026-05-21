@@ -1025,7 +1025,29 @@ mod tests {
         }
     }
 }
+
+/// On Linux with NVIDIA proprietary drivers + Wayland, WebKit's DMA-BUF renderer
+/// crashes in libnvidia-eglcore during GL context teardown. Set env vars to disable
+/// it before any WebView is created. See GitHub issue #36.
+fn apply_linux_workarounds() {
+    #[cfg(target_os = "linux")]
+    {
+        let session = std::env::var("XDG_SESSION_TYPE").unwrap_or_default();
+        let is_nvidia = std::path::Path::new("/proc/driver/nvidia").exists()
+            || std::env::var("__GLX_VENDOR_LIBRARY_NAME")
+                .map(|v| v.eq_ignore_ascii_case("nvidia"))
+                .unwrap_or(false);
+
+        if is_nvidia && session == "wayland" {
+            tracing::info!("Detected NVIDIA + Wayland, disabling WebKit DMA-BUF renderer");
+            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        }
+    }
+}
+
 pub fn run() {
+    apply_linux_workarounds();
+
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::from_default_env().add_directive(
