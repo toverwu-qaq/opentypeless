@@ -135,3 +135,124 @@ where
     }
     Err(last_error.unwrap())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn test_network_error_is_retryable() {
+        let err = AppError::Network("connection reset".to_string());
+        assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn test_timeout_is_retryable() {
+        let err = AppError::Timeout(Duration::from_secs(30));
+        assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn test_500_is_retryable() {
+        let err = AppError::Api { status: 500, body: "internal error".to_string() };
+        assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn test_503_is_retryable() {
+        let err = AppError::Api { status: 503, body: "service unavailable".to_string() };
+        assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn test_401_is_not_retryable() {
+        let err = AppError::Api { status: 401, body: "unauthorized".to_string() };
+        assert!(!err.is_retryable());
+    }
+
+    #[test]
+    fn test_403_is_not_retryable() {
+        let err = AppError::Api { status: 403, body: "forbidden".to_string() };
+        assert!(!err.is_retryable());
+    }
+
+    #[test]
+    fn test_auth_not_retryable() {
+        let err = AppError::Auth("bad key".to_string());
+        assert!(!err.is_retryable());
+    }
+
+    #[test]
+    fn test_output_not_retryable() {
+        let err = AppError::Output("enigo failed".to_string());
+        assert!(!err.is_retryable());
+    }
+
+    #[test]
+    fn test_config_not_retryable() {
+        let err = AppError::Config("bad config".to_string());
+        assert!(!err.is_retryable());
+    }
+
+    #[test]
+    fn test_401_maps_to_invalid_key_code() {
+        let err = AppError::Api { status: 401, body: "".to_string() };
+        let ue = err.to_user_error();
+        assert_eq!(ue.code, "stt_invalid_key");
+    }
+
+    #[test]
+    fn test_403_maps_to_invalid_key_code() {
+        let err = AppError::Api { status: 403, body: "".to_string() };
+        let ue = err.to_user_error();
+        assert_eq!(ue.code, "stt_invalid_key");
+    }
+
+    #[test]
+    fn test_500_maps_to_stt_failed_code() {
+        let err = AppError::Api { status: 500, body: "".to_string() };
+        let ue = err.to_user_error();
+        assert_eq!(ue.code, "stt_failed");
+    }
+
+    #[test]
+    fn test_network_maps_to_timeout_code() {
+        let err = AppError::Network("timeout".to_string());
+        let ue = err.to_user_error();
+        assert_eq!(ue.code, "stt_timeout");
+    }
+
+    #[test]
+    fn test_timeout_maps_to_timeout_code() {
+        let err = AppError::Timeout(Duration::from_secs(10));
+        let ue = err.to_user_error();
+        assert_eq!(ue.code, "stt_timeout");
+    }
+
+    #[test]
+    fn test_output_maps_to_fallback_code() {
+        let err = AppError::Output("keyboard failed".to_string());
+        let ue = err.to_user_error();
+        assert_eq!(ue.code, "output_fallback_clipboard");
+    }
+
+    #[test]
+    fn test_with_retry_count() {
+        let err = AppError::Timeout(Duration::from_secs(10));
+        let ue = err.with_retry_count(2);
+        assert_eq!(ue.retry_count, 2);
+    }
+
+    #[test]
+    fn test_display_format() {
+        let err = AppError::Network("timeout".to_string());
+        assert!(err.to_string().contains("Network error"));
+
+        let err = AppError::Timeout(Duration::from_secs(5));
+        assert!(err.to_string().contains("Timeout"));
+
+        let err = AppError::Api { status: 429, body: "rate limited".to_string() };
+        assert!(err.to_string().contains("429"));
+    }
+}
