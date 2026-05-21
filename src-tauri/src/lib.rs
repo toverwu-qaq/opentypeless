@@ -223,31 +223,9 @@ async fn test_stt_connection(
                 .map_err(|e| e.to_string())?;
             Ok(resp.status().is_success())
         }
-        "glm-asr" | "openai-whisper" | "groq-whisper" | "siliconflow" => {
-            // All four use Whisper-compatible file upload API
-            let (endpoint, model, extra_fields): (&str, &str, &[(&str, &str)]) =
-                match provider.as_str() {
-                    "glm-asr" => (
-                        "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions",
-                        "glm-asr-2512",
-                        &[("stream", "false")][..],
-                    ),
-                    "openai-whisper" => (
-                        "https://api.openai.com/v1/audio/transcriptions",
-                        "whisper-1",
-                        &[][..],
-                    ),
-                    "groq-whisper" => (
-                        "https://api.groq.com/openai/v1/audio/transcriptions",
-                        "whisper-large-v3-turbo",
-                        &[][..],
-                    ),
-                    _ => (
-                        "https://api.siliconflow.cn/v1/audio/transcriptions",
-                        "FunAudioLLM/SenseVoiceSmall",
-                        &[][..],
-                    ),
-                };
+        _ => {
+            let cfg = stt::config::get_whisper_config(&provider)
+                .ok_or_else(|| format!("Unknown STT provider: {}", provider))?;
 
             let silent_pcm = vec![0u8; 3200]; // 0.1s at 16kHz 16-bit mono
             let wav = stt::whisper_compat::WhisperCompatProvider::build_wav(&silent_pcm, 16000);
@@ -257,14 +235,14 @@ async fn test_stt_connection(
                 .mime_str("audio/wav")
                 .map_err(|e| e.to_string())?;
             let mut form = reqwest::multipart::Form::new()
-                .text("model", model.to_string())
+                .text("model", cfg.model.to_string())
                 .part("file", file_part);
-            for &(key, value) in extra_fields {
+            for &(key, value) in cfg.extra_fields {
                 form = form.text(key.to_string(), value.to_string());
             }
 
             let resp = client
-                .post(endpoint)
+                .post(cfg.endpoint)
                 .header("Authorization", format!("Bearer {}", api_key))
                 .multipart(form)
                 .timeout(std::time::Duration::from_secs(15))
@@ -273,7 +251,6 @@ async fn test_stt_connection(
                 .map_err(|e| e.to_string())?;
             Ok(resp.status().is_success())
         }
-        _ => Err(format!("Unknown STT provider: {}", provider)),
     }
 }
 
@@ -471,30 +448,9 @@ async fn bench_stt_connection(
             }
             Ok(elapsed)
         }
-        "glm-asr" | "openai-whisper" | "groq-whisper" | "siliconflow" => {
-            let (endpoint, model, extra_fields): (&str, &str, &[(&str, &str)]) =
-                match provider.as_str() {
-                    "glm-asr" => (
-                        "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions",
-                        "glm-asr-2512",
-                        &[("stream", "false")][..],
-                    ),
-                    "openai-whisper" => (
-                        "https://api.openai.com/v1/audio/transcriptions",
-                        "whisper-1",
-                        &[][..],
-                    ),
-                    "groq-whisper" => (
-                        "https://api.groq.com/openai/v1/audio/transcriptions",
-                        "whisper-large-v3-turbo",
-                        &[][..],
-                    ),
-                    _ => (
-                        "https://api.siliconflow.cn/v1/audio/transcriptions",
-                        "FunAudioLLM/SenseVoiceSmall",
-                        &[][..],
-                    ),
-                };
+        _ => {
+            let cfg = stt::config::get_whisper_config(&provider)
+                .ok_or_else(|| format!("Unknown STT provider: {}", provider))?;
 
             let silent_pcm = vec![0u8; 3200]; // 0.1s at 16kHz 16-bit mono
             let wav = stt::whisper_compat::WhisperCompatProvider::build_wav(&silent_pcm, 16000);
@@ -504,15 +460,15 @@ async fn bench_stt_connection(
                 .mime_str("audio/wav")
                 .map_err(|e| e.to_string())?;
             let mut form = reqwest::multipart::Form::new()
-                .text("model", model.to_string())
+                .text("model", cfg.model.to_string())
                 .part("file", file_part);
-            for &(key, value) in extra_fields {
+            for &(key, value) in cfg.extra_fields {
                 form = form.text(key.to_string(), value.to_string());
             }
 
             let t0 = std::time::Instant::now();
             let resp = client
-                .post(endpoint)
+                .post(cfg.endpoint)
                 .header("Authorization", format!("Bearer {}", api_key))
                 .multipart(form)
                 .timeout(std::time::Duration::from_secs(15))
@@ -525,7 +481,6 @@ async fn bench_stt_connection(
             }
             Ok(elapsed)
         }
-        _ => Err(format!("Unknown STT provider: {}", provider)),
     }
 }
 

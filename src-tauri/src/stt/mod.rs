@@ -1,5 +1,6 @@
 pub mod assemblyai;
 pub mod cloud;
+pub mod config;
 pub mod deepgram;
 pub mod whisper_compat;
 
@@ -51,12 +52,6 @@ pub fn create_provider(
     provider_name: &str,
     client: Option<reqwest::Client>,
 ) -> Box<dyn SttProvider> {
-    let make = |cfg: WhisperCompatConfig| -> Box<dyn SttProvider> {
-        match client {
-            Some(ref c) => Box::new(WhisperCompatProvider::with_client(cfg, c.clone())),
-            None => Box::new(WhisperCompatProvider::new(cfg)),
-        }
-    };
     match provider_name {
         "cloud" => {
             let api_base_url = crate::api_base_url();
@@ -69,35 +64,23 @@ pub fn create_provider(
             }
         }
         "assemblyai" => Box::new(assemblyai::AssemblyAiProvider::new()),
-        "glm-asr" => make(WhisperCompatConfig {
-            provider_name: "GLM-ASR",
-            endpoint: "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions",
-            model: "glm-asr-2512",
-            extra_fields: &[("stream", "false")],
-        }),
-        "openai-whisper" => make(WhisperCompatConfig {
-            provider_name: "OpenAI Whisper",
-            endpoint: "https://api.openai.com/v1/audio/transcriptions",
-            model: "whisper-1",
-            extra_fields: &[],
-        }),
-        "groq-whisper" => make(WhisperCompatConfig {
-            provider_name: "Groq Whisper",
-            endpoint: "https://api.groq.com/openai/v1/audio/transcriptions",
-            model: "whisper-large-v3-turbo",
-            extra_fields: &[],
-        }),
-        "siliconflow" => make(WhisperCompatConfig {
-            provider_name: "SiliconFlow",
-            endpoint: "https://api.siliconflow.cn/v1/audio/transcriptions",
-            model: "FunAudioLLM/SenseVoiceSmall",
-            extra_fields: &[],
-        }),
-        _ => make(WhisperCompatConfig {
-            provider_name: "GLM-ASR",
-            endpoint: "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions",
-            model: "glm-asr-2512",
-            extra_fields: &[("stream", "false")],
-        }),
+        "deepgram" => Box::new(deepgram::DeepgramProvider::new()),
+        name => {
+            // All Whisper-compatible providers share the same HTTP upload logic.
+            // Config is centralised in config::get_whisper_config.
+            let cfg = config::get_whisper_config(name)
+                .or_else(|| config::get_whisper_config("glm-asr"))
+                .expect("glm-asr config must always exist");
+            let wc = WhisperCompatConfig {
+                provider_name: name,
+                endpoint: cfg.endpoint,
+                model: cfg.model,
+                extra_fields: cfg.extra_fields,
+            };
+            match client {
+                Some(ref c) => Box::new(WhisperCompatProvider::with_client(wc, c.clone())),
+                None => Box::new(WhisperCompatProvider::new(wc)),
+            }
+        }
     }
 }
