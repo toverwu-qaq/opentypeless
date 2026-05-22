@@ -68,10 +68,13 @@ export function useTauriEvents() {
             ? payload
             : t(`errors.${payload.code}`, { details: payload.details ?? '' })
         setPipelineError(message)
-        if (message === 'ACCESSIBILITY_REQUIRED' || (typeof payload === 'string' && payload === 'ACCESSIBILITY_REQUIRED')) {
+        if (
+          message === 'ACCESSIBILITY_REQUIRED' ||
+          (typeof payload === 'string' && payload === 'ACCESSIBILITY_REQUIRED')
+        ) {
           setAccessibilityTrusted(false)
         }
-      }
+      },
     )
     addListener<{ code: string; details?: string }>('pipeline:warning', (payload) => {
       const message = t(`errors.${payload.code}`, { details: payload.details ?? '' })

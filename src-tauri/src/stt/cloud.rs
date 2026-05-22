@@ -118,11 +118,7 @@ impl SttProvider for CloudSttProvider {
 
                         tracing::info!("Cloud STT transcription: {} chars", text.len());
 
-                        return Ok(if text.is_empty() {
-                            None
-                        } else {
-                            Some(text)
-                        });
+                        return Ok(if text.is_empty() { None } else { Some(text) });
                     } else if status.as_u16() == 403 {
                         let msg = serde_json::from_str::<serde_json::Value>(&body)
                             .ok()
@@ -164,10 +160,7 @@ impl SttProvider for CloudSttProvider {
                     }
                 }
                 Err(e) if e.is_timeout() && attempt < 2 => {
-                    tracing::warn!(
-                        "Cloud STT timeout (attempt {}/3)",
-                        attempt + 1
-                    );
+                    tracing::warn!("Cloud STT timeout (attempt {}/3)", attempt + 1);
                     attempt += 1;
                     tokio::time::sleep(std::time::Duration::from_millis(
                         1000 * 2u64.pow(attempt - 1),

@@ -156,25 +156,37 @@ mod tests {
 
     #[test]
     fn test_500_is_retryable() {
-        let err = AppError::Api { status: 500, body: "internal error".to_string() };
+        let err = AppError::Api {
+            status: 500,
+            body: "internal error".to_string(),
+        };
         assert!(err.is_retryable());
     }
 
     #[test]
     fn test_503_is_retryable() {
-        let err = AppError::Api { status: 503, body: "service unavailable".to_string() };
+        let err = AppError::Api {
+            status: 503,
+            body: "service unavailable".to_string(),
+        };
         assert!(err.is_retryable());
     }
 
     #[test]
     fn test_401_is_not_retryable() {
-        let err = AppError::Api { status: 401, body: "unauthorized".to_string() };
+        let err = AppError::Api {
+            status: 401,
+            body: "unauthorized".to_string(),
+        };
         assert!(!err.is_retryable());
     }
 
     #[test]
     fn test_403_is_not_retryable() {
-        let err = AppError::Api { status: 403, body: "forbidden".to_string() };
+        let err = AppError::Api {
+            status: 403,
+            body: "forbidden".to_string(),
+        };
         assert!(!err.is_retryable());
     }
 
@@ -198,21 +210,30 @@ mod tests {
 
     #[test]
     fn test_401_maps_to_invalid_key_code() {
-        let err = AppError::Api { status: 401, body: "".to_string() };
+        let err = AppError::Api {
+            status: 401,
+            body: "".to_string(),
+        };
         let ue = err.to_user_error();
         assert_eq!(ue.code, "stt_invalid_key");
     }
 
     #[test]
     fn test_403_maps_to_invalid_key_code() {
-        let err = AppError::Api { status: 403, body: "".to_string() };
+        let err = AppError::Api {
+            status: 403,
+            body: "".to_string(),
+        };
         let ue = err.to_user_error();
         assert_eq!(ue.code, "stt_invalid_key");
     }
 
     #[test]
     fn test_500_maps_to_stt_failed_code() {
-        let err = AppError::Api { status: 500, body: "".to_string() };
+        let err = AppError::Api {
+            status: 500,
+            body: "".to_string(),
+        };
         let ue = err.to_user_error();
         assert_eq!(ue.code, "stt_failed");
     }
@@ -253,7 +274,10 @@ mod tests {
         let err = AppError::Timeout(Duration::from_secs(5));
         assert!(err.to_string().contains("Timeout"));
 
-        let err = AppError::Api { status: 429, body: "rate limited".to_string() };
+        let err = AppError::Api {
+            status: 429,
+            body: "rate limited".to_string(),
+        };
         assert!(err.to_string().contains("429"));
     }
 }

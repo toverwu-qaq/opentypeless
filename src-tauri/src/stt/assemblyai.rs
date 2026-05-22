@@ -95,8 +95,8 @@ impl SttProvider for AssemblyAiProvider {
 
         match ws.next().await {
             Some(Ok(Message::Text(text))) => {
-                let v: serde_json::Value = serde_json::from_str(&text)
-                    .map_err(|e| AppError::Config(e.to_string()))?;
+                let v: serde_json::Value =
+                    serde_json::from_str(&text).map_err(|e| AppError::Config(e.to_string()))?;
                 let msg_type = v["type"].as_str().unwrap_or("");
 
                 match msg_type {

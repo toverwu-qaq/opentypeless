@@ -1,8 +1,8 @@
 pub mod clipboard;
 pub mod keyboard;
 
-use async_trait::async_trait;
 use crate::error::{AppError, UserError};
+use async_trait::async_trait;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum OutputMode {
@@ -33,7 +33,11 @@ pub async fn output_with_fallback(
 ) -> Result<Option<UserError>, String> {
     if mode == OutputMode::Clipboard {
         let output = create_output(OutputMode::Clipboard);
-        return output.type_text(text).await.map_err(|e| e.to_string()).map(|_| None);
+        return output
+            .type_text(text)
+            .await
+            .map_err(|e| e.to_string())
+            .map(|_| None);
     }
 
     // Try keyboard first
@@ -41,19 +45,21 @@ pub async fn output_with_fallback(
     match keyboard.type_text(text).await {
         Ok(()) => Ok(None),
         Err(kb_err) => {
-            tracing::warn!("Keyboard output failed: {}, falling back to clipboard", kb_err);
+            tracing::warn!(
+                "Keyboard output failed: {}, falling back to clipboard",
+                kb_err
+            );
             let clipboard = create_output(OutputMode::Clipboard);
             match clipboard.type_text(text).await {
-                Ok(()) => {
-                    Ok(Some(UserError {
-                        code: "output_fallback_clipboard".to_string(),
-                        details: Some(kb_err.to_string()),
-                        retry_count: 0,
-                    }))
-                }
-                Err(cb_err) => {
-                    Err(format!("Both keyboard ({}) and clipboard ({}) output failed", kb_err, cb_err))
-                }
+                Ok(()) => Ok(Some(UserError {
+                    code: "output_fallback_clipboard".to_string(),
+                    details: Some(kb_err.to_string()),
+                    retry_count: 0,
+                })),
+                Err(cb_err) => Err(format!(
+                    "Both keyboard ({}) and clipboard ({}) output failed",
+                    kb_err, cb_err
+                )),
             }
         }
     }

@@ -178,11 +178,7 @@ impl SttProvider for WhisperCompatProvider {
                             text.len()
                         );
 
-                        return Ok(if text.is_empty() {
-                            None
-                        } else {
-                            Some(text)
-                        });
+                        return Ok(if text.is_empty() { None } else { Some(text) });
                     } else if status.as_u16() >= 500 && attempt < 2 {
                         let truncate_at = body
                             .char_indices()

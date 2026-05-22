@@ -209,7 +209,10 @@ impl PipelineHandle {
     /// Stops audio capture, forces state to Idle, and signals any
     /// ongoing stop() to exit early via abort_flag.
     pub fn abort(&self) {
-        tracing::info!("Pipeline abort requested (current state: {:?})", self.current_state());
+        tracing::info!(
+            "Pipeline abort requested (current state: {:?})",
+            self.current_state()
+        );
 
         // Set abort flag so any running stop() exits early
         self.abort_flag.store(true, Ordering::SeqCst);
@@ -227,7 +230,10 @@ impl PipelineHandle {
         self.stt_done.notify_one();
 
         // Clear accumulated text
-        self.accumulated_text.lock().unwrap_or_else(|e| e.into_inner()).clear();
+        self.accumulated_text
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear();
 
         // Force state to Idle — emits pipeline:state event to sync frontend
         self.set_state(PipelineState::Idle);
@@ -433,10 +439,9 @@ impl PipelineHandle {
             Ok(result) => result,
             Err(e) => {
                 tracing::error!("Audio capture failed: {}", e);
-                let _ = self.app_handle.emit(
-                    "pipeline:error",
-                    format!("Audio capture failed: {e}"),
-                );
+                let _ = self
+                    .app_handle
+                    .emit("pipeline:error", format!("Audio capture failed: {e}"));
                 *self
                     .preloaded_config
                     .lock()
@@ -777,10 +782,9 @@ impl PipelineHandle {
             .to_string();
 
         if raw_text.is_empty() {
-            let _ = self.app_handle.emit(
-                "pipeline:error",
-                "No speech detected. Please try again.",
-            );
+            let _ = self
+                .app_handle
+                .emit("pipeline:error", "No speech detected. Please try again.");
             self.set_state(PipelineState::Idle);
             return Ok(None);
         }
@@ -804,10 +808,7 @@ impl PipelineHandle {
             || (config.llm_api_key.is_empty() && config.llm_provider != "cloud")
         {
             // No polishing — output raw text directly
-            if let Err(e) = self
-                .output_text(raw_text, &app_ctx.app_name, config)
-                .await
-            {
+            if let Err(e) = self.output_text(raw_text, &app_ctx.app_name, config).await {
                 tracing::error!("Output failed: {}", e);
                 let _ = self
                     .app_handle
@@ -832,8 +833,7 @@ impl PipelineHandle {
             max_tokens: 4096,
             temperature: 0.3,
         };
-        let provider =
-            llm::create_provider(&config.llm_provider, Some(self.shared_client.clone()));
+        let provider = llm::create_provider(&config.llm_provider, Some(self.shared_client.clone()));
 
         // on_chunk only drives the UI transcript display; actual output happens
         // in batch after the full response arrives (see output_text below).
@@ -851,52 +851,47 @@ impl PipelineHandle {
             selected_text,
         };
 
-        let (final_text, llm_elapsed) = match provider
-            .polish(&llm_config, &req, Some(&on_chunk))
-            .await
-        {
-            Ok(response) => {
-                // Check abort after LLM returns — skip output if cancelled during polish
-                if self.abort_flag.load(Ordering::SeqCst) {
-                    tracing::info!("Pipeline aborted after LLM polish, skipping output");
-                    return (raw_text.to_string(), llm_start.elapsed());
+        let (final_text, llm_elapsed) =
+            match provider.polish(&llm_config, &req, Some(&on_chunk)).await {
+                Ok(response) => {
+                    // Check abort after LLM returns — skip output if cancelled during polish
+                    if self.abort_flag.load(Ordering::SeqCst) {
+                        tracing::info!("Pipeline aborted after LLM polish, skipping output");
+                        return (raw_text.to_string(), llm_start.elapsed());
+                    }
+                    let elapsed = llm_start.elapsed();
+                    if let Err(e) = self
+                        .output_text(&response.polished_text, &app_ctx.app_name, config)
+                        .await
+                    {
+                        tracing::error!("Output failed: {}", e);
+                        let _ = self
+                            .app_handle
+                            .emit("pipeline:error", format!("Output failed: {e}"));
+                    }
+                    (response.polished_text, elapsed)
                 }
-                let elapsed = llm_start.elapsed();
-                if let Err(e) = self
-                    .output_text(&response.polished_text, &app_ctx.app_name, config)
-                    .await
-                {
-                    tracing::error!("Output failed: {}", e);
-                    let _ = self
-                        .app_handle
-                        .emit("pipeline:error", format!("Output failed: {e}"));
-                }
-                (response.polished_text, elapsed)
-            }
-            Err(e) => {
-                // Check abort after LLM error — skip fallback output if cancelled
-                if self.abort_flag.load(Ordering::SeqCst) {
-                    tracing::info!("Pipeline aborted after LLM error, skipping output");
-                    return (raw_text.to_string(), llm_start.elapsed());
-                }
-                tracing::error!("LLM polish failed: {}, outputting raw text", e);
-                let elapsed = llm_start.elapsed();
+                Err(e) => {
+                    // Check abort after LLM error — skip fallback output if cancelled
+                    if self.abort_flag.load(Ordering::SeqCst) {
+                        tracing::info!("Pipeline aborted after LLM error, skipping output");
+                        return (raw_text.to_string(), llm_start.elapsed());
+                    }
+                    tracing::error!("LLM polish failed: {}, outputting raw text", e);
+                    let elapsed = llm_start.elapsed();
 
-                let _ = self
-                    .app_handle
-                    .emit("pipeline:error", format!("LLM polishing failed: {e}"));
-                if let Err(e) = self
-                    .output_text(raw_text, &app_ctx.app_name, config)
-                    .await
-                {
-                    tracing::error!("Output failed: {}", e);
                     let _ = self
                         .app_handle
-                        .emit("pipeline:error", format!("Output failed: {e}"));
+                        .emit("pipeline:error", format!("LLM polishing failed: {e}"));
+                    if let Err(e) = self.output_text(raw_text, &app_ctx.app_name, config).await {
+                        tracing::error!("Output failed: {}", e);
+                        let _ = self
+                            .app_handle
+                            .emit("pipeline:error", format!("Output failed: {e}"));
+                    }
+                    (raw_text.to_string(), elapsed)
                 }
-                (raw_text.to_string(), elapsed)
-            }
-        };
+            };
 
         tracing::info!(
             "[Pipeline Timing] LLM polish: {}ms",
@@ -957,7 +952,9 @@ impl PipelineHandle {
         let effective_mode = if mode == OutputMode::Keyboard {
             if let Err(reason) = output::keyboard::check_keyboard_available() {
                 if reason == "wayland_unsupported" {
-                    tracing::warn!("Keyboard output not supported on Wayland, falling back to clipboard");
+                    tracing::warn!(
+                        "Keyboard output not supported on Wayland, falling back to clipboard"
+                    );
                     let ue = crate::error::UserError {
                         code: "output_wayland_unsupported".to_string(),
                         details: None,

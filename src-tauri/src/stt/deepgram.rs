@@ -71,11 +71,7 @@ impl SttProvider for DeepgramProvider {
                     return Ok(());
                 }
                 Err(e) if attempt < 2 => {
-                    tracing::warn!(
-                        "Deepgram connect failed (attempt {}/3): {}",
-                        attempt + 1,
-                        e
-                    );
+                    tracing::warn!("Deepgram connect failed (attempt {}/3): {}", attempt + 1, e);
                     attempt += 1;
                     tokio::time::sleep(std::time::Duration::from_millis(
                         1000 * 2u64.pow(attempt - 1),
@@ -104,8 +100,8 @@ impl SttProvider for DeepgramProvider {
 
         match ws.next().await {
             Some(Ok(Message::Text(text))) => {
-                let v: serde_json::Value = serde_json::from_str(&text)
-                    .map_err(|e| AppError::Config(e.to_string()))?;
+                let v: serde_json::Value =
+                    serde_json::from_str(&text).map_err(|e| AppError::Config(e.to_string()))?;
 
                 // Check for error
                 if v.get("type").and_then(|t| t.as_str()) == Some("Error") {

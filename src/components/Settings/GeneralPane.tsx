@@ -2,7 +2,13 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '../../stores/appStore'
 import type { HotkeyMode, OutputMode } from '../../stores/appStore'
-import { updateHotkey, pauseHotkey, resumeHotkey, checkAccessibilityPermission, requestAccessibilityPermission } from '../../lib/tauri'
+import {
+  updateHotkey,
+  pauseHotkey,
+  resumeHotkey,
+  checkAccessibilityPermission,
+  requestAccessibilityPermission,
+} from '../../lib/tauri'
 import { SegmentedControl } from './shared/SegmentedControl'
 import { Toggle } from './shared/Toggle'
 
@@ -183,7 +189,8 @@ export function GeneralPane() {
   const config = useAppStore((s) => s.config)
   const updateConfig = useAppStore((s) => s.updateConfig)
   const { t } = useTranslation()
-  const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const isMac =
+    typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
   const [a11yTrusted, setA11yTrusted] = useState<boolean | null>(null)
 
   useEffect(() => {

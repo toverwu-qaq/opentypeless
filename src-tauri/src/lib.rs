@@ -6,12 +6,12 @@ pub mod hotkey;
 pub mod llm;
 pub mod output;
 pub mod pipeline;
-pub mod stt;
 pub mod storage;
+pub mod stt;
 pub mod tray;
 
 pub use hotkey::{default_shortcut, parse_hotkey};
-pub use tray::{TrayHandle, refresh_tray};
+pub use tray::{refresh_tray, TrayHandle};
 
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
@@ -150,12 +150,14 @@ pub fn run() {
                 .build()
                 .expect("Failed to create HTTP client");
 
-            let pipeline_handle = pipeline::PipelineHandle::new(app_handle.clone(), shared_client.clone());
+            let pipeline_handle =
+                pipeline::PipelineHandle::new(app_handle.clone(), shared_client.clone());
 
             // Load initial config to get hotkey
             let initial_config =
                 tauri::async_runtime::block_on(config_manager.load()).unwrap_or_default();
-            let shortcut = parse_hotkey(&initial_config.hotkey).unwrap_or_else(hotkey::default_shortcut);
+            let shortcut =
+                parse_hotkey(&initial_config.hotkey).unwrap_or_else(hotkey::default_shortcut);
 
             app.manage(config_manager);
             app.manage(history_store);

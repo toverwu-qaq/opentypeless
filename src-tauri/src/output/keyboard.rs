@@ -61,9 +61,9 @@ impl TextOutput for KeyboardOutput {
                 if !line.is_empty() {
                     for chunk in line.chars().collect::<Vec<_>>().chunks(TYPE_CHUNK_SIZE) {
                         let s: String = chunk.iter().collect();
-                        enigo
-                            .text(&s)
-                            .map_err(|e| AppError::Output(format!("Failed to type text: {:?}", e)))?;
+                        enigo.text(&s).map_err(|e| {
+                            AppError::Output(format!("Failed to type text: {:?}", e))
+                        })?;
                         std::thread::sleep(std::time::Duration::from_millis(TYPE_CHUNK_DELAY_MS));
                     }
                 }

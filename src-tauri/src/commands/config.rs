@@ -1,7 +1,7 @@
+use crate::storage;
 use crate::CloseToTrayCache;
 use crate::HotkeyModeCache;
 use crate::SessionTokenStore;
-use crate::storage;
 
 #[tauri::command]
 pub async fn get_config(
