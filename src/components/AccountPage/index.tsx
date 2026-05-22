@@ -389,9 +389,9 @@ function AccountDetails() {
     try {
       const { stt_api_key: _stt_api_key, llm_api_key: _llm_api_key, ...safeConfig } = config
       await uploadBackup({ history, dictionary, settings: safeConfig })
-      setBackupMsg('Backup uploaded successfully')
+      setBackupMsg(t('account.toast.backupOk'))
     } catch (e) {
-      setBackupMsg(e instanceof Error ? e.message : 'Backup failed')
+      setBackupMsg(e instanceof Error ? e.message : t('account.toast.backupFail'))
     } finally {
       setBackupLoading(false)
     }
@@ -405,9 +405,9 @@ function AccountDetails() {
       if (data.history) setHistory(data.history as never)
       if (data.dictionary) setDictionary(data.dictionary as never)
       if (data.settings) setConfig(data.settings as never)
-      setBackupMsg('Restore completed')
+      setBackupMsg(t('account.toast.restoreOk'))
     } catch (e) {
-      setBackupMsg(e instanceof Error ? e.message : 'Restore failed')
+      setBackupMsg(e instanceof Error ? e.message : t('account.toast.restoreFail'))
     } finally {
       setBackupLoading(false)
     }
@@ -419,7 +419,7 @@ function AccountDetails() {
       const { url } = await createPortalSession()
       await openUrl(url)
     } catch (e) {
-      setBackupMsg(e instanceof Error ? e.message : 'Failed to open subscription management')
+      setBackupMsg(e instanceof Error ? e.message : t('account.toast.subscriptionFail'))
     } finally {
       setPortalLoading(false)
     }

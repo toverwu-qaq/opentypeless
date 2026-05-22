@@ -1,4 +1,17 @@
 // App metadata
+export const UI_LANGUAGES = [
+  { value: 'en', label: 'English' },
+  { value: 'zh', label: '中文' },
+  { value: 'ja', label: '日本語' },
+  { value: 'ko', label: '한국어' },
+  { value: 'fr', label: 'Français' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'es', label: 'Español' },
+  { value: 'pt', label: 'Português' },
+  { value: 'ru', label: 'Русский' },
+  { value: 'it', label: 'Italiano' },
+] as const
+
 export const APP_NAME = 'OpenTypeless'
 export const APP_VERSION = 'v0.1.0'
 export const APP_REPO_URL = 'https://github.com/tover0314-w/opentypeless'
@@ -16,13 +29,16 @@ export const PRO_PLAN = {
   price: '$4.99',
   period: 'month',
   features: [
-    { label: 'Millisecond STT', detail: '10h/month, 99 languages' },
-    { label: 'Instant AI Rewrite', detail: '~5M tokens/month' },
-    { label: 'Cloud Backup & Restore', detail: 'History, dictionary, settings' },
-    { label: 'Pro Scene Packs', detail: 'Professional prompt templates' },
-    { label: 'Zero-config', detail: 'No API key needed' },
+    { labelKey: 'upgrade.features.sttTitle', detailKey: 'upgrade.features.sttDetail' },
+    { labelKey: 'upgrade.features.llmTitle', detailKey: 'upgrade.features.llmDetail' },
+    { labelKey: 'upgrade.features.backupTitle', detailKey: 'upgrade.features.backupDetail' },
+    { labelKey: 'upgrade.features.scenesTitle', detailKey: 'upgrade.features.scenesDetail' },
+    {
+      labelKey: 'upgrade.features.zeroConfigTitle',
+      detailKey: 'upgrade.features.zeroConfigDetail',
+    },
   ],
-} as const
+}
 
 export const STT_PROVIDERS = [
   { value: 'deepgram', label: 'Deepgram Nova-3' },

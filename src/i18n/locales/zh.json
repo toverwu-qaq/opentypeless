@@ -73,7 +73,125 @@
     "llm": "LLM",
     "output": "输出",
     "releaseToStop": "松开停止录音",
-    "holdAndSay": "按住并说点什么"
+    "holdAndSay": "按住并说点什么",
+    "steps": {
+      "welcome": "欢迎",
+      "welcomeSub": "几步完成 OpenTypeless 设置",
+      "signIn": "登录",
+      "signInSub": "连接你的账户以开始使用",
+      "chooseMode": "选择模式",
+      "chooseModeSub": "选择你想如何使用 OpenTypeless",
+      "speechRecognition": "语音识别",
+      "speechRecognitionSub": "配置你的 STT 服务",
+      "aiPolish": "AI 润色",
+      "aiPolishSub": "配置你的 LLM 服务",
+      "howItWorks": "使用方法",
+      "howItWorksSub": "试试快速录音测试",
+      "setupComplete": "设置完成",
+      "getStarted": "开始使用"
+    },
+    "account": {
+      "signIn": "登录",
+      "signUp": "注册",
+      "name": "姓名",
+      "namePlaceholder": "你的名字",
+      "email": "邮箱",
+      "emailPlaceholder": "your@email.com",
+      "password": "密码",
+      "send": "发送",
+      "or": "或",
+      "signInWith": "使用以下方式登录",
+      "signUpWith": "使用以下方式注册",
+      "signedInAs": "已登录为",
+      "freePlan": "免费计划",
+      "freePlanQuota": "剩余配额",
+      "checkEmail": "查看你的邮箱",
+      "verificationSent": "我们已发送验证链接至",
+      "resendVerification": "重新发送验证",
+      "backToSignIn": "返回登录",
+      "completingSignIn": "正在完成登录...",
+      "finishSignIn": "完成登录",
+      "cancel": "取消",
+      "nameRequired": "请输入姓名",
+      "passwordTooShort": "密码至少需要 8 个字符",
+      "signInTimedOut": "登录超时",
+      "failedToStart": "启动失败",
+      "verifyHint": "请验证你的邮箱以继续"
+    },
+    "test": {
+      "stageRecord": "录音",
+      "stageStt": "转写",
+      "stageLlm": "润色",
+      "stageOutput": "输出",
+      "phaseIdle": "按住以录音",
+      "phaseRecording": "录音中...",
+      "phaseStt": "转写中...",
+      "phaseLlm": "润色中...",
+      "phaseDone": "完成！",
+      "hold": "按住",
+      "press": "按下",
+      "toTalk": "说话",
+      "toStartStop": "开始/停止",
+      "transcribing": "转写中",
+      "raw": "原文",
+      "polished": "润色后",
+      "result": "结果"
+    },
+    "done": {
+      "title": "一切就绪！",
+      "capsuleOnDesktop": "桌面悬浮球",
+      "holdPress": "按住 / 按下",
+      "holdPressSub": "使用快捷键开始和停止录音",
+      "clickCapsule": "点击悬浮球",
+      "clickCapsuleSub": "点击悬浮球切换录音状态",
+      "dragToReposition": "拖动定位",
+      "dragToRepositionSub": "将悬浮球拖到屏幕任意位置",
+      "rightClickMenu": "右键菜单",
+      "rightClickMenuSub": "右键悬浮球查看更多选项",
+      "accessibilityRequired": "需要辅助功能权限才能输出文本",
+      "grantPermission": "授予权限",
+      "grantLater": "稍后授予",
+      "accessibilityGranted": "已授予辅助功能权限"
+    },
+    "mode": {
+      "cloud": "云端",
+      "recommended": "推荐",
+      "zeroConfig": "零配置",
+      "cloudVoice": "云端语音识别",
+      "cloudTokens": "包含云端 AI 额度",
+      "oneTimeCredit": "注册即送额度",
+      "byok": "自带密钥",
+      "byokDesc": "使用你自己的 API 密钥",
+      "unlimitedUsage": "使用自己的密钥无限制",
+      "providersSupported": "支持多个服务商"
+    },
+    "stt": {
+      "serviceLabel": "语音识别服务",
+      "apiKeyLabel": "API 密钥",
+      "apiKeyPlaceholder": "输入你的 API 密钥",
+      "testButton": "测试连接",
+      "connectionOk": "连接成功",
+      "connectionFail": "连接失败"
+    },
+    "llm": {
+      "serviceLabel": "AI 润色服务",
+      "apiKeyLabel": "API 密钥",
+      "apiKeyPlaceholder": "输入你的 API 密钥",
+      "testButton": "测试连接",
+      "modelLabel": "模型",
+      "modelPlaceholder": "选择模型",
+      "fetchModelsTitle": "获取模型列表",
+      "modelsAvailable": "个模型可用",
+      "baseUrlLabel": "Base URL",
+      "connectionOk": "连接成功",
+      "connectionFail": "连接失败"
+    },
+    "layout": {
+      "skip": "跳过",
+      "back": "上一步",
+      "next": "下一步",
+      "close": "关闭"
+    }
   },
   "capsule": {
     "cancelRecording": "取消录音",
@@ -89,7 +207,21 @@
     "account": "账户",
     "upgrade": "升级",
     "exit": "退出",
-    "accessibilityRequired": "需要辅助功能权限 — 请打开设置"
+    "accessibilityRequired": "需要辅助功能权限 — 请打开设置",
+    "menu": {
+      "openMainWindow": "打开主窗口",
+      "settings": "设置",
+      "history": "历史记录",
+      "account": "账户",
+      "upgrade": "升级",
+      "exit": "退出"
+    },
+    "status": {
+      "recording": "录音中",
+      "transcribing": "转写中",
+      "thinking": "思考中",
+      "done": "完成"
+    }
   },
   "settings": {
     "title": "设置",
@@ -150,7 +282,8 @@
     "accessibilityPermission": "macOS 辅助功能",
     "accessibilityGranted": "权限已授予",
     "accessibilityRequired": "键盘输出需要此权限",
-    "grantPermission": "授权"
+    "grantPermission": "授权",
+    "unsavedChanges": "你有未保存的更改"
   },
   "dictionary": {
     "word": "词语",
@@ -203,7 +336,19 @@
     "llm": "LLM",
     "thankYou": "你已是 Pro 用户 — 感谢你的支持！",
     "signInFirst": "请先在账户页面登录后再订阅。",
-    "subscribeToPro": "订阅 Pro"
+    "subscribeToPro": "订阅 Pro",
+    "features": {
+      "sttTitle": "云端 STT",
+      "sttDetail": "高品质语音识别",
+      "llmTitle": "云端 LLM",
+      "llmDetail": "AI 文本润色",
+      "backupTitle": "云端备份",
+      "backupDetail": "同步你的设置和历史记录",
+      "scenesTitle": "自定义场景",
+      "scenesDetail": "保存和切换提示词模板",
+      "zeroConfigTitle": "零配置",
+      "zeroConfigDetail": "无需 API 密钥"
+    }
   },
   "account": {
     "title": "账户",
@@ -230,7 +375,14 @@
     "oauthPendingTitle": "正在完成登录...",
     "oauthPendingDesc": "请在浏览器中完成登录，完成后将自动返回。",
     "oauthTimeout": "登录超时，请重试。",
-    "cancel": "取消"
+    "cancel": "取消",
+    "toast": {
+      "backupOk": "备份成功",
+      "backupFail": "备份失败",
+      "restoreOk": "恢复成功",
+      "restoreFail": "恢复失败",
+      "subscriptionFail": "加载订阅信息失败"
+    }
   },
   "error": {
     "somethingWentWrong": "出了点问题",
@@ -244,6 +396,32 @@
     "llm_failed": "文本润色失败，原始转录已保存",
     "output_fallback_clipboard": "已复制到剪贴板，请手动粘贴",
     "output_wayland_unsupported": "Wayland 不支持键盘输出，已切换为剪贴板模式",
-    "output_xdotool_missing": "未找到 xdotool，请安装以使用键盘输出：sudo apt install xdotool"
+    "output_xdotool_missing": "未找到 xdotool，请安装以使用键盘输出：sudo apt install xdotool",
+    "boundary": {
+      "title": "出了点问题",
+      "reload": "重新加载"
+    }
+  },
+  "tray": {
+    "showWindow": "显示窗口",
+    "hideWindow": "隐藏窗口",
+    "startRecording": "开始录音",
+    "stopRecording": "停止录音",
+    "settings": "设置",
+    "history": "历史记录",
+    "account": "账户",
+    "about": "关于",
+    "quit": "退出"
+  },
+  "common": {
+    "loading": "加载中...",
+    "retry": "重试",
+    "save": "保存",
+    "saving": "保存中...",
+    "reset": "重置",
+    "cancel": "取消",
+    "test": "测试",
+    "connectionOk": "连接成功",
+    "connectionFail": "连接失败"
   }
 }

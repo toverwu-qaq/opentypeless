@@ -1,6 +1,13 @@
 use crate::pipeline;
 use crate::storage;
+use crate::tray;
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
+
+#[tauri::command]
+pub fn refresh_tray_labels(app: tauri::AppHandle) -> Result<(), String> {
+    tray::refresh_tray(&app);
+    Ok(())
+}
 
 #[tauri::command]
 pub fn check_accessibility_permission() -> bool {

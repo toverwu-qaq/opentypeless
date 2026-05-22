@@ -404,6 +404,7 @@ pub fn run() {
             commands::misc::update_hotkey,
             commands::misc::pause_hotkey,
             commands::misc::resume_hotkey,
+            commands::misc::refresh_tray_labels,
             commands::config::set_auto_start,
             commands::config::set_session_token,
         ])

@@ -23,7 +23,7 @@ export function UpgradePage() {
       useAuthStore.setState({ checkoutPending: true })
       await openUrl(url)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create checkout')
+      setError(e instanceof Error ? e.message : t('account.toast.subscriptionFail'))
     } finally {
       setLoading(false)
     }
@@ -65,15 +65,15 @@ export function UpgradePage() {
 
         {/* Features */}
         <div>
-          {PRO_PLAN.features.map((f) => (
+          {PRO_PLAN.features.map((f, i) => (
             <div
-              key={f.label}
+              key={i}
               className="flex items-start gap-2.5 px-4 py-2.5 border-b border-border last:border-b-0"
             >
               <Check size={14} className="text-green-500 mt-0.5 shrink-0" />
               <div>
-                <span className="text-text-primary">{f.label}</span>
-                <span className="text-text-tertiary ml-1.5 text-[12px]">{f.detail}</span>
+                <span className="text-text-primary">{t(f.labelKey)}</span>
+                <span className="text-text-tertiary ml-1.5 text-[12px]">{t(f.detailKey)}</span>
               </div>
             </div>
           ))}
