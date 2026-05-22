@@ -95,8 +95,10 @@ impl From<reqwest::Error> for AppError {
 }
 
 /// Retry an async operation with exponential backoff.
+///
 /// - `max_retries`: number of retries (0 = no retry)
 /// - `f`: closure returning a Future that produces Result<T, AppError>
+///
 /// Emits a `pipeline:retry` event on each retry attempt.
 pub async fn with_retry<F, Fut, T>(
     app_handle: &tauri::AppHandle,

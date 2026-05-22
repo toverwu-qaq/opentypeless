@@ -77,6 +77,7 @@ impl LlmProvider for CloudLlmProvider {
         });
 
         // Retry the initial connection (not once streaming starts)
+        #[allow(unused_assignments)]
         let mut response = None;
         let mut last_error: Option<AppError> = None;
         let mut attempt = 0u32;

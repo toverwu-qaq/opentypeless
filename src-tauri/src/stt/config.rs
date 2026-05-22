@@ -4,8 +4,9 @@
 /// - `stt::create_provider`
 /// - `lib::test_stt_connection`
 /// - `lib::bench_stt_connection`
-
+///
 /// Configuration for a Whisper-compatible STT provider.
+#[allow(clippy::doc_lazy_continuation)]
 pub struct SttProviderConfig {
     pub endpoint: &'static str,
     pub model: &'static str,
