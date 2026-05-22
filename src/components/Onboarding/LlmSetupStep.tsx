@@ -76,7 +76,7 @@ export function LlmSetupStep() {
         >
           {LLM_PROVIDERS.map((p) => (
             <option key={p.value} value={p.value}>
-              {p.label}
+              {t(p.labelKey)}
             </option>
           ))}
         </select>
@@ -113,7 +113,7 @@ export function LlmSetupStep() {
               list="onboarding-llm-model-list"
               value={config.llm_model}
               onChange={(e) => updateConfig({ llm_model: e.target.value })}
-              placeholder="glm-4.7"
+              placeholder={t('onboarding.llm.modelPlaceholder')}
               className="w-full px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
             />
             <datalist id="onboarding-llm-model-list">
@@ -133,7 +133,7 @@ export function LlmSetupStep() {
         </div>
         {models.length > 0 && (
           <p className="text-[11px] text-text-tertiary mt-1">
-            {models.length} {t('onboarding.llm.modelsAvailable')}
+            {t('onboarding.llm.modelsAvailable', { count: models.length })}
           </p>
         )}
       </Field>
@@ -142,7 +142,9 @@ export function LlmSetupStep() {
         <input
           value={config.llm_base_url}
           onChange={(e) => updateConfig({ llm_base_url: e.target.value })}
-          placeholder="https://open.bigmodel.cn/api/paas/v4"
+          placeholder={
+            LLM_DEFAULT_CONFIG[config.llm_provider]?.baseUrl ?? 'https://api.openai.com/v1'
+          }
           className="w-full px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
         />
       </Field>

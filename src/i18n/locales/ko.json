@@ -61,7 +61,27 @@
     "aiPolishService": "AI 다듬기 서비스",
     "apiKey": "API 키",
     "enterApiKey": "API 키를 입력하세요...",
-    "test": "테스트",
+    "test": {
+      "stageRecord": "녹음",
+      "stageStt": "변환",
+      "stageLlm": "다듬기",
+      "stageOutput": "출력",
+      "phaseIdle": "누른 채 녹음하세요",
+      "phaseRecording": "녹음 중...",
+      "phaseStt": "변환 중...",
+      "phaseLlm": "다듬는 중...",
+      "phaseDone": "완료!",
+      "hold": "누른 채",
+      "press": "눌러서",
+      "toTalk": "말하세요",
+      "toStartStop": "시작/중지하세요",
+      "transcribing": "변환 중",
+      "raw": "원본",
+      "polished": "다듬기 결과",
+      "result": "결과",
+      "demoRaw": "안녕하세요 음 이것 좀 도와주시겠어요",
+      "demoPolished": "안녕하세요, 이것 좀 도와주시겠어요?"
+    },
     "connectionSuccess": "연결에 성공했습니다",
     "connectionFailed": "연결에 실패했습니다. API 키를 확인해 주세요",
     "connectionFailedConfig": "연결에 실패했습니다. 설정을 확인해 주세요",
@@ -70,8 +90,27 @@
     "modelsAvailable": "{{count}}개 모델 사용 가능",
     "baseUrl": "기본 URL",
     "record": "녹음",
-    "stt": "STT",
-    "llm": "LLM",
+    "stt": {
+      "serviceLabel": "음성 인식 서비스",
+      "apiKeyLabel": "API 키",
+      "apiKeyPlaceholder": "API 키를 입력하세요",
+      "testButton": "연결 테스트",
+      "connectionOk": "연결에 성공했습니다",
+      "connectionFail": "연결에 실패했습니다"
+    },
+    "llm": {
+      "serviceLabel": "AI 다듬기 서비스",
+      "apiKeyLabel": "API 키",
+      "apiKeyPlaceholder": "API 키를 입력하세요",
+      "testButton": "연결 테스트",
+      "modelLabel": "모델",
+      "modelPlaceholder": "모델을 선택하세요",
+      "fetchModelsTitle": "모델 불러오기",
+      "modelsAvailable": "개 모델 사용 가능",
+      "baseUrlLabel": "기본 URL",
+      "connectionOk": "연결에 성공했습니다",
+      "connectionFail": "연결에 실패했습니다"
+    },
     "output": "출력",
     "releaseToStop": "놓으면 녹음이 중지됩니다",
     "holdAndSay": "누른 채 무언가를 말하세요",
@@ -117,26 +156,9 @@
       "passwordTooShort": "비밀번호는 8자 이상이어야 합니다",
       "signInTimedOut": "로그인 시간이 초과되었습니다",
       "failedToStart": "시작하지 못했습니다",
-      "verifyHint": "계속하려면 이메일을 인증해 주세요"
-    },
-    "test": {
-      "stageRecord": "녹음",
-      "stageStt": "변환",
-      "stageLlm": "다듬기",
-      "stageOutput": "출력",
-      "phaseIdle": "누른 채 녹음하세요",
-      "phaseRecording": "녹음 중...",
-      "phaseStt": "변환 중...",
-      "phaseLlm": "다듬는 중...",
-      "phaseDone": "완료!",
-      "hold": "누른 채",
-      "press": "눌러서",
-      "toTalk": "말하세요",
-      "toStartStop": "시작/중지하세요",
-      "transcribing": "변환 중",
-      "raw": "원본",
-      "polished": "다듬기 결과",
-      "result": "결과"
+      "verificationResent": "인증 이메일이 전송되었습니다!",
+      "continueWithGoogle": "Google로 계속",
+      "continueWithGithub": "GitHub로 계속"
     },
     "done": {
       "title": "모든 준비가 완료되었습니다!",
@@ -165,27 +187,6 @@
       "byokDesc": "자신의 API 키를 사용하세요",
       "unlimitedUsage": "자신의 키로 무제한 사용",
       "providersSupported": "여러 제공자 지원"
-    },
-    "stt": {
-      "serviceLabel": "음성 인식 서비스",
-      "apiKeyLabel": "API 키",
-      "apiKeyPlaceholder": "API 키를 입력하세요",
-      "testButton": "연결 테스트",
-      "connectionOk": "연결에 성공했습니다",
-      "connectionFail": "연결에 실패했습니다"
-    },
-    "llm": {
-      "serviceLabel": "AI 다듬기 서비스",
-      "apiKeyLabel": "API 키",
-      "apiKeyPlaceholder": "API 키를 입력하세요",
-      "testButton": "연결 테스트",
-      "modelLabel": "모델",
-      "modelPlaceholder": "모델을 선택하세요",
-      "fetchModelsTitle": "모델 불러오기",
-      "modelsAvailable": "개 모델 사용 가능",
-      "baseUrlLabel": "기본 URL",
-      "connectionOk": "연결에 성공했습니다",
-      "connectionFail": "연결에 실패했습니다"
     },
     "layout": {
       "skip": "건너뛰기",
@@ -222,7 +223,9 @@
       "transcribing": "변환 중",
       "thinking": "생각 중",
       "done": "완료"
-    }
+    },
+    "stopRecording": "녹음 중지",
+    "close": "닫기"
   },
   "settings": {
     "title": "설정",
@@ -338,6 +341,7 @@
     "thankYou": "Pro를 이용 중이시네요 — 지원해 주셔서 감사합니다!",
     "signInFirst": "구독하려면 먼저 계정 페이지에서 로그인하세요.",
     "subscribeToPro": "Pro 구독하기",
+    "month": "월",
     "features": {
       "sttTitle": "클라우드 STT",
       "sttDetail": "프리미엄 음성 인식",
@@ -376,6 +380,7 @@
     "oauthPendingTitle": "로그인 완료 중...",
     "oauthPendingDesc": "브라우저에서 로그인을 완료하세요. 자동으로 돌아옵니다.",
     "oauthTimeout": "로그인 시간이 초과되었습니다. 다시 시도해 주세요.",
+    "oauthFailed": "로그인 시작에 실패했습니다",
     "cancel": "취소",
     "toast": {
       "backupOk": "백업에 성공했습니다",
@@ -383,7 +388,12 @@
       "restoreOk": "복원에 성공했습니다",
       "restoreFail": "복원에 실패했습니다",
       "subscriptionFail": "구독 정보를 불러오지 못했습니다"
-    }
+    },
+    "sttQuotaWarning": "STT 할당량이 90%를 초과했습니다. BYOK 모드로 전환을 고려하세요.",
+    "llmQuotaWarning": "LLM 할당량이 90%를 초과했습니다. BYOK 모드로 전환을 고려하세요.",
+    "quotaHours": "시간",
+    "quotaTokens": "천 토큰",
+    "quotaUsage": "{{label}} 사용량: {{used}} / {{limit}} {{unit}}"
   },
   "error": {
     "somethingWentWrong": "문제가 발생했습니다",
@@ -424,5 +434,30 @@
     "test": "테스트",
     "connectionOk": "연결에 성공했습니다",
     "connectionFail": "연결에 실패했습니다"
+  },
+  "providers": {
+    "stt": {
+      "deepgram": "Deepgram Nova-3",
+      "assemblyai": "AssemblyAI",
+      "glmAsr": "GLM-ASR (Zhipu)",
+      "openaiWhisper": "OpenAI Whisper",
+      "groqWhisper": "Groq Whisper",
+      "siliconflow": "SiliconFlow",
+      "cloud": "OpenTypeless Cloud"
+    },
+    "llm": {
+      "zhipu": "Zhipu",
+      "deepseek": "DeepSeek",
+      "siliconflow": "SiliconFlow",
+      "openai": "OpenAI",
+      "gemini": "Google Gemini",
+      "moonshot": "Moonshot (Kimi)",
+      "qwen": "Qwen",
+      "groq": "Groq",
+      "claude": "Claude",
+      "ollama": "Ollama (로컬)",
+      "openrouter": "OpenRouter",
+      "cloud": "OpenTypeless Cloud"
+    }
   }
 }

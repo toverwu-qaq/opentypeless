@@ -116,7 +116,9 @@
       "passwordTooShort": "Password must be at least 8 characters",
       "signInTimedOut": "Sign in timed out",
       "failedToStart": "Failed to start",
-      "verifyHint": "Please verify your email to continue"
+      "verificationResent": "Verification email sent!",
+      "continueWithGoogle": "Continue with Google",
+      "continueWithGithub": "Continue with GitHub"
     },
     "test": {
       "stageRecord": "Record",
@@ -135,7 +137,9 @@
       "transcribing": "Transcribing",
       "raw": "Raw",
       "polished": "Polished",
-      "result": "Result"
+      "result": "Result",
+      "demoRaw": "hello um can you help me with this",
+      "demoPolished": "Hello, can you help me with this?"
     },
     "done": {
       "title": "You're all set!",
@@ -201,6 +205,8 @@
     "cancelPolishing": "Cancel polishing",
     "done": "Done",
     "errorOccurred": "An error occurred",
+    "stopRecording": "Stop recording",
+    "close": "Close",
     "openMainWindow": "Open Main Window",
     "settings": "Settings",
     "history": "History",
@@ -337,6 +343,7 @@
     "thankYou": "You're on Pro — thank you for your support!",
     "signInFirst": "Sign in from the Account page first to subscribe.",
     "subscribeToPro": "Subscribe to Pro",
+    "month": "month",
     "features": {
       "sttTitle": "Cloud STT",
       "sttDetail": "Premium speech recognition",
@@ -375,6 +382,12 @@
     "oauthPendingTitle": "Completing sign in...",
     "oauthPendingDesc": "Finish signing in with your browser. You'll be redirected back automatically.",
     "oauthTimeout": "Sign in timed out. Please try again.",
+    "oauthFailed": "Failed to start sign in",
+    "quotaHours": "hours",
+    "quotaTokens": "k tokens",
+    "quotaUsage": "{{label}}: {{used}} / {{limit}} {{unit}}",
+    "sttQuotaWarning": "STT usage has exceeded 90% of your monthly quota",
+    "llmQuotaWarning": "LLM usage has exceeded 90% of your monthly quota",
     "cancel": "Cancel",
     "toast": {
       "backupOk": "Backup successful",
@@ -423,5 +436,30 @@
     "test": "Test",
     "connectionOk": "Connection successful",
     "connectionFail": "Connection failed"
+  },
+  "providers": {
+    "stt": {
+      "deepgram": "Deepgram Nova-3",
+      "assemblyai": "AssemblyAI",
+      "glmAsr": "GLM-ASR (Zhipu)",
+      "openaiWhisper": "OpenAI Whisper",
+      "groqWhisper": "Groq Whisper",
+      "siliconflow": "SiliconFlow",
+      "cloud": "OpenTypeless Cloud"
+    },
+    "llm": {
+      "zhipu": "Zhipu",
+      "deepseek": "DeepSeek",
+      "siliconflow": "SiliconFlow",
+      "openai": "OpenAI",
+      "gemini": "Google Gemini",
+      "moonshot": "Moonshot (Kimi)",
+      "qwen": "Qwen",
+      "groq": "Groq",
+      "claude": "Claude",
+      "ollama": "Ollama (Local)",
+      "openrouter": "OpenRouter",
+      "cloud": "OpenTypeless Cloud"
+    }
   }
 }

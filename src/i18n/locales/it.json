@@ -61,7 +61,27 @@
     "aiPolishService": "Servizio di rifinitura IA",
     "apiKey": "Chiave API",
     "enterApiKey": "Inserisci la chiave API...",
-    "test": "Test",
+    "test": {
+      "stageRecord": "Registra",
+      "stageStt": "Trascrivi",
+      "stageLlm": "Rifinisci",
+      "stageOutput": "Output",
+      "phaseIdle": "Premi e tieni per registrare",
+      "phaseRecording": "Registrazione in corso...",
+      "phaseStt": "Trascrizione in corso...",
+      "phaseLlm": "Rifinitura in corso...",
+      "phaseDone": "Fatto!",
+      "hold": "Tieni premuto",
+      "press": "Premi",
+      "toTalk": "per parlare",
+      "toStartStop": "per avviare/fermare",
+      "transcribing": "Trascrizione",
+      "raw": "Grezzo",
+      "polished": "Rifinito",
+      "result": "Risultato",
+      "demoRaw": "ciao ehm puoi aiutarmi con questo",
+      "demoPolished": "Ciao, puoi aiutarmi con questo?"
+    },
     "connectionSuccess": "Connessione riuscita",
     "connectionFailed": "Connessione non riuscita, controlla la tua chiave API",
     "connectionFailedConfig": "Connessione non riuscita, controlla la tua configurazione",
@@ -70,8 +90,27 @@
     "modelsAvailable": "{{count}} modelli disponibili",
     "baseUrl": "URL di base",
     "record": "Registra",
-    "stt": "STT",
-    "llm": "LLM",
+    "stt": {
+      "serviceLabel": "Servizio di riconoscimento vocale",
+      "apiKeyLabel": "Chiave API",
+      "apiKeyPlaceholder": "Inserisci la tua chiave API",
+      "testButton": "Testa connessione",
+      "connectionOk": "Connessione riuscita",
+      "connectionFail": "Connessione non riuscita"
+    },
+    "llm": {
+      "serviceLabel": "Servizio di rifinitura IA",
+      "apiKeyLabel": "Chiave API",
+      "apiKeyPlaceholder": "Inserisci la tua chiave API",
+      "testButton": "Testa connessione",
+      "modelLabel": "Modello",
+      "modelPlaceholder": "Seleziona un modello",
+      "fetchModelsTitle": "Recupera modelli",
+      "modelsAvailable": "modelli disponibili",
+      "baseUrlLabel": "URL di base",
+      "connectionOk": "Connessione riuscita",
+      "connectionFail": "Connessione non riuscita"
+    },
     "output": "Output",
     "releaseToStop": "Rilascia per fermare la registrazione",
     "holdAndSay": "Tieni premuto e dì qualcosa",
@@ -117,26 +156,9 @@
       "passwordTooShort": "La password deve essere di almeno 8 caratteri",
       "signInTimedOut": "Accesso scaduto",
       "failedToStart": "Avvio non riuscito",
-      "verifyHint": "Verifica la tua email per continuare"
-    },
-    "test": {
-      "stageRecord": "Registra",
-      "stageStt": "Trascrivi",
-      "stageLlm": "Rifinisci",
-      "stageOutput": "Output",
-      "phaseIdle": "Premi e tieni per registrare",
-      "phaseRecording": "Registrazione in corso...",
-      "phaseStt": "Trascrizione in corso...",
-      "phaseLlm": "Rifinitura in corso...",
-      "phaseDone": "Fatto!",
-      "hold": "Tieni premuto",
-      "press": "Premi",
-      "toTalk": "per parlare",
-      "toStartStop": "per avviare/fermare",
-      "transcribing": "Trascrizione",
-      "raw": "Grezzo",
-      "polished": "Rifinito",
-      "result": "Risultato"
+      "verificationResent": "E-mail di verifica inviata!",
+      "continueWithGoogle": "Continua con Google",
+      "continueWithGithub": "Continua con GitHub"
     },
     "done": {
       "title": "Tutto pronto!",
@@ -165,27 +187,6 @@
       "byokDesc": "Usa le tue chiavi API",
       "unlimitedUsage": "Utilizzo illimitato con le tue chiavi",
       "providersSupported": "Più provider supportati"
-    },
-    "stt": {
-      "serviceLabel": "Servizio di riconoscimento vocale",
-      "apiKeyLabel": "Chiave API",
-      "apiKeyPlaceholder": "Inserisci la tua chiave API",
-      "testButton": "Testa connessione",
-      "connectionOk": "Connessione riuscita",
-      "connectionFail": "Connessione non riuscita"
-    },
-    "llm": {
-      "serviceLabel": "Servizio di rifinitura IA",
-      "apiKeyLabel": "Chiave API",
-      "apiKeyPlaceholder": "Inserisci la tua chiave API",
-      "testButton": "Testa connessione",
-      "modelLabel": "Modello",
-      "modelPlaceholder": "Seleziona un modello",
-      "fetchModelsTitle": "Recupera modelli",
-      "modelsAvailable": "modelli disponibili",
-      "baseUrlLabel": "URL di base",
-      "connectionOk": "Connessione riuscita",
-      "connectionFail": "Connessione non riuscita"
     },
     "layout": {
       "skip": "Salta",
@@ -222,7 +223,9 @@
       "transcribing": "Trascrizione",
       "thinking": "Elaborazione",
       "done": "Fatto"
-    }
+    },
+    "stopRecording": "Ferma registrazione",
+    "close": "Chiudi"
   },
   "settings": {
     "title": "Impostazioni",
@@ -338,6 +341,7 @@
     "thankYou": "Sei su Pro — grazie per il tuo supporto!",
     "signInFirst": "Accedi prima dalla pagina Account per abbonarti.",
     "subscribeToPro": "Abbonati a Pro",
+    "month": "mese",
     "features": {
       "sttTitle": "STT Cloud",
       "sttDetail": "Riconoscimento vocale premium",
@@ -376,6 +380,7 @@
     "oauthPendingTitle": "Completamento accesso in corso...",
     "oauthPendingDesc": "Termina l'accesso con il tuo browser. Verrai reindirizzato automaticamente.",
     "oauthTimeout": "Accesso scaduto. Riprova.",
+    "oauthFailed": "Impossibile avviare l'accesso",
     "cancel": "Annulla",
     "toast": {
       "backupOk": "Backup riuscito",
@@ -383,7 +388,12 @@
       "restoreOk": "Ripristino riuscito",
       "restoreFail": "Ripristino non riuscito",
       "subscriptionFail": "Caricamento abbonamento non riuscito"
-    }
+    },
+    "sttQuotaWarning": "La quota STT supera il 90 %. Valuta di passare alla modalità BYOK.",
+    "llmQuotaWarning": "La quota LLM supera il 90 %. Valuta di passare alla modalità BYOK.",
+    "quotaHours": "ore",
+    "quotaTokens": "k token",
+    "quotaUsage": "Utilizzo {{label}}: {{used}} di {{limit}} {{unit}}"
   },
   "error": {
     "somethingWentWrong": "Qualcosa è andato storto",
@@ -424,5 +434,30 @@
     "test": "Test",
     "connectionOk": "Connessione riuscita",
     "connectionFail": "Connessione non riuscita"
+  },
+  "providers": {
+    "stt": {
+      "deepgram": "Deepgram Nova-3",
+      "assemblyai": "AssemblyAI",
+      "glmAsr": "GLM-ASR (Zhipu)",
+      "openaiWhisper": "OpenAI Whisper",
+      "groqWhisper": "Groq Whisper",
+      "siliconflow": "SiliconFlow",
+      "cloud": "OpenTypeless Cloud"
+    },
+    "llm": {
+      "zhipu": "Zhipu",
+      "deepseek": "DeepSeek",
+      "siliconflow": "SiliconFlow",
+      "openai": "OpenAI",
+      "gemini": "Google Gemini",
+      "moonshot": "Moonshot (Kimi)",
+      "qwen": "Qwen",
+      "groq": "Groq",
+      "claude": "Claude",
+      "ollama": "Ollama (Locale)",
+      "openrouter": "OpenRouter",
+      "cloud": "OpenTypeless Cloud"
+    }
   }
 }

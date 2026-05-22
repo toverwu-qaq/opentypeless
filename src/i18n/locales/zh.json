@@ -116,7 +116,9 @@
       "passwordTooShort": "密码至少需要 8 个字符",
       "signInTimedOut": "登录超时",
       "failedToStart": "启动失败",
-      "verifyHint": "请验证你的邮箱以继续"
+      "verificationResent": "验证邮件已发送！",
+      "continueWithGoogle": "使用 Google 继续",
+      "continueWithGithub": "使用 GitHub 继续"
     },
     "test": {
       "stageRecord": "录音",
@@ -135,7 +137,9 @@
       "transcribing": "转写中",
       "raw": "原文",
       "polished": "润色后",
-      "result": "结果"
+      "result": "结果",
+      "demoRaw": "你好 嗯 你能帮我一下吗",
+      "demoPolished": "你好，你能帮我一下吗？"
     },
     "done": {
       "title": "一切就绪！",
@@ -201,6 +205,8 @@
     "cancelPolishing": "取消润色",
     "done": "完成",
     "errorOccurred": "发生错误",
+    "stopRecording": "停止录音",
+    "close": "关闭",
     "openMainWindow": "打开主窗口",
     "settings": "设置",
     "history": "历史记录",
@@ -337,6 +343,7 @@
     "thankYou": "你已是 Pro 用户 — 感谢你的支持！",
     "signInFirst": "请先在账户页面登录后再订阅。",
     "subscribeToPro": "订阅 Pro",
+    "month": "月",
     "features": {
       "sttTitle": "云端 STT",
       "sttDetail": "高品质语音识别",
@@ -375,6 +382,12 @@
     "oauthPendingTitle": "正在完成登录...",
     "oauthPendingDesc": "请在浏览器中完成登录，完成后将自动返回。",
     "oauthTimeout": "登录超时，请重试。",
+    "oauthFailed": "启动登录失败",
+    "sttQuotaWarning": "语音转文字额度已超过 90%，建议切换到自带密钥模式。",
+    "llmQuotaWarning": "AI 额度已超过 90%，建议切换到自带密钥模式。",
+    "quotaHours": "小时",
+    "quotaTokens": "千 token",
+    "quotaUsage": "{{label}}使用量：{{used}} / {{limit}} {{unit}}",
     "cancel": "取消",
     "toast": {
       "backupOk": "备份成功",
@@ -423,5 +436,30 @@
     "test": "测试",
     "connectionOk": "连接成功",
     "connectionFail": "连接失败"
+  },
+  "providers": {
+    "stt": {
+      "deepgram": "Deepgram Nova-3",
+      "assemblyai": "AssemblyAI",
+      "glmAsr": "智谱 GLM-ASR",
+      "openaiWhisper": "OpenAI Whisper",
+      "groqWhisper": "Groq Whisper",
+      "siliconflow": "硅基流动 SiliconFlow",
+      "cloud": "OpenTypeless 云服务"
+    },
+    "llm": {
+      "zhipu": "智谱",
+      "deepseek": "DeepSeek",
+      "siliconflow": "硅基流动 SiliconFlow",
+      "openai": "OpenAI",
+      "gemini": "Google Gemini",
+      "moonshot": "Moonshot (Kimi)",
+      "qwen": "通义千问",
+      "groq": "Groq",
+      "claude": "Claude",
+      "ollama": "Ollama (本地)",
+      "openrouter": "OpenRouter",
+      "cloud": "OpenTypeless 云服务"
+    }
   }
 }

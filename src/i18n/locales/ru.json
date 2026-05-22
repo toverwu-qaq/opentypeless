@@ -61,7 +61,27 @@
     "aiPolishService": "Служба обработки ИИ",
     "apiKey": "API-ключ",
     "enterApiKey": "Введите API-ключ...",
-    "test": "Проверить",
+    "test": {
+      "stageRecord": "Запись",
+      "stageStt": "Распознавание",
+      "stageLlm": "Обработка",
+      "stageOutput": "Вывод",
+      "phaseIdle": "Нажмите и удерживайте для записи",
+      "phaseRecording": "Запись...",
+      "phaseStt": "Распознавание...",
+      "phaseLlm": "Обработка...",
+      "phaseDone": "Готово!",
+      "hold": "Удерживать",
+      "press": "Нажать",
+      "toTalk": "чтобы говорить",
+      "toStartStop": "для старт/стоп",
+      "transcribing": "Распознавание",
+      "raw": "Без обработки",
+      "polished": "Обработано",
+      "result": "Результат",
+      "demoRaw": "здравствуйте эм не могли бы вы мне помочь с этим",
+      "demoPolished": "Здравствуйте, не могли бы вы мне помочь с этим?"
+    },
     "connectionSuccess": "Подключение успешно",
     "connectionFailed": "Не удалось подключиться, проверьте ваш API-ключ",
     "connectionFailedConfig": "Не удалось подключиться, проверьте конфигурацию",
@@ -70,8 +90,27 @@
     "modelsAvailable": "Доступно моделей: {{count}}",
     "baseUrl": "Базовый URL",
     "record": "Запись",
-    "stt": "STT",
-    "llm": "LLM",
+    "stt": {
+      "serviceLabel": "Служба распознавания речи",
+      "apiKeyLabel": "API-ключ",
+      "apiKeyPlaceholder": "Введите ваш API-ключ",
+      "testButton": "Проверить подключение",
+      "connectionOk": "Подключение успешно",
+      "connectionFail": "Не удалось подключиться"
+    },
+    "llm": {
+      "serviceLabel": "Служба обработки ИИ",
+      "apiKeyLabel": "API-ключ",
+      "apiKeyPlaceholder": "Введите ваш API-ключ",
+      "testButton": "Проверить подключение",
+      "modelLabel": "Модель",
+      "modelPlaceholder": "Выберите модель",
+      "fetchModelsTitle": "Загрузить модели",
+      "modelsAvailable": "моделей доступно",
+      "baseUrlLabel": "Базовый URL",
+      "connectionOk": "Подключение успешно",
+      "connectionFail": "Не удалось подключиться"
+    },
     "output": "Вывод",
     "releaseToStop": "Отпустите, чтобы остановить запись",
     "holdAndSay": "Удерживайте и скажите что-нибудь",
@@ -117,26 +156,9 @@
       "passwordTooShort": "Пароль должен содержать не менее 8 символов",
       "signInTimedOut": "Время входа истекло",
       "failedToStart": "Не удалось начать",
-      "verifyHint": "Пожалуйста, подтвердите вашу электронную почту, чтобы продолжить"
-    },
-    "test": {
-      "stageRecord": "Запись",
-      "stageStt": "Распознавание",
-      "stageLlm": "Обработка",
-      "stageOutput": "Вывод",
-      "phaseIdle": "Нажмите и удерживайте для записи",
-      "phaseRecording": "Запись...",
-      "phaseStt": "Распознавание...",
-      "phaseLlm": "Обработка...",
-      "phaseDone": "Готово!",
-      "hold": "Удерживать",
-      "press": "Нажать",
-      "toTalk": "чтобы говорить",
-      "toStartStop": "для старт/стоп",
-      "transcribing": "Распознавание",
-      "raw": "Без обработки",
-      "polished": "Обработано",
-      "result": "Результат"
+      "verificationResent": "Письмо для подтверждения отправлено!",
+      "continueWithGoogle": "Продолжить с Google",
+      "continueWithGithub": "Продолжить с GitHub"
     },
     "done": {
       "title": "Всё готово!",
@@ -165,27 +187,6 @@
       "byokDesc": "Используйте свои API-ключи",
       "unlimitedUsage": "Неограниченное использование с вашими ключами",
       "providersSupported": "Поддерживается несколько провайдеров"
-    },
-    "stt": {
-      "serviceLabel": "Служба распознавания речи",
-      "apiKeyLabel": "API-ключ",
-      "apiKeyPlaceholder": "Введите ваш API-ключ",
-      "testButton": "Проверить подключение",
-      "connectionOk": "Подключение успешно",
-      "connectionFail": "Не удалось подключиться"
-    },
-    "llm": {
-      "serviceLabel": "Служба обработки ИИ",
-      "apiKeyLabel": "API-ключ",
-      "apiKeyPlaceholder": "Введите ваш API-ключ",
-      "testButton": "Проверить подключение",
-      "modelLabel": "Модель",
-      "modelPlaceholder": "Выберите модель",
-      "fetchModelsTitle": "Загрузить модели",
-      "modelsAvailable": "моделей доступно",
-      "baseUrlLabel": "Базовый URL",
-      "connectionOk": "Подключение успешно",
-      "connectionFail": "Не удалось подключиться"
     },
     "layout": {
       "skip": "Пропустить",
@@ -222,7 +223,9 @@
       "transcribing": "Распознавание",
       "thinking": "Обработка",
       "done": "Готово"
-    }
+    },
+    "stopRecording": "Остановить запись",
+    "close": "Закрыть"
   },
   "settings": {
     "title": "Настройки",
@@ -338,6 +341,7 @@
     "thankYou": "Вы на плане Pro — спасибо за вашу поддержку!",
     "signInFirst": "Сначала войдите на странице Аккаунт, чтобы оформить подписку.",
     "subscribeToPro": "Оформить подписку Pro",
+    "month": "месяц",
     "features": {
       "sttTitle": "Облачный STT",
       "sttDetail": "Премиальное распознавание речи",
@@ -376,6 +380,7 @@
     "oauthPendingTitle": "Завершение входа...",
     "oauthPendingDesc": "Завершите вход в браузере. Вы будете перенаправлены автоматически.",
     "oauthTimeout": "Время входа истекло. Пожалуйста, попробуйте снова.",
+    "oauthFailed": "Не удалось начать вход",
     "cancel": "Отмена",
     "toast": {
       "backupOk": "Резервная копия создана",
@@ -383,7 +388,12 @@
       "restoreOk": "Восстановление выполнено",
       "restoreFail": "Не удалось восстановить",
       "subscriptionFail": "Не удалось загрузить подписку"
-    }
+    },
+    "sttQuotaWarning": "Квота STT превышает 90 %. Рассмотрите переход в режим BYOK.",
+    "llmQuotaWarning": "Квота LLM превышает 90 %. Рассмотрите переход в режим BYOK.",
+    "quotaHours": "часов",
+    "quotaTokens": "к токенов",
+    "quotaUsage": "Использование {{label}}: {{used}} из {{limit}} {{unit}}"
   },
   "error": {
     "somethingWentWrong": "Что-то пошло не так",
@@ -424,5 +434,30 @@
     "test": "Проверить",
     "connectionOk": "Подключение успешно",
     "connectionFail": "Не удалось подключиться"
+  },
+  "providers": {
+    "stt": {
+      "deepgram": "Deepgram Nova-3",
+      "assemblyai": "AssemblyAI",
+      "glmAsr": "GLM-ASR (Zhipu)",
+      "openaiWhisper": "OpenAI Whisper",
+      "groqWhisper": "Groq Whisper",
+      "siliconflow": "SiliconFlow",
+      "cloud": "OpenTypeless Cloud"
+    },
+    "llm": {
+      "zhipu": "Zhipu",
+      "deepseek": "DeepSeek",
+      "siliconflow": "SiliconFlow",
+      "openai": "OpenAI",
+      "gemini": "Google Gemini",
+      "moonshot": "Moonshot (Kimi)",
+      "qwen": "Qwen",
+      "groq": "Groq",
+      "claude": "Claude",
+      "ollama": "Ollama (Локальный)",
+      "openrouter": "OpenRouter",
+      "cloud": "OpenTypeless Cloud"
+    }
   }
 }

@@ -23,17 +23,6 @@ const STAGES = [
   { icon: Type, label: 'onboarding.test.stageOutput', key: 'complete' },
 ] as const
 
-const DEMO_RAW = 'hello um can you help me with this'
-const DEMO_POLISHED = 'Hello, can you help me with this?'
-
-const PHASE_DESC: Record<DemoPhase, string> = {
-  idle: 'onboarding.test.phaseIdle',
-  recording: 'onboarding.test.phaseRecording',
-  transcribing: 'onboarding.test.phaseStt',
-  polishing: 'onboarding.test.phaseLlm',
-  complete: 'onboarding.test.phaseDone',
-}
-
 export function QuickTestStep() {
   const { t } = useTranslation()
   const config = useAppStore((s) => s.config)
@@ -41,6 +30,17 @@ export function QuickTestStep() {
   const [rawChars, setRawChars] = useState(0)
   const [polishedChars, setPolishedChars] = useState(0)
   const [seconds, setSeconds] = useState(0)
+
+  const DEMO_RAW = t('onboarding.test.demoRaw')
+  const DEMO_POLISHED = t('onboarding.test.demoPolished')
+
+  const PHASE_DESC: Record<DemoPhase, string> = {
+    idle: 'onboarding.test.phaseIdle',
+    recording: 'onboarding.test.phaseRecording',
+    transcribing: 'onboarding.test.phaseStt',
+    polishing: 'onboarding.test.phaseLlm',
+    complete: 'onboarding.test.phaseDone',
+  }
 
   // Auto-advance through demo phases in a loop
   useEffect(() => {
@@ -80,7 +80,7 @@ export function QuickTestStep() {
       })
     }, interval)
     return () => clearInterval(timer)
-  }, [phase])
+  }, [phase, DEMO_RAW.length])
 
   // Typewriter: polished text during polishing
   useEffect(() => {
@@ -97,7 +97,7 @@ export function QuickTestStep() {
       })
     }, interval)
     return () => clearInterval(timer)
-  }, [phase])
+  }, [phase, DEMO_POLISHED.length])
 
   const activeIdx = STAGES.findIndex((s) => s.key === phase)
 

@@ -99,7 +99,7 @@ export function LlmPane() {
         >
           {LLM_PROVIDERS.map((p) => (
             <option key={p.value} value={p.value}>
-              {p.label}
+              {t(p.labelKey)}
             </option>
           ))}
         </select>
@@ -235,7 +235,7 @@ export function LlmPane() {
           >
             {TARGET_LANGUAGES.map((l) => (
               <option key={l.value} value={l.value}>
-                {l.label}
+                {l.labelKey ? t(l.labelKey) : l.label}
               </option>
             ))}
           </select>

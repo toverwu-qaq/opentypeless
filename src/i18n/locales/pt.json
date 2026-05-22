@@ -61,7 +61,27 @@
     "aiPolishService": "Serviço de Polimento por IA",
     "apiKey": "Chave de API",
     "enterApiKey": "Insira a Chave de API...",
-    "test": "Testar",
+    "test": {
+      "stageRecord": "Gravar",
+      "stageStt": "Transcrever",
+      "stageLlm": "Polir",
+      "stageOutput": "Saída",
+      "phaseIdle": "Pressione e segure para gravar",
+      "phaseRecording": "Gravando...",
+      "phaseStt": "Transcrevendo...",
+      "phaseLlm": "Polindo...",
+      "phaseDone": "Pronto!",
+      "hold": "Segure",
+      "press": "Pressione",
+      "toTalk": "para falar",
+      "toStartStop": "para iniciar/parar",
+      "transcribing": "Transcrevendo",
+      "raw": "Bruto",
+      "polished": "Polido",
+      "result": "Resultado",
+      "demoRaw": "olá hum pode me ajudar com isso",
+      "demoPolished": "Olá, pode me ajudar com isso?"
+    },
     "connectionSuccess": "Conexão bem-sucedida",
     "connectionFailed": "Conexão falhou, verifique sua Chave de API",
     "connectionFailedConfig": "Conexão falhou, verifique sua configuração",
@@ -70,8 +90,27 @@
     "modelsAvailable": "{{count}} modelos disponíveis",
     "baseUrl": "URL Base",
     "record": "Gravar",
-    "stt": "STT",
-    "llm": "LLM",
+    "stt": {
+      "serviceLabel": "Serviço de Reconhecimento de Fala",
+      "apiKeyLabel": "Chave de API",
+      "apiKeyPlaceholder": "Insira sua chave de API",
+      "testButton": "Testar Conexão",
+      "connectionOk": "Conexão bem-sucedida",
+      "connectionFail": "Conexão falhou"
+    },
+    "llm": {
+      "serviceLabel": "Serviço de Polimento por IA",
+      "apiKeyLabel": "Chave de API",
+      "apiKeyPlaceholder": "Insira sua chave de API",
+      "testButton": "Testar Conexão",
+      "modelLabel": "Modelo",
+      "modelPlaceholder": "Selecione um modelo",
+      "fetchModelsTitle": "Buscar Modelos",
+      "modelsAvailable": "modelos disponíveis",
+      "baseUrlLabel": "URL Base",
+      "connectionOk": "Conexão bem-sucedida",
+      "connectionFail": "Conexão falhou"
+    },
     "output": "Saída",
     "releaseToStop": "Solte para parar a gravação",
     "holdAndSay": "Segure e diga algo",
@@ -117,26 +156,9 @@
       "passwordTooShort": "A senha deve ter pelo menos 8 caracteres",
       "signInTimedOut": "O login expirou",
       "failedToStart": "Falha ao iniciar",
-      "verifyHint": "Verifique seu e-mail para continuar"
-    },
-    "test": {
-      "stageRecord": "Gravar",
-      "stageStt": "Transcrever",
-      "stageLlm": "Polir",
-      "stageOutput": "Saída",
-      "phaseIdle": "Pressione e segure para gravar",
-      "phaseRecording": "Gravando...",
-      "phaseStt": "Transcrevendo...",
-      "phaseLlm": "Polindo...",
-      "phaseDone": "Pronto!",
-      "hold": "Segure",
-      "press": "Pressione",
-      "toTalk": "para falar",
-      "toStartStop": "para iniciar/parar",
-      "transcribing": "Transcrevendo",
-      "raw": "Bruto",
-      "polished": "Polido",
-      "result": "Resultado"
+      "verificationResent": "E-mail de verificação enviado!",
+      "continueWithGoogle": "Continuar com Google",
+      "continueWithGithub": "Continuar com GitHub"
     },
     "done": {
       "title": "Tudo pronto!",
@@ -165,27 +187,6 @@
       "byokDesc": "Use suas próprias chaves de API",
       "unlimitedUsage": "Uso ilimitado com suas chaves",
       "providersSupported": "Múltiplos provedores suportados"
-    },
-    "stt": {
-      "serviceLabel": "Serviço de Reconhecimento de Fala",
-      "apiKeyLabel": "Chave de API",
-      "apiKeyPlaceholder": "Insira sua chave de API",
-      "testButton": "Testar Conexão",
-      "connectionOk": "Conexão bem-sucedida",
-      "connectionFail": "Conexão falhou"
-    },
-    "llm": {
-      "serviceLabel": "Serviço de Polimento por IA",
-      "apiKeyLabel": "Chave de API",
-      "apiKeyPlaceholder": "Insira sua chave de API",
-      "testButton": "Testar Conexão",
-      "modelLabel": "Modelo",
-      "modelPlaceholder": "Selecione um modelo",
-      "fetchModelsTitle": "Buscar Modelos",
-      "modelsAvailable": "modelos disponíveis",
-      "baseUrlLabel": "URL Base",
-      "connectionOk": "Conexão bem-sucedida",
-      "connectionFail": "Conexão falhou"
     },
     "layout": {
       "skip": "Pular",
@@ -222,7 +223,9 @@
       "transcribing": "Transcrevendo",
       "thinking": "Pensando",
       "done": "Pronto"
-    }
+    },
+    "stopRecording": "Parar gravação",
+    "close": "Fechar"
   },
   "settings": {
     "title": "Configurações",
@@ -338,6 +341,7 @@
     "thankYou": "Você está no Pro — obrigado pelo seu apoio!",
     "signInFirst": "Entre pela página de Conta primeiro para se inscrever.",
     "subscribeToPro": "Inscrever-se no Pro",
+    "month": "mês",
     "features": {
       "sttTitle": "STT na Nuvem",
       "sttDetail": "Reconhecimento de fala premium",
@@ -376,6 +380,7 @@
     "oauthPendingTitle": "Concluindo login...",
     "oauthPendingDesc": "Conclua o login no seu navegador. Você será redirecionado automaticamente.",
     "oauthTimeout": "O login expirou. Tente novamente.",
+    "oauthFailed": "Falha ao iniciar sessão",
     "cancel": "Cancelar",
     "toast": {
       "backupOk": "Backup realizado com sucesso",
@@ -383,7 +388,12 @@
       "restoreOk": "Restauração realizada com sucesso",
       "restoreFail": "Falha na restauração",
       "subscriptionFail": "Falha ao carregar a assinatura"
-    }
+    },
+    "sttQuotaWarning": "A cota de STT ultrapassa 90 %. Considere mudar para o modo BYOK.",
+    "llmQuotaWarning": "A cota de LLM ultrapassa 90 %. Considere mudar para o modo BYOK.",
+    "quotaHours": "horas",
+    "quotaTokens": "k tokens",
+    "quotaUsage": "Uso de {{label}}: {{used}} de {{limit}} {{unit}}"
   },
   "error": {
     "somethingWentWrong": "Algo deu errado",
@@ -424,5 +434,30 @@
     "test": "Testar",
     "connectionOk": "Conexão bem-sucedida",
     "connectionFail": "Conexão falhou"
+  },
+  "providers": {
+    "stt": {
+      "deepgram": "Deepgram Nova-3",
+      "assemblyai": "AssemblyAI",
+      "glmAsr": "GLM-ASR (Zhipu)",
+      "openaiWhisper": "OpenAI Whisper",
+      "groqWhisper": "Groq Whisper",
+      "siliconflow": "SiliconFlow",
+      "cloud": "OpenTypeless Cloud"
+    },
+    "llm": {
+      "zhipu": "Zhipu",
+      "deepseek": "DeepSeek",
+      "siliconflow": "SiliconFlow",
+      "openai": "OpenAI",
+      "gemini": "Google Gemini",
+      "moonshot": "Moonshot (Kimi)",
+      "qwen": "Qwen",
+      "groq": "Groq",
+      "claude": "Claude",
+      "ollama": "Ollama (Local)",
+      "openrouter": "OpenRouter",
+      "cloud": "OpenTypeless Cloud"
+    }
   }
 }

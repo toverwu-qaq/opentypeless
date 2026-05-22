@@ -61,7 +61,27 @@
     "aiPolishService": "AI整形サービス",
     "apiKey": "APIキー",
     "enterApiKey": "APIキーを入力...",
-    "test": "テスト",
+    "test": {
+      "stageRecord": "録音",
+      "stageStt": "文字起こし",
+      "stageLlm": "整形",
+      "stageOutput": "出力",
+      "phaseIdle": "長押しして録音を開始",
+      "phaseRecording": "録音中...",
+      "phaseStt": "文字起こし中...",
+      "phaseLlm": "整形中...",
+      "phaseDone": "完了！",
+      "hold": "長押し",
+      "press": "押す",
+      "toTalk": "して話す",
+      "toStartStop": "して開始/停止",
+      "transcribing": "文字起こし中",
+      "raw": "原文",
+      "polished": "整形済み",
+      "result": "結果",
+      "demoRaw": "こんにちは えーと ちょっと手伝ってもらえますか",
+      "demoPolished": "こんにちは、ちょっと手伝ってもらえますか？"
+    },
     "connectionSuccess": "接続に成功しました",
     "connectionFailed": "接続に失敗しました。APIキーを確認してください",
     "connectionFailedConfig": "接続に失敗しました。設定を確認してください",
@@ -70,8 +90,27 @@
     "modelsAvailable": "{{count}}件のモデルが利用可能",
     "baseUrl": "ベースURL",
     "record": "録音",
-    "stt": "STT",
-    "llm": "LLM",
+    "stt": {
+      "serviceLabel": "音声認識サービス",
+      "apiKeyLabel": "APIキー",
+      "apiKeyPlaceholder": "APIキーを入力してください",
+      "testButton": "接続テスト",
+      "connectionOk": "接続に成功しました",
+      "connectionFail": "接続に失敗しました"
+    },
+    "llm": {
+      "serviceLabel": "AI整形サービス",
+      "apiKeyLabel": "APIキー",
+      "apiKeyPlaceholder": "APIキーを入力してください",
+      "testButton": "接続テスト",
+      "modelLabel": "モデル",
+      "modelPlaceholder": "モデルを選択",
+      "fetchModelsTitle": "モデルを取得",
+      "modelsAvailable": "件のモデルが利用可能",
+      "baseUrlLabel": "ベースURL",
+      "connectionOk": "接続に成功しました",
+      "connectionFail": "接続に失敗しました"
+    },
     "output": "出力",
     "releaseToStop": "離すと録音停止",
     "holdAndSay": "長押しして何か話しかけてください",
@@ -117,26 +156,9 @@
       "passwordTooShort": "パスワードは8文字以上必要です",
       "signInTimedOut": "サインインがタイムアウトしました",
       "failedToStart": "開始に失敗しました",
-      "verifyHint": "続行するにはメールアドレスを確認してください"
-    },
-    "test": {
-      "stageRecord": "録音",
-      "stageStt": "文字起こし",
-      "stageLlm": "整形",
-      "stageOutput": "出力",
-      "phaseIdle": "長押しして録音を開始",
-      "phaseRecording": "録音中...",
-      "phaseStt": "文字起こし中...",
-      "phaseLlm": "整形中...",
-      "phaseDone": "完了！",
-      "hold": "長押し",
-      "press": "押す",
-      "toTalk": "して話す",
-      "toStartStop": "して開始/停止",
-      "transcribing": "文字起こし中",
-      "raw": "原文",
-      "polished": "整形済み",
-      "result": "結果"
+      "verificationResent": "確認メールを送信しました！",
+      "continueWithGoogle": "Googleで続行",
+      "continueWithGithub": "GitHubで続行"
     },
     "done": {
       "title": "準備が完了しました！",
@@ -165,27 +187,6 @@
       "byokDesc": "独自のAPIキーを使用します",
       "unlimitedUsage": "独自キーで使い放題",
       "providersSupported": "複数プロバイダー対応"
-    },
-    "stt": {
-      "serviceLabel": "音声認識サービス",
-      "apiKeyLabel": "APIキー",
-      "apiKeyPlaceholder": "APIキーを入力してください",
-      "testButton": "接続テスト",
-      "connectionOk": "接続に成功しました",
-      "connectionFail": "接続に失敗しました"
-    },
-    "llm": {
-      "serviceLabel": "AI整形サービス",
-      "apiKeyLabel": "APIキー",
-      "apiKeyPlaceholder": "APIキーを入力してください",
-      "testButton": "接続テスト",
-      "modelLabel": "モデル",
-      "modelPlaceholder": "モデルを選択",
-      "fetchModelsTitle": "モデルを取得",
-      "modelsAvailable": "件のモデルが利用可能",
-      "baseUrlLabel": "ベースURL",
-      "connectionOk": "接続に成功しました",
-      "connectionFail": "接続に失敗しました"
     },
     "layout": {
       "skip": "スキップ",
@@ -222,7 +223,9 @@
       "transcribing": "文字起こし中",
       "thinking": "思考中",
       "done": "完了"
-    }
+    },
+    "stopRecording": "録音を停止",
+    "close": "閉じる"
   },
   "settings": {
     "title": "設定",
@@ -338,6 +341,7 @@
     "thankYou": "Proをご利用いただきありがとうございます！",
     "signInFirst": "サブスクライブするには、まずアカウントページからサインインしてください。",
     "subscribeToPro": "Proにサブスクライブ",
+    "month": "月",
     "features": {
       "sttTitle": "クラウドSTT",
       "sttDetail": "プレミアム音声認識",
@@ -373,6 +377,7 @@
     "opening": "開いています...",
     "manageSubscription": "サブスクリプションを管理",
     "signOut": "サインアウト",
+    "oauthFailed": "ログインの開始に失敗しました",
     "oauthPendingTitle": "サインインを完了中...",
     "oauthPendingDesc": "ブラウザでサインインを完了してください。自動的にリダイレクトされます。",
     "oauthTimeout": "サインインがタイムアウトしました。もう一度お試しください。",
@@ -383,7 +388,12 @@
       "restoreOk": "復元に成功しました",
       "restoreFail": "復元に失敗しました",
       "subscriptionFail": "サブスクリプションの読み込みに失敗しました"
-    }
+    },
+    "sttQuotaWarning": "音声認識の使用量が90%を超えています。BYOKモードへの切り替えをご検討ください。",
+    "llmQuotaWarning": "AIの使用量が90%を超えています。BYOKモードへの切り替えをご検討ください。",
+    "quotaHours": "時間",
+    "quotaTokens": "千トークン",
+    "quotaUsage": "{{label}}使用量: {{used}} / {{limit}} {{unit}}"
   },
   "error": {
     "somethingWentWrong": "問題が発生しました",
@@ -424,5 +434,30 @@
     "test": "テスト",
     "connectionOk": "接続に成功しました",
     "connectionFail": "接続に失敗しました"
+  },
+  "providers": {
+    "stt": {
+      "deepgram": "Deepgram Nova-3",
+      "assemblyai": "AssemblyAI",
+      "glmAsr": "GLM-ASR (Zhipu)",
+      "openaiWhisper": "OpenAI Whisper",
+      "groqWhisper": "Groq Whisper",
+      "siliconflow": "SiliconFlow",
+      "cloud": "OpenTypeless Cloud"
+    },
+    "llm": {
+      "zhipu": "Zhipu",
+      "deepseek": "DeepSeek",
+      "siliconflow": "SiliconFlow",
+      "openai": "OpenAI",
+      "gemini": "Google Gemini",
+      "moonshot": "Moonshot (Kimi)",
+      "qwen": "Qwen",
+      "groq": "Groq",
+      "claude": "Claude",
+      "ollama": "Ollama (ローカル)",
+      "openrouter": "OpenRouter",
+      "cloud": "OpenTypeless Cloud"
+    }
   }
 }

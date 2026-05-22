@@ -61,7 +61,27 @@
     "aiPolishService": "KI-Glättungsdienst",
     "apiKey": "API-Schlüssel",
     "enterApiKey": "API-Schlüssel eingeben...",
-    "test": "Testen",
+    "test": {
+      "stageRecord": "Aufnehmen",
+      "stageStt": "Transkribieren",
+      "stageLlm": "Glätten",
+      "stageOutput": "Ausgabe",
+      "phaseIdle": "Gedrückt halten, um aufzunehmen",
+      "phaseRecording": "Aufnahme...",
+      "phaseStt": "Transkribiere...",
+      "phaseLlm": "Glätte...",
+      "phaseDone": "Fertig!",
+      "hold": "Halten",
+      "press": "Drücken",
+      "toTalk": "zum Sprechen",
+      "toStartStop": "zum Starten/Stoppen",
+      "transcribing": "Transkribiere",
+      "raw": "Roh",
+      "polished": "Geglättet",
+      "demoRaw": "hallo ähm können Sie mir hierbei helfen",
+      "demoPolished": "Hallo, können Sie mir hierbei helfen?",
+      "result": "Ergebnis"
+    },
     "connectionSuccess": "Verbindung erfolgreich",
     "connectionFailed": "Verbindung fehlgeschlagen, bitte überprüfen Sie Ihren API-Schlüssel",
     "connectionFailedConfig": "Verbindung fehlgeschlagen, bitte überprüfen Sie Ihre Konfiguration",
@@ -70,8 +90,27 @@
     "modelsAvailable": "{{count}} Modelle verfügbar",
     "baseUrl": "Basis-URL",
     "record": "Aufnehmen",
-    "stt": "STT",
-    "llm": "LLM",
+    "stt": {
+      "serviceLabel": "Spracherkennungsdienst",
+      "apiKeyLabel": "API-Schlüssel",
+      "apiKeyPlaceholder": "Geben Sie Ihren API-Schlüssel ein",
+      "testButton": "Verbindung testen",
+      "connectionOk": "Verbindung erfolgreich",
+      "connectionFail": "Verbindung fehlgeschlagen"
+    },
+    "llm": {
+      "serviceLabel": "KI-Glättungsdienst",
+      "apiKeyLabel": "API-Schlüssel",
+      "apiKeyPlaceholder": "Geben Sie Ihren API-Schlüssel ein",
+      "testButton": "Verbindung testen",
+      "modelLabel": "Modell",
+      "modelPlaceholder": "Modell auswählen",
+      "fetchModelsTitle": "Modelle abrufen",
+      "modelsAvailable": "Modelle verfügbar",
+      "baseUrlLabel": "Basis-URL",
+      "connectionOk": "Verbindung erfolgreich",
+      "connectionFail": "Verbindung fehlgeschlagen"
+    },
     "output": "Ausgabe",
     "releaseToStop": "Loslassen, um Aufnahme zu stoppen",
     "holdAndSay": "Halten und etwas sagen",
@@ -117,26 +156,9 @@
       "passwordTooShort": "Passwort muss mindestens 8 Zeichen lang sein",
       "signInTimedOut": "Anmeldung abgelaufen",
       "failedToStart": "Start fehlgeschlagen",
-      "verifyHint": "Bitte verifizieren Sie Ihre E-Mail, um fortzufahren"
-    },
-    "test": {
-      "stageRecord": "Aufnehmen",
-      "stageStt": "Transkribieren",
-      "stageLlm": "Glätten",
-      "stageOutput": "Ausgabe",
-      "phaseIdle": "Gedrückt halten, um aufzunehmen",
-      "phaseRecording": "Aufnahme...",
-      "phaseStt": "Transkribiere...",
-      "phaseLlm": "Glätte...",
-      "phaseDone": "Fertig!",
-      "hold": "Halten",
-      "press": "Drücken",
-      "toTalk": "zum Sprechen",
-      "toStartStop": "zum Starten/Stoppen",
-      "transcribing": "Transkribiere",
-      "raw": "Roh",
-      "polished": "Geglättet",
-      "result": "Ergebnis"
+      "verificationResent": "Bestätigungs-E-Mail gesendet!",
+      "continueWithGoogle": "Weiter mit Google",
+      "continueWithGithub": "Weiter mit GitHub"
     },
     "done": {
       "title": "Sie sind bereit!",
@@ -165,27 +187,6 @@
       "byokDesc": "Verwenden Sie Ihre eigenen API-Schlüssel",
       "unlimitedUsage": "Unbegrenzte Nutzung mit Ihren Schlüsseln",
       "providersSupported": "Mehrere Anbieter unterstützt"
-    },
-    "stt": {
-      "serviceLabel": "Spracherkennungsdienst",
-      "apiKeyLabel": "API-Schlüssel",
-      "apiKeyPlaceholder": "Geben Sie Ihren API-Schlüssel ein",
-      "testButton": "Verbindung testen",
-      "connectionOk": "Verbindung erfolgreich",
-      "connectionFail": "Verbindung fehlgeschlagen"
-    },
-    "llm": {
-      "serviceLabel": "KI-Glättungsdienst",
-      "apiKeyLabel": "API-Schlüssel",
-      "apiKeyPlaceholder": "Geben Sie Ihren API-Schlüssel ein",
-      "testButton": "Verbindung testen",
-      "modelLabel": "Modell",
-      "modelPlaceholder": "Modell auswählen",
-      "fetchModelsTitle": "Modelle abrufen",
-      "modelsAvailable": "Modelle verfügbar",
-      "baseUrlLabel": "Basis-URL",
-      "connectionOk": "Verbindung erfolgreich",
-      "connectionFail": "Verbindung fehlgeschlagen"
     },
     "layout": {
       "skip": "Überspringen",
@@ -222,7 +223,9 @@
       "transcribing": "Transkribiere",
       "thinking": "Denke nach",
       "done": "Fertig"
-    }
+    },
+    "stopRecording": "Aufnahme stoppen",
+    "close": "Schließen"
   },
   "settings": {
     "title": "Einstellungen",
@@ -338,6 +341,7 @@
     "thankYou": "Sie sind auf Pro — danke für Ihre Unterstützung!",
     "signInFirst": "Melden Sie sich zuerst auf der Konto-Seite an, um zu abonnieren.",
     "subscribeToPro": "Pro abonnieren",
+    "month": "Monat",
     "features": {
       "sttTitle": "Cloud-STT",
       "sttDetail": "Premium-Spracherkennung",
@@ -377,13 +381,19 @@
     "oauthPendingDesc": "Schließen Sie die Anmeldung in Ihrem Browser ab. Sie werden automatisch zurückgeleitet.",
     "oauthTimeout": "Anmeldung abgelaufen. Bitte versuchen Sie es erneut.",
     "cancel": "Abbrechen",
+    "oauthFailed": "Anmeldung konnte nicht gestartet werden",
     "toast": {
       "backupOk": "Sicherung erfolgreich",
       "backupFail": "Sicherung fehlgeschlagen",
       "restoreOk": "Wiederherstellung erfolgreich",
       "restoreFail": "Wiederherstellung fehlgeschlagen",
       "subscriptionFail": "Abonnement konnte nicht geladen werden"
-    }
+    },
+    "sttQuotaWarning": "STT-Kontingent über 90 %. Erwägen Sie den Wechsel in den BYOK-Modus.",
+    "llmQuotaWarning": "LLM-Kontingent über 90 %. Erwägen Sie den Wechsel in den BYOK-Modus.",
+    "quotaHours": "Stunden",
+    "quotaTokens": "k Tokens",
+    "quotaUsage": "{{label}}-Nutzung: {{used}} von {{limit}} {{unit}}"
   },
   "error": {
     "somethingWentWrong": "Etwas ist schiefgelaufen",
@@ -424,5 +434,30 @@
     "test": "Testen",
     "connectionOk": "Verbindung erfolgreich",
     "connectionFail": "Verbindung fehlgeschlagen"
+  },
+  "providers": {
+    "stt": {
+      "deepgram": "Deepgram Nova-3",
+      "assemblyai": "AssemblyAI",
+      "glmAsr": "GLM-ASR (Zhipu)",
+      "openaiWhisper": "OpenAI Whisper",
+      "groqWhisper": "Groq Whisper",
+      "siliconflow": "SiliconFlow",
+      "cloud": "OpenTypeless Cloud"
+    },
+    "llm": {
+      "zhipu": "Zhipu",
+      "deepseek": "DeepSeek",
+      "siliconflow": "SiliconFlow",
+      "openai": "OpenAI",
+      "gemini": "Google Gemini",
+      "moonshot": "Moonshot (Kimi)",
+      "qwen": "Qwen",
+      "groq": "Groq",
+      "claude": "Claude",
+      "ollama": "Ollama (Local)",
+      "openrouter": "OpenRouter",
+      "cloud": "OpenTypeless Cloud"
+    }
   }
 }
