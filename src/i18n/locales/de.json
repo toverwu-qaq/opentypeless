@@ -341,7 +341,8 @@
     "resendVerification": "Bestätigungsmail erneut senden",
     "sending": "Wird gesendet...",
     "verificationResent": "Bestätigungsmail erneut gesendet!",
-    "verifyEmailTitle": "Überprüfen Sie Ihre E-Mail"
+    "verifyEmailTitle": "Überprüfen Sie Ihre E-Mail",
+    "quotaMin": "Min."
   },
   "error": {
     "somethingWentWrong": "Etwas ist schiefgelaufen",

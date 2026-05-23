@@ -341,7 +341,8 @@
     "resendVerification": "Повторная отправка письма",
     "sending": "Отправка...",
     "verificationResent": "Письмо отправлено повторно!",
-    "verifyEmailTitle": "Проверьте вашу почту"
+    "verifyEmailTitle": "Проверьте вашу почту",
+    "quotaMin": "мин"
   },
   "error": {
     "somethingWentWrong": "Что-то пошло не так",

@@ -341,7 +341,8 @@
       "restoreOk": "恢复成功",
       "restoreFail": "恢复失败",
       "subscriptionFail": "加载订阅信息失败"
-    }
+    },
+    "quotaMin": "分钟"
   },
   "error": {
     "somethingWentWrong": "出了点问题",

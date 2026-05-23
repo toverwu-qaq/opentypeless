@@ -457,7 +457,7 @@ function AccountDetails() {
               label={t('upgrade.stt')}
               used={sttSecondsUsed}
               limit={sttSecondsLimit}
-              unit={sttSecondsLimit >= 3600 ? 'hours' : 'min'}
+              unit={sttSecondsLimit >= 3600 ? t('account.quotaHours') : t('account.quotaMin')}
               divisor={sttSecondsLimit >= 3600 ? 3600 : 60}
             />
             <QuotaBar

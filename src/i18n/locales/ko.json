@@ -341,7 +341,8 @@
     "resendVerification": "인증 이메일 재전송",
     "sending": "전송 중...",
     "verificationResent": "인증 이메일이 전송되었습니다!",
-    "verifyEmailTitle": "이메일을 확인하세요"
+    "verifyEmailTitle": "이메일을 확인하세요",
+    "quotaMin": "분"
   },
   "error": {
     "somethingWentWrong": "문제가 발생했습니다",

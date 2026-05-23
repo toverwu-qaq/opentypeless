@@ -341,7 +341,8 @@
     "resendVerification": "Reenviar email de verificación",
     "sending": "Enviando...",
     "verificationResent": "¡Email de verificación reenviado!",
-    "verifyEmailTitle": "Verifica tu email"
+    "verifyEmailTitle": "Verifica tu email",
+    "quotaMin": "min"
   },
   "error": {
     "somethingWentWrong": "Algo salió mal",

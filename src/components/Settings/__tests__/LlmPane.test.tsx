@@ -271,7 +271,7 @@ describe('LlmPane', () => {
   describe('Base URL input', () => {
     it('updates config when base URL changes', () => {
       render(<LlmPane />)
-      const input = screen.getByPlaceholderText('https://open.bigmodel.cn/api/paas/v4')
+      const input = screen.getByPlaceholderText('https://api.openai.com/v1')
 
       fireEvent.change(input, { target: { value: 'https://custom.api.com/v1' } })
 

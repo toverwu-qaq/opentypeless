@@ -341,7 +341,8 @@
       "restoreOk": "Restore successful",
       "restoreFail": "Restore failed",
       "subscriptionFail": "Failed to load subscription"
-    }
+    },
+    "quotaMin": "min"
   },
   "error": {
     "somethingWentWrong": "Something went wrong",

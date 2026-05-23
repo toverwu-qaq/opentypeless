@@ -341,7 +341,8 @@
     "resendVerification": "確認メールを再送信",
     "sending": "送信中...",
     "verificationResent": "確認メールを送信しました！",
-    "verifyEmailTitle": "メールを確認してください"
+    "verifyEmailTitle": "メールを確認してください",
+    "quotaMin": "分"
   },
   "error": {
     "somethingWentWrong": "問題が発生しました",
