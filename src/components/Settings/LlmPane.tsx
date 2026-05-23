@@ -167,7 +167,7 @@ export function LlmPane() {
                     updateConfig({ llm_model: e.target.value })
                     setLlmLatencyMs(null)
                   }}
-                  placeholder="e.g. gpt-4o-mini"
+                  placeholder={t('settings.llmModelPlaceholder')}
                   className="w-full px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
                 />
                 <datalist id="llm-model-list">

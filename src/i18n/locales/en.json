@@ -9,7 +9,8 @@
     "history": "History",
     "account": "Account",
     "upgrade": "Upgrade",
-    "pro": "Pro"
+    "pro": "Pro",
+    "mainNavigation": "Main navigation"
   },
   "home": {
     "welcome": "Welcome to OpenTypeless",
@@ -229,7 +230,8 @@
     "accessibilityGranted": "Permission granted",
     "accessibilityRequired": "Required for keyboard output",
     "grantPermission": "Grant Permission",
-    "unsavedChanges": "You have unsaved changes"
+    "unsavedChanges": "You have unsaved changes",
+    "llmModelPlaceholder": "e.g. gpt-4o-mini"
   },
   "dictionary": {
     "word": "Word",

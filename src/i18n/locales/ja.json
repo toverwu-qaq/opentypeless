@@ -9,7 +9,8 @@
     "history": "履歴",
     "account": "アカウント",
     "upgrade": "アップグレード",
-    "pro": "Pro"
+    "pro": "Pro",
+    "mainNavigation": "メインナビゲーション"
   },
   "home": {
     "welcome": "OpenTypelessへようこそ",
@@ -229,7 +230,8 @@
     "accessibilityRequired": "キーボード出力に必要です",
     "grantPermission": "権限を付与",
     "unsavedChanges": "未保存の変更があります",
-    "autoDetect": "自動検出"
+    "autoDetect": "自動検出",
+    "llmModelPlaceholder": "例: gpt-4o-mini"
   },
   "dictionary": {
     "word": "単語",

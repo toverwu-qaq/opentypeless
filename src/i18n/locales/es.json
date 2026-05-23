@@ -9,7 +9,8 @@
     "history": "Historial",
     "account": "Cuenta",
     "upgrade": "Mejorar",
-    "pro": "Pro"
+    "pro": "Pro",
+    "mainNavigation": "Navegación principal"
   },
   "home": {
     "welcome": "Bienvenido a OpenTypeless",
@@ -229,7 +230,8 @@
     "accessibilityRequired": "Requerido para la salida por teclado",
     "grantPermission": "Conceder permiso",
     "unsavedChanges": "Tienes cambios sin guardar",
-    "autoDetect": "Detección automática"
+    "autoDetect": "Detección automática",
+    "llmModelPlaceholder": "ej: gpt-4o-mini"
   },
   "dictionary": {
     "word": "Palabra",

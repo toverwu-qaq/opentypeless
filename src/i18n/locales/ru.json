@@ -9,7 +9,8 @@
     "history": "История",
     "account": "Аккаунт",
     "upgrade": "Обновить",
-    "pro": "Pro"
+    "pro": "Pro",
+    "mainNavigation": "Основная навигация"
   },
   "home": {
     "welcome": "Добро пожаловать в OpenTypeless",
@@ -229,7 +230,8 @@
     "accessibilityRequired": "Требуется для вывода с клавиатуры",
     "grantPermission": "Предоставить разрешение",
     "unsavedChanges": "У вас есть несохранённые изменения",
-    "autoDetect": "Автоопределение"
+    "autoDetect": "Автоопределение",
+    "llmModelPlaceholder": "напр. gpt-4o-mini"
   },
   "dictionary": {
     "word": "Слово",
