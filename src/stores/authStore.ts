@@ -2,8 +2,8 @@ import { create } from 'zustand'
 import { invoke } from '@tauri-apps/api/core'
 import { authClient } from '../lib/auth-client'
 import { getSubscriptionStatus } from '../lib/api'
-import { toast } from '../components/Toast'
 import i18n from '../i18n'
+import { toast } from '../components/toastApi'
 
 let sttWarningShown = false
 let llmWarningShown = false

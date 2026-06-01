@@ -5,12 +5,6 @@ import { Loader2 } from 'lucide-react'
 import { useAppStore } from '../../../stores/appStore'
 import { updateConfig, setAutoStart } from '../../../lib/tauri'
 
-export function useDirtyConfig() {
-  const config = useAppStore((s) => s.config)
-  const savedConfig = useAppStore((s) => s.savedConfig)
-  return savedConfig !== null && JSON.stringify(config) !== JSON.stringify(savedConfig)
-}
-
 type SaveResult = 'idle' | 'success' | 'error'
 
 export function DirtyBar() {
