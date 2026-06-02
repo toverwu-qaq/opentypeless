@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '../../stores/appStore'
 import { ONBOARDING_STT_PROVIDERS } from '../../lib/constants'
@@ -10,11 +11,22 @@ export function SttSetupStep() {
   const updateConfig = useAppStore((s) => s.updateConfig)
   const sttTestStatus = useAppStore((s) => s.sttTestStatus)
   const setSttTestStatus = useAppStore((s) => s.setSttTestStatus)
+  const fallbackProvider = ONBOARDING_STT_PROVIDERS[0]?.value ?? 'deepgram'
+  const selectedProvider = ONBOARDING_STT_PROVIDERS.some((p) => p.value === config.stt_provider)
+    ? config.stt_provider
+    : fallbackProvider
+
+  useEffect(() => {
+    if (selectedProvider === config.stt_provider) return
+
+    updateConfig({ stt_provider: selectedProvider as typeof config.stt_provider })
+    setSttTestStatus('idle')
+  }, [config.stt_provider, selectedProvider, setSttTestStatus, updateConfig])
 
   const handleTest = async () => {
     setSttTestStatus('testing')
     try {
-      const ok = await testSttConnection(config.stt_api_key, config.stt_provider)
+      const ok = await testSttConnection(config.stt_api_key, selectedProvider)
       setSttTestStatus(ok ? 'success' : 'error')
     } catch {
       setSttTestStatus('error')
@@ -25,7 +37,7 @@ export function SttSetupStep() {
     <div className="space-y-5">
       <Field label={t('onboarding.stt.serviceLabel')}>
         <select
-          value={config.stt_provider}
+          value={selectedProvider}
           onChange={(e) => {
             updateConfig({ stt_provider: e.target.value as typeof config.stt_provider })
             setSttTestStatus('idle')
