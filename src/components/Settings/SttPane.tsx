@@ -60,10 +60,8 @@ export function SttPane() {
               stt_provider: provider,
               ...(provider === CUSTOM_WHISPER_PROVIDER
                 ? {
-                    stt_custom_preset:
-                      config.stt_custom_preset || CUSTOM_STT_DEFAULTS.preset,
-                    stt_custom_base_url:
-                      config.stt_custom_base_url || CUSTOM_STT_DEFAULTS.baseUrl,
+                    stt_custom_preset: config.stt_custom_preset || CUSTOM_STT_DEFAULTS.preset,
+                    stt_custom_base_url: config.stt_custom_base_url || CUSTOM_STT_DEFAULTS.baseUrl,
                     stt_custom_model: config.stt_custom_model || CUSTOM_STT_DEFAULTS.model,
                   }
                 : {}),
@@ -160,9 +158,7 @@ export function SttPane() {
           )}
 
           <FormField
-            label={
-              isCustomWhisper ? t('settings.customSttApiKeyOptional') : t('settings.apiKey')
-            }
+            label={isCustomWhisper ? t('settings.customSttApiKeyOptional') : t('settings.apiKey')}
           >
             <div className="flex gap-2">
               <input
@@ -196,9 +192,7 @@ export function SttPane() {
                 <XCircle size={13} /> {t('settings.connectionFailed')}
               </p>
             )}
-            <p className="text-[11px] text-text-tertiary mt-1.5">
-              {t('settings.storedLocally')}
-            </p>
+            <p className="text-[11px] text-text-tertiary mt-1.5">{t('settings.storedLocally')}</p>
           </FormField>
         </>
       )}

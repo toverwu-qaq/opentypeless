@@ -195,7 +195,10 @@ mod tests {
         )
         .unwrap();
         assert_eq!(cfg.provider_name, CUSTOM_WHISPER_PROVIDER);
-        assert_eq!(cfg.endpoint, "http://localhost:8000/v1/audio/transcriptions");
+        assert_eq!(
+            cfg.endpoint,
+            "http://localhost:8000/v1/audio/transcriptions"
+        );
         assert_eq!(cfg.model, "Systran/faster-whisper-large-v3");
         assert!(!cfg.api_key_required);
     }
