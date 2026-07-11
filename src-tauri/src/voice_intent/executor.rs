@@ -318,6 +318,8 @@ mod tests {
         target_matches: bool,
         restore_succeeds: bool,
         popup_fails: bool,
+        insert_fails: bool,
+        copy_fails: bool,
         opened_url: Option<String>,
     }
 
@@ -335,7 +337,11 @@ mod tests {
 
         async fn insert_at_cursor(&mut self, _text: &str) -> Result<(), String> {
             self.actions.push("insert_at_cursor");
-            Ok(())
+            if self.insert_fails {
+                Err("insertion unavailable".to_string())
+            } else {
+                Ok(())
+            }
         }
 
         async fn replace_selection(&mut self, _text: &str) -> Result<(), String> {
@@ -354,7 +360,11 @@ mod tests {
 
         async fn copy_to_clipboard(&mut self, _text: &str) -> Result<(), String> {
             self.actions.push("copy_to_clipboard");
-            Ok(())
+            if self.copy_fails {
+                Err("clipboard unavailable".to_string())
+            } else {
+                Ok(())
+            }
         }
 
         async fn open_search(&mut self, url: &SearchUrl) -> Result<(), String> {
@@ -613,5 +623,71 @@ mod tests {
             backend.actions,
             ["target_matches", "popup_answer", "copy_to_clipboard"]
         );
+    }
+
+    #[tokio::test]
+    async fn voice_intent_executor_release_matrix_never_uses_a_failed_destructive_target() {
+        let insert = intent(VoiceIntentKind::DraftInsert);
+        let mut permission_denied = FakeBackend {
+            target_matches: true,
+            insert_fails: true,
+            ..Default::default()
+        };
+        let result = execute_voice_intent(
+            request(&insert, "draft", false, false, VoiceRoutingFlags::default()),
+            &mut permission_denied,
+        )
+        .await;
+        assert_eq!(result.status, VoiceExecutionStatus::CopiedFallback);
+        assert_eq!(
+            permission_denied.actions,
+            ["target_matches", "insert_at_cursor", "copy_to_clipboard"]
+        );
+
+        let replacement = intent(VoiceIntentKind::RewriteSelection);
+        let mut application_closed = FakeBackend {
+            target_matches: false,
+            popup_fails: true,
+            copy_fails: true,
+            ..Default::default()
+        };
+        let result = execute_voice_intent(
+            request(
+                &replacement,
+                "replacement",
+                true,
+                false,
+                VoiceRoutingFlags::default(),
+            ),
+            &mut application_closed,
+        )
+        .await;
+        assert_eq!(result.status, VoiceExecutionStatus::Failed);
+        assert!(!application_closed.actions.contains(&"replace_selection"));
+        assert_eq!(
+            application_closed.actions,
+            ["target_matches", "popup_answer", "copy_to_clipboard"]
+        );
+
+        let mut disabled = FakeBackend {
+            target_matches: true,
+            ..Default::default()
+        };
+        let result = execute_voice_intent(
+            request(
+                &replacement,
+                "replacement",
+                true,
+                false,
+                VoiceRoutingFlags {
+                    rewrite_selection: false,
+                    ..VoiceRoutingFlags::default()
+                },
+            ),
+            &mut disabled,
+        )
+        .await;
+        assert_eq!(result.status, VoiceExecutionStatus::Prevented);
+        assert!(disabled.actions.is_empty());
     }
 }
