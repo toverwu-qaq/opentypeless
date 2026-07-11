@@ -1,9 +1,11 @@
+import { StrictMode } from 'react'
 import { act, cleanup, render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useTauriEvents } from '../useTauriEvents'
 import { useAppStore } from '../../stores/appStore'
 
 const eventListeners = vi.hoisted(() => new Map<string, (event: { payload: unknown }) => void>())
+const invalidateCloudSessionOnce = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
 
 vi.mock('@tauri-apps/api/event', () => ({
   listen: vi.fn((event: string, handler: (event: { payload: unknown }) => void) => {
@@ -29,6 +31,10 @@ vi.mock('../../lib/tauri', () => ({
 
 vi.mock('../../components/Toast', () => ({
   toast: vi.fn(),
+}))
+
+vi.mock('../../lib/cloud-session', () => ({
+  invalidateCloudSessionOnce,
 }))
 
 function HookHarness() {
@@ -82,5 +88,23 @@ describe('useTauriEvents', () => {
     })
 
     expect(useAppStore.getState().pipelineError).toBeNull()
+  })
+
+  it('forwards one Rust session-invalid event to the shared coordinator in Strict Mode', async () => {
+    render(
+      <StrictMode>
+        <HookHarness />
+      </StrictMode>,
+    )
+
+    await waitFor(() => {
+      expect(eventListeners.has('auth:session-invalid')).toBe(true)
+    })
+
+    act(() => {
+      eventListeners.get('auth:session-invalid')?.({ payload: undefined })
+    })
+
+    expect(invalidateCloudSessionOnce).toHaveBeenCalledTimes(1)
   })
 })

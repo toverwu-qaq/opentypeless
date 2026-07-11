@@ -1,6 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LogOut, Upload, Download, Loader2, ExternalLink, ClipboardCheck } from 'lucide-react'
+import {
+  LogOut,
+  Upload,
+  Download,
+  Loader2,
+  ExternalLink,
+  ClipboardCheck,
+  Mail,
+  Eye,
+  EyeOff,
+  KeyRound,
+  ChevronDown,
+} from 'lucide-react'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { readText } from '@tauri-apps/plugin-clipboard-manager'
 import { hasManagedCloudAccess, useAuthStore } from '../../stores/authStore'
@@ -16,6 +28,7 @@ import {
 import { createDesktopAuthCallbackURL } from '../../lib/desktop-auth-callback'
 
 type Tab = 'signin' | 'signup'
+type AuthMode = 'auth' | 'forgot' | 'forgot-sent'
 
 function accountErrorMessage(message: string | null, t: ReturnType<typeof useTranslation>['t']) {
   if (!message) return null
@@ -53,15 +66,23 @@ export function AccountPage() {
 
 function AuthForm() {
   const [tab, setTab] = useState<Tab>('signin')
+  const [mode, setMode] = useState<AuthMode>('auth')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const { signIn, signUp, loading, error, emailVerificationPending, resendVerification } =
-    useAuthStore()
+  const {
+    signIn,
+    signUp,
+    requestPasswordReset,
+    loading,
+    error,
+    emailVerificationPending,
+    resendVerification,
+  } = useAuthStore()
   const [localError, setLocalError] = useState<string | null>(null)
   const [resent, setResent] = useState(false)
   const [oauthPending, setOauthPending] = useState<'google' | 'github' | null>(null)
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   // Keep the UI timeout aligned with the persisted OAuth state TTL.
   useEffect(() => {
@@ -80,7 +101,10 @@ function AuthForm() {
     e.preventDefault()
     setLocalError(null)
     try {
-      if (tab === 'signin') {
+      if (mode === 'forgot') {
+        await requestPasswordReset(email, i18n.resolvedLanguage ?? i18n.language ?? 'en')
+        setMode('forgot-sent')
+      } else if (tab === 'signin') {
         const verificationCallbackURL = createDesktopAuthCallbackURL(
           EMAIL_VERIFICATION_STATE_TTL_MS,
         )
@@ -113,7 +137,7 @@ function AuthForm() {
   if (emailVerificationPending) {
     return (
       <div className="max-w-[340px] mx-auto py-8 px-6 space-y-5 text-[13px] text-center">
-        <div className="text-[40px]">📧</div>
+        <Mail size={32} className="mx-auto text-text-secondary" aria-hidden="true" />
         <h2 className="text-[16px] font-semibold text-text-primary">
           {t('account.verifyEmailTitle', 'Check your email')}
         </h2>
@@ -194,6 +218,34 @@ function AuthForm() {
     } catch {
       setLocalError(t('account.oauthClipboardInvalid', 'No valid sign-in link found.'))
     }
+  }
+
+  if (mode === 'forgot-sent') {
+    return (
+      <div className="max-w-[340px] mx-auto py-8 px-6 space-y-4 text-[13px] text-center">
+        <Mail size={28} className="mx-auto text-text-secondary" aria-hidden="true" />
+        <h2 className="text-[16px] font-semibold text-text-primary">
+          {t('account.resetLinkSent', 'Check your email')}
+        </h2>
+        <p className="text-text-secondary">
+          {t(
+            'account.resetLinkSentDesc',
+            'If an account exists for that email, a password reset link is on its way.',
+          )}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setMode('auth')
+            setTab('signin')
+            setLocalError(null)
+          }}
+          className="px-4 py-2 rounded-[8px] border border-border bg-transparent text-text-primary text-[13px] cursor-pointer hover:bg-bg-secondary transition-colors"
+        >
+          {t('account.backToSignIn', 'Back to Sign In')}
+        </button>
+      </div>
+    )
   }
 
   if (oauthPending) {
@@ -302,15 +354,28 @@ function AuthForm() {
     )
   }
 
+  const forgotMode = mode === 'forgot'
+
   return (
     <div className="max-w-[340px] mx-auto py-8 px-6 space-y-5 text-[13px]">
       <div className="text-center mb-2">
-        <h1 className="text-[18px] font-semibold text-text-primary">{t('account.title')}</h1>
-        <p className="text-text-secondary mt-1">{t('account.subtitle')}</p>
+        <h1 className="text-[18px] font-semibold text-text-primary">
+          {forgotMode
+            ? t('account.forgotPasswordTitle', 'Forgot your password?')
+            : t('account.title')}
+        </h1>
+        <p className="text-text-secondary mt-1">
+          {forgotMode
+            ? t(
+                'account.forgotPasswordDescription',
+                'Enter your email and we will send a secure reset link.',
+              )
+            : t('account.subtitle')}
+        </p>
       </div>
 
       {/* Tab switcher */}
-      <div className="flex border border-border rounded-[8px] overflow-hidden">
+      {!forgotMode && <div className="flex border border-border rounded-[8px] overflow-hidden">
         <button
           onClick={() => {
             setTab('signin')
@@ -337,12 +402,14 @@ function AuthForm() {
         >
           {t('account.signUp')}
         </button>
-      </div>
+      </div>}
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        {tab === 'signup' && (
+        {!forgotMode && tab === 'signup' && (
           <input
             type="text"
+            aria-label={t('account.name')}
+            autoComplete="name"
             placeholder={t('account.name')}
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -351,6 +418,8 @@ function AuthForm() {
         )}
         <input
           type="email"
+          aria-label={t('account.email')}
+          autoComplete="email"
           placeholder={t('account.email')}
           value={email}
           onChange={(e) => {
@@ -360,18 +429,34 @@ function AuthForm() {
           className="w-full px-3 py-2 rounded-[8px] border border-border bg-bg-secondary text-text-primary text-[13px] outline-none focus:border-accent transition-colors"
           required
         />
-        <input
-          type="password"
-          placeholder={t('account.password')}
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value)
-            useAuthStore.setState({ error: null })
-          }}
-          minLength={8}
-          className="w-full px-3 py-2 rounded-[8px] border border-border bg-bg-secondary text-text-primary text-[13px] outline-none focus:border-accent transition-colors"
-          required
-        />
+        {!forgotMode && (
+          <>
+            <PasswordField
+              label={t('account.password')}
+              value={password}
+              onChange={(value) => {
+                setPassword(value)
+                useAuthStore.setState({ error: null })
+              }}
+              autoComplete={tab === 'signin' ? 'current-password' : 'new-password'}
+            />
+            {tab === 'signin' && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('forgot')
+                    setLocalError(null)
+                    useAuthStore.setState({ error: null })
+                  }}
+                  className="p-0 text-[12px] text-accent bg-transparent border-none cursor-pointer hover:underline"
+                >
+                  {t('account.forgotPassword', 'Forgot password?')}
+                </button>
+              </div>
+            )}
+          </>
+        )}
         {displayError && <p className="text-red-500 text-[12px]">{displayError}</p>}
         <button
           type="submit"
@@ -379,19 +464,36 @@ function AuthForm() {
           className="w-full py-2 rounded-[8px] bg-accent text-white text-[13px] font-medium cursor-pointer border-none hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {loading && <Loader2 size={14} className="animate-spin" />}
-          {tab === 'signin' ? t('account.signIn') : t('account.signUp')}
+          {forgotMode
+            ? t('account.sendResetLink', 'Send reset link')
+            : tab === 'signin'
+              ? t('account.signIn')
+              : t('account.signUp')}
         </button>
+        {forgotMode && (
+          <button
+            type="button"
+            onClick={() => {
+              setMode('auth')
+              setTab('signin')
+              setLocalError(null)
+            }}
+            className="w-full py-2 text-[12px] text-accent bg-transparent border-none cursor-pointer hover:underline"
+          >
+            {t('account.backToSignIn', 'Back to Sign In')}
+          </button>
+        )}
       </form>
 
       {/* Divider */}
-      <div className="flex items-center gap-3">
+      {!forgotMode && <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
         <span className="text-text-tertiary text-[12px]">{t('account.orContinueWith')}</span>
         <div className="flex-1 h-px bg-border" />
-      </div>
+      </div>}
 
       {/* OAuth buttons */}
-      <div className="space-y-2">
+      {!forgotMode && <div className="space-y-2">
         <button
           onClick={() => handleOAuth('google')}
           className="w-full py-2 rounded-[8px] border border-border bg-transparent text-text-primary text-[13px] font-medium cursor-pointer hover:bg-bg-secondary transition-colors flex items-center justify-center gap-2"
@@ -425,7 +527,7 @@ function AuthForm() {
           </svg>
           {t('account.continueWithGithub')}
         </button>
-      </div>
+      </div>}
     </div>
   )
 }
@@ -448,6 +550,10 @@ function AccountDetails() {
     sttSecondsLimit,
     llmTokensUsed,
     llmTokensLimit,
+    credentialCapability,
+    refreshCredentialCapability,
+    changePassword,
+    loading,
     signOut,
   } = useAuthStore()
   const config = useAppStore((s) => s.config)
@@ -460,6 +566,16 @@ function AccountDetails() {
   const [backupLoading, setBackupLoading] = useState(false)
   const [backupMsg, setBackupMsg] = useState<string | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [securityOpen, setSecurityOpen] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [securityError, setSecurityError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (credentialCapability !== 'unknown') return
+    void refreshCredentialCapability().catch(() => {})
+  }, [credentialCapability, refreshCredentialCapability])
 
   const hasCloudAccess = useAuthStore(hasManagedCloudAccess)
   const isAppSumo = source === 'appsumo'
@@ -525,6 +641,45 @@ function AccountDetails() {
     }
   }
 
+  const passwordActionLabel = credentialCapability === 'present'
+    ? t('account.changePassword', 'Change password')
+    : t('account.setPassword', 'Set password')
+  const passwordMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword
+  const passwordTooShort = newPassword.length > 0 && newPassword.length < 8
+  const passwordFormValid =
+    credentialCapability !== 'unknown'
+    && newPassword.length >= 8
+    && newPassword.length <= 128
+    && newPassword === confirmPassword
+    && (credentialCapability === 'none' || currentPassword.length > 0)
+
+  const clearSecurityForm = () => {
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setSecurityError(null)
+  }
+
+  const handlePasswordChange = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!passwordFormValid) return
+    setSecurityError(null)
+    try {
+      await changePassword(
+        credentialCapability === 'present' ? currentPassword : null,
+        newPassword,
+      )
+      clearSecurityForm()
+      setSecurityOpen(false)
+    } catch (caught) {
+      setSecurityError(
+        caught instanceof Error
+          ? caught.message
+          : t('account.passwordChangeFailed', 'Failed to update password'),
+      )
+    }
+  }
+
   return (
     <div className="max-w-[400px] mx-auto py-8 px-6 space-y-5 text-[13px]">
       <div className="text-center mb-2">
@@ -555,6 +710,94 @@ function AccountDetails() {
           />
         )}
       </div>
+
+      {/* Security */}
+      <section className="border border-border rounded-[10px] overflow-hidden">
+        <div className="min-h-10 px-3 py-2.5 flex items-center justify-between gap-3 bg-bg-secondary/50">
+          <div className="flex items-center gap-2 text-text-primary font-medium">
+            <KeyRound size={14} aria-hidden="true" />
+            <span>{t('account.security', 'Security')}</span>
+          </div>
+          {credentialCapability === 'unknown' ? (
+            <Loader2 size={14} className="animate-spin text-text-tertiary" aria-label={t('common.loading')} />
+          ) : (
+            <button
+              type="button"
+              aria-label={securityOpen ? t('account.cancel', 'Cancel') : passwordActionLabel}
+              onClick={() => {
+                if (securityOpen) clearSecurityForm()
+                setSecurityOpen((current) => !current)
+              }}
+              className="flex items-center gap-1 p-0 bg-transparent border-none text-accent text-[12px] font-medium cursor-pointer hover:underline"
+            >
+              {passwordActionLabel}
+              <ChevronDown
+                size={13}
+                aria-hidden="true"
+                className={`transition-transform ${securityOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+          )}
+        </div>
+        {securityOpen && credentialCapability !== 'unknown' && (
+          <form onSubmit={handlePasswordChange} className="px-3 py-3 border-t border-border space-y-3">
+            {credentialCapability === 'present' && (
+              <PasswordField
+                label={t('account.currentPassword', 'Current password')}
+                value={currentPassword}
+                onChange={setCurrentPassword}
+                autoComplete="current-password"
+                showLabel
+              />
+            )}
+            <PasswordField
+              label={t('account.newPassword', 'New password')}
+              value={newPassword}
+              onChange={setNewPassword}
+              autoComplete="new-password"
+              showLabel
+            />
+            <PasswordField
+              label={t('account.confirmPassword', 'Confirm password')}
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              autoComplete="new-password"
+              showLabel
+            />
+            {passwordTooShort && (
+              <p className="text-red-500 text-[12px]" role="alert">
+                {t('account.passwordTooShort', 'Password must be 8 to 128 characters')}
+              </p>
+            )}
+            {passwordMismatch && (
+              <p className="text-red-500 text-[12px]" role="alert">
+                {t('account.passwordMismatch', 'Passwords do not match')}
+              </p>
+            )}
+            {securityError && <p className="text-red-500 text-[12px]" role="alert">{securityError}</p>}
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={!passwordFormValid || loading}
+                className="flex-1 py-2 rounded-[8px] bg-accent text-white text-[13px] font-medium cursor-pointer border-none hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+              >
+                {loading && <Loader2 size={13} className="animate-spin" aria-hidden="true" />}
+                {passwordActionLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  clearSecurityForm()
+                  setSecurityOpen(false)
+                }}
+                className="px-3 py-2 rounded-[8px] border border-border bg-transparent text-text-secondary text-[13px] cursor-pointer hover:bg-bg-secondary transition-colors"
+              >
+                {t('account.cancel', 'Cancel')}
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
 
       {/* Quota */}
       {wordsLimit > 0 ? (
@@ -669,6 +912,61 @@ function AccountDetails() {
         <LogOut size={14} />
         {t('account.signOut')}
       </button>
+    </div>
+  )
+}
+
+function PasswordField({
+  label,
+  value,
+  onChange,
+  autoComplete,
+  showLabel = false,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  autoComplete: 'current-password' | 'new-password'
+  showLabel?: boolean
+}) {
+  const id = useId()
+  const [visible, setVisible] = useState(false)
+  const { t } = useTranslation()
+  const visibilityLabel = visible
+    ? t('account.hidePassword', { label, defaultValue: `Hide ${label}` })
+    : t('account.showPassword', { label, defaultValue: `Show ${label}` })
+
+  return (
+    <div className="space-y-1.5">
+      {showLabel && (
+        <label htmlFor={id} className="block text-[12px] text-text-secondary">
+          {label}
+        </label>
+      )}
+      <div className="relative">
+        <input
+          id={id}
+          type={visible ? 'text' : 'password'}
+          aria-label={label}
+          autoComplete={autoComplete}
+          placeholder={label}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          minLength={autoComplete === 'new-password' ? 8 : undefined}
+          maxLength={128}
+          required
+          className="w-full px-3 py-2 pr-9 rounded-[8px] border border-border bg-bg-secondary text-text-primary text-[13px] outline-none focus:border-accent transition-colors"
+        />
+        <button
+          type="button"
+          aria-label={visibilityLabel}
+          title={visibilityLabel}
+          onClick={() => setVisible((current) => !current)}
+          className="absolute inset-y-0 right-0 w-9 flex items-center justify-center bg-transparent border-none text-text-tertiary hover:text-text-primary cursor-pointer"
+        >
+          {visible ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />}
+        </button>
+      </div>
     </div>
   )
 }

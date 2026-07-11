@@ -1252,6 +1252,10 @@ impl PipelineHandle {
                                             active_session_id_ref.as_ref(),
                                             stt_control.id,
                                         ) {
+                                            crate::error::emit_cloud_session_invalid(
+                                                &app_handle,
+                                                &e,
+                                            );
                                             let user_error = e.to_user_error();
                                             *stt_error_ref.lock().unwrap_or_else(|e| e.into_inner()) =
                                                 Some((stt_control.id, user_error.clone()));
@@ -1314,6 +1318,7 @@ impl PipelineHandle {
                                     active_session_id_ref.as_ref(),
                                     stt_control.id,
                                 ) {
+                                    crate::error::emit_cloud_session_invalid(&app_handle, &e);
                                     let user_error = e.to_user_error();
                                     *stt_error_ref.lock().unwrap_or_else(|e| e.into_inner()) =
                                         Some((stt_control.id, user_error.clone()));
@@ -1953,6 +1958,7 @@ impl PipelineHandle {
                 PolishTextOutcome::normal(response.polished_text, elapsed)
             }
             Err(e) => {
+                crate::error::emit_cloud_session_invalid(&self.app_handle, &e);
                 let elapsed = llm_start.elapsed();
                 if let Some(report) = streaming_report.as_ref() {
                     if report.has_inserted_text() {

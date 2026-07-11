@@ -7,6 +7,7 @@ import type { AppConfig, InsertResult, PipelineState } from '../stores/appStore'
 import { getHistory } from '../lib/tauri'
 import { toast } from '../components/Toast'
 import { capsuleErrorKeyFromPayload, type PipelineErrorPayload } from '../lib/capsuleError'
+import { invalidateCloudSessionOnce } from '../lib/cloud-session'
 
 type Unlisten = () => void | Promise<void>
 
@@ -92,6 +93,11 @@ export function useTauriEvents() {
     })
     addListener<void>('hotkey:registration-recovered', () => {
       setHotkeyRegistrationError(null)
+    })
+    addListener<void>('auth:session-invalid', () => {
+      void invalidateCloudSessionOnce().catch((error) => {
+        console.error('Failed to invalidate cloud session:', error)
+      })
     })
     addListener<Partial<AppConfig>>('config:patch', (patch) => {
       applyPersistedConfigPatch(patch)

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use futures_util::StreamExt;
 use reqwest::Client;
 
-use crate::error::AppError;
+use crate::error::{managed_cloud_error, AppError};
 use crate::with_desktop_client_version;
 
 use super::{prompt, ChunkCallback, LlmConfig, LlmProvider, PolishRequest, PolishResponse};
@@ -187,6 +187,15 @@ impl LlmProvider for CloudLlmProvider {
                     if status.is_success() {
                         response = Some(resp);
                         break;
+                    } else if status.as_u16() == 401 {
+                        let text = resp.text().await.unwrap_or_default();
+                        if let Some(error) = managed_cloud_error(status.as_u16(), &text) {
+                            return Err(error);
+                        }
+                        return Err(AppError::Api {
+                            status: status.as_u16(),
+                            body: text,
+                        });
                     } else if status.as_u16() == 403 {
                         let text = resp.text().await.unwrap_or_default();
                         return Err(cloud_llm_forbidden_error(&text));
