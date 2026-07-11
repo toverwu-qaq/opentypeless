@@ -2,6 +2,7 @@ pub mod app_detector;
 pub mod audio;
 pub mod commands;
 pub mod credentials;
+pub mod dictionary_io;
 pub mod error;
 pub mod hotkey;
 #[cfg(target_os = "linux")]
@@ -870,11 +871,17 @@ pub fn run() {
             commands::history::clear_history,
             commands::dictionary::get_dictionary,
             commands::dictionary::add_dictionary_entry,
+            commands::dictionary::update_dictionary_entry,
             commands::dictionary::remove_dictionary_entry,
             commands::dictionary::get_correction_rules,
             commands::dictionary::add_correction_rule,
+            commands::dictionary::update_correction_rule,
             commands::dictionary::remove_correction_rule,
             commands::dictionary::set_correction_rule_enabled,
+            commands::dictionary::preview_dictionary_import,
+            commands::dictionary::commit_dictionary_import,
+            commands::dictionary::export_dictionary_json,
+            commands::dictionary::export_dictionary_csv,
             commands::misc::update_hotkey,
             commands::misc::update_ask_hotkey,
             commands::misc::pause_hotkey,

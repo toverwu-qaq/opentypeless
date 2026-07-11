@@ -8,6 +8,7 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri_plugin_store::StoreExt;
+use unicode_normalization::UnicodeNormalization;
 
 const CUSTOM_SCENES_MAX_COUNT: usize = 100;
 const SCENE_ID_MAX_CHARS: usize = 120;
@@ -1333,11 +1334,39 @@ impl DictionaryStore {
     }
 
     pub async fn add(&self, word: &str, pronunciation: Option<&str>) -> Result<()> {
+        let word = validate_dictionary_text(word, 100, "dictionary_word")?;
+        let pronunciation = pronunciation
+            .map(|value| validate_dictionary_text(value, 100, "dictionary_pronunciation"))
+            .transpose()?
+            .filter(|value| !value.is_empty());
         let conn = self.conn.lock().unwrap_or_else(|e| e.into_inner());
+        if dictionary_identity_exists(&conn, &normalized_dictionary_identity(&word), None)? {
+            anyhow::bail!("dictionary_duplicate");
+        }
         conn.execute(
             "INSERT INTO dictionary (word, pronunciation) VALUES (?1, ?2)",
             rusqlite::params![word, pronunciation],
         )?;
+        Ok(())
+    }
+
+    pub async fn update(&self, id: i64, word: &str, pronunciation: Option<&str>) -> Result<()> {
+        let word = validate_dictionary_text(word, 100, "dictionary_word")?;
+        let pronunciation = pronunciation
+            .map(|value| validate_dictionary_text(value, 100, "dictionary_pronunciation"))
+            .transpose()?
+            .filter(|value| !value.is_empty());
+        let conn = self.conn.lock().unwrap_or_else(|e| e.into_inner());
+        if dictionary_identity_exists(&conn, &normalized_dictionary_identity(&word), Some(id))? {
+            anyhow::bail!("dictionary_duplicate");
+        }
+        let updated = conn.execute(
+            "UPDATE dictionary SET word = ?2, pronunciation = ?3 WHERE id = ?1",
+            rusqlite::params![id, word, pronunciation],
+        )?;
+        if updated == 0 {
+            anyhow::bail!("dictionary_entry_not_found");
+        }
         Ok(())
     }
 
@@ -1352,7 +1381,8 @@ impl DictionaryStore {
 
     pub async fn list(&self) -> Result<Vec<DictionaryEntry>> {
         let conn = self.conn.lock().unwrap_or_else(|e| e.into_inner());
-        let mut stmt = conn.prepare("SELECT id, word, pronunciation FROM dictionary")?;
+        let mut stmt =
+            conn.prepare("SELECT id, word, pronunciation FROM dictionary ORDER BY id ASC")?;
         let rows = stmt.query_map([], |row| {
             Ok(DictionaryEntry {
                 id: row.get(0)?,
@@ -1381,17 +1411,43 @@ impl DictionaryStore {
     }
 
     pub async fn add_correction(&self, pattern: &str, replacement: &str) -> Result<()> {
-        let pattern = sanitize_correction_text(pattern);
-        let replacement = sanitize_correction_text(replacement);
-        if pattern.is_empty() || replacement.is_empty() {
-            anyhow::bail!("Correction rule cannot be empty");
-        }
-
+        let pattern = validate_dictionary_text(pattern, 120, "correction_pattern")?;
+        let replacement = validate_dictionary_text(replacement, 120, "correction_replacement")?;
+        let identity = normalized_correction_identity(&pattern, &replacement);
         let conn = self.conn.lock().unwrap_or_else(|e| e.into_inner());
+        if correction_identity_exists(&conn, &identity, None)? {
+            anyhow::bail!("correction_duplicate");
+        }
         conn.execute(
             "INSERT INTO correction_rules (pattern, replacement, enabled) VALUES (?1, ?2, 1)",
             rusqlite::params![pattern, replacement],
         )?;
+        Ok(())
+    }
+
+    pub async fn update_correction(
+        &self,
+        id: i64,
+        pattern: &str,
+        replacement: &str,
+        enabled: bool,
+    ) -> Result<()> {
+        let pattern = validate_dictionary_text(pattern, 120, "correction_pattern")?;
+        let replacement = validate_dictionary_text(replacement, 120, "correction_replacement")?;
+        let identity = normalized_correction_identity(&pattern, &replacement);
+        let conn = self.conn.lock().unwrap_or_else(|e| e.into_inner());
+        if correction_identity_exists(&conn, &identity, Some(id))? {
+            anyhow::bail!("correction_duplicate");
+        }
+        let updated = conn.execute(
+            "UPDATE correction_rules
+             SET pattern = ?2, replacement = ?3, enabled = ?4
+             WHERE id = ?1",
+            rusqlite::params![id, pattern, replacement, if enabled { 1 } else { 0 }],
+        )?;
+        if updated == 0 {
+            anyhow::bail!("correction_rule_not_found");
+        }
         Ok(())
     }
 
@@ -1454,10 +1510,88 @@ impl DictionaryStore {
         };
         rows.filter_map(|r| r.ok()).collect()
     }
+
+    pub(crate) fn with_transaction<T>(
+        &self,
+        operation: impl FnOnce(&rusqlite::Transaction<'_>) -> Result<T>,
+    ) -> Result<T> {
+        let mut conn = self.conn.lock().unwrap_or_else(|error| error.into_inner());
+        let transaction = conn.transaction()?;
+        let result = operation(&transaction)?;
+        transaction.commit()?;
+        Ok(result)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn execute_batch_for_test(&self, sql: &str) -> Result<()> {
+        let conn = self.conn.lock().unwrap_or_else(|error| error.into_inner());
+        conn.execute_batch(sql)?;
+        Ok(())
+    }
 }
 
-fn sanitize_correction_text(value: &str) -> String {
-    value.replace('\0', "").trim().chars().take(120).collect()
+pub(crate) fn normalized_dictionary_identity(value: &str) -> String {
+    value.nfkc().collect::<String>().trim().to_lowercase()
+}
+
+pub(crate) fn normalized_correction_identity(pattern: &str, replacement: &str) -> (String, String) {
+    (
+        normalized_dictionary_identity(pattern),
+        normalized_dictionary_identity(replacement),
+    )
+}
+
+fn validate_dictionary_text(value: &str, max_chars: usize, field: &str) -> Result<String> {
+    let value = value.replace('\0', "").trim().to_string();
+    if value.is_empty() {
+        anyhow::bail!("{field}_empty");
+    }
+    if value.chars().count() > max_chars {
+        anyhow::bail!("{field}_too_long");
+    }
+    Ok(value)
+}
+
+fn dictionary_identity_exists(
+    conn: &Connection,
+    identity: &str,
+    excluding_id: Option<i64>,
+) -> Result<bool> {
+    let mut statement = conn.prepare("SELECT id, word FROM dictionary")?;
+    let rows = statement.query_map([], |row| {
+        Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?))
+    })?;
+    for row in rows {
+        let (id, word) = row?;
+        if Some(id) != excluding_id && normalized_dictionary_identity(&word) == identity {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+fn correction_identity_exists(
+    conn: &Connection,
+    identity: &(String, String),
+    excluding_id: Option<i64>,
+) -> Result<bool> {
+    let mut statement = conn.prepare("SELECT id, pattern, replacement FROM correction_rules")?;
+    let rows = statement.query_map([], |row| {
+        Ok((
+            row.get::<_, i64>(0)?,
+            row.get::<_, String>(1)?,
+            row.get::<_, String>(2)?,
+        ))
+    })?;
+    for row in rows {
+        let (id, pattern, replacement) = row?;
+        if Some(id) != excluding_id
+            && normalized_correction_identity(&pattern, &replacement) == *identity
+        {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 #[cfg(test)]
@@ -2453,5 +2587,48 @@ mod tests {
         let enabled = store.enabled_correction_rules().await;
 
         assert!(enabled.is_empty());
+    }
+
+    #[tokio::test]
+    async fn dictionary_store_updates_entries_and_rejects_normalized_duplicates() {
+        let store = temp_dictionary_store("updates");
+        store.add("Token", None).await.unwrap();
+        store.add("TalkMore", Some("talk more")).await.unwrap();
+        let entries = store.list().await.unwrap();
+
+        store
+            .update(entries[0].id, "OpenTypeless", Some("open typeless"))
+            .await
+            .unwrap();
+        assert!(store
+            .update(entries[0].id, "ＴＡＬＫＭＯＲＥ", None)
+            .await
+            .is_err());
+
+        let updated = store.list().await.unwrap();
+        assert_eq!(updated[0].word, "OpenTypeless");
+        assert_eq!(updated[0].pronunciation.as_deref(), Some("open typeless"));
+    }
+
+    #[tokio::test]
+    async fn dictionary_store_updates_correction_pair_and_enabled_state() {
+        let store = temp_dictionary_store("correction-updates");
+        store.add_correction("token", "Token").await.unwrap();
+        store.add_correction("talk more", "TalkMore").await.unwrap();
+        let rules = store.correction_rules().await.unwrap();
+
+        store
+            .update_correction(rules[0].id, "open type less", "OpenTypeless", false)
+            .await
+            .unwrap();
+        assert!(store
+            .update_correction(rules[0].id, "ＴＡＬＫ ＭＯＲＥ", "talkmore", true)
+            .await
+            .is_err());
+
+        let updated = store.correction_rules().await.unwrap();
+        assert_eq!(updated[0].pattern, "open type less");
+        assert_eq!(updated[0].replacement, "OpenTypeless");
+        assert!(!updated[0].enabled);
     }
 }
