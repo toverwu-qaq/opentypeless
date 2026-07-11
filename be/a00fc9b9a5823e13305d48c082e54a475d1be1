@@ -1,0 +1,25 @@
+src-tauri/src/app_detector/mod.rs
+  s_7724aa1accb26b::t_4398eff483ce31 3-4,221-295
+src-tauri/src/app_detector/profiles.rs
+  s_7724aa1accb26b::t_4cf9a3ea50757c 1-983
+src-tauri/src/app_detector/registry.rs
+  s_7724aa1accb26b::t_7c50a1793cb33c 1-540
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "bea00fc9b9a5823e13305d48c082e54a475d1be1",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
