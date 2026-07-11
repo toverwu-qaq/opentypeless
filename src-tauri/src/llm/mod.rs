@@ -44,6 +44,7 @@ pub struct PolishRequest {
     pub target_lang: String,
     pub selected_text: Option<String>,
     pub operation_id: Option<String>,
+    pub voice_intent: crate::voice_intent::VoiceIntent,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -124,6 +125,7 @@ mod context_prompt_contract_tests {
             translate_enabled: true,
             target_lang: "en",
             has_selected_text: false,
+            voice_intent: None,
         })
     }
 
@@ -186,6 +188,38 @@ mod context_prompt_contract_tests {
         assert!(prompt.contains("keep the original order"));
         assert!(prompt.contains("uncertain names"));
         assert!(prompt.contains("Do not search"));
+    }
+
+    #[test]
+    fn shared_voice_router_prompt_treats_operation_and_placement_as_trusted() {
+        let intent = crate::voice_intent::VoiceIntent::from_parts(
+            crate::voice_intent::VoiceIntentKind::RewriteSelection,
+            crate::voice_intent::VoiceOutputPlacement::ReplaceSelection,
+            1.0,
+            None,
+            None,
+            Some(crate::voice_intent::CommandLocale::En),
+            None,
+        )
+        .unwrap();
+        let prompt = build_context_system_prompt(ContextPromptOptions {
+            context: &context(ContextFamily::Email, None),
+            dictionary: &[],
+            correction_rules: &[],
+            polish_style: "clean",
+            personal_style_prompt: "",
+            mapped_scene_prompt: "",
+            active_scene_prompt: "",
+            polish_custom_prompt: "",
+            translate_enabled: false,
+            target_lang: "en",
+            has_selected_text: true,
+            voice_intent: Some(&intent),
+        });
+
+        assert!(prompt.contains("TRUSTED OPERATION: rewrite_selection"));
+        assert!(prompt.contains("TRUSTED PLACEMENT: replace_selection"));
+        assert!(prompt.contains("output only the replacement text"));
     }
 
     #[test]

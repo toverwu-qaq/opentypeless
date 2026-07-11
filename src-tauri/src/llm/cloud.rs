@@ -136,6 +136,7 @@ impl LlmProvider for CloudLlmProvider {
             translate_enabled: req.translate_enabled,
             target_lang: &req.target_lang,
             has_selected_text,
+            voice_intent: Some(&req.voice_intent),
         });
 
         let mut messages = vec![serde_json::json!({ "role": "system", "content": system_prompt })];

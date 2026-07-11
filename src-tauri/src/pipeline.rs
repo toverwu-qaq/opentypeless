@@ -311,29 +311,41 @@ fn history_provider_kind(config: &storage::AppConfig) -> storage::HistoryProvide
 enum SelectedTextOutputPolicy {
     PopupAnswer,
     ReplaceSelection,
-    CopyToClipboard,
 }
 
 fn selected_text_output_policy(
-    raw_instruction: &str,
-    selected_text: Option<&str>,
+    voice_intent: &crate::voice_intent::VoiceIntent,
 ) -> SelectedTextOutputPolicy {
-    if !selected_text_has_content(selected_text) {
-        return SelectedTextOutputPolicy::ReplaceSelection;
-    }
-
-    match crate::selection::route_selected_text_command(raw_instruction, selected_text).output {
-        crate::selection::SelectedTextCommandOutput::PopupAnswer => {
+    match voice_intent.placement {
+        crate::voice_intent::VoiceOutputPlacement::PopupAnswer => {
             SelectedTextOutputPolicy::PopupAnswer
         }
-        crate::selection::SelectedTextCommandOutput::ReplaceSelection
-        | crate::selection::SelectedTextCommandOutput::InsertAtCursor => {
+        crate::voice_intent::VoiceOutputPlacement::InsertAtCursor
+        | crate::voice_intent::VoiceOutputPlacement::ReplaceSelection => {
             SelectedTextOutputPolicy::ReplaceSelection
         }
-        crate::selection::SelectedTextCommandOutput::CopyToClipboard => {
-            SelectedTextOutputPolicy::CopyToClipboard
-        }
+        crate::voice_intent::VoiceOutputPlacement::OpenUrl => SelectedTextOutputPolicy::PopupAnswer,
     }
+}
+
+fn route_pipeline_voice_intent(
+    mode: crate::voice_intent::VoiceMode,
+    raw_text: &str,
+    selected_text: Option<&str>,
+    config: &storage::AppConfig,
+) -> crate::voice_intent::VoiceIntent {
+    let speech_language = if config.stt_language == "multi" {
+        crate::voice_intent::SpeechLanguageMode::Automatic
+    } else {
+        crate::voice_intent::SpeechLanguageMode::Explicit(&config.stt_language)
+    };
+    crate::voice_intent::VoiceIntentRouter::route(crate::voice_intent::VoiceRouteRequest {
+        mode,
+        utterance: raw_text,
+        has_selected_text: selected_text_has_content(selected_text),
+        speech_language,
+        flags: config.voice_routing_flags,
+    })
 }
 
 fn streaming_insert_strategy_for_config(
@@ -647,6 +659,7 @@ pub struct PipelineHandle {
     preloaded_dictionary: Arc<Mutex<Option<Vec<String>>>>,
     preloaded_correction_rules: Arc<Mutex<Option<Vec<llm::CorrectionRule>>>>,
     preloaded_selected_text: Arc<Mutex<Option<String>>>,
+    preloaded_voice_mode: Arc<Mutex<Option<crate::voice_intent::VoiceMode>>>,
     cloud_operation_id: Arc<Mutex<Option<String>>>,
     recording_start: Arc<Mutex<Option<std::time::Instant>>>,
     shared_client: reqwest::Client,
@@ -666,6 +679,7 @@ struct PolishTextInput<'a> {
     selected_text: Option<String>,
     session_token: String,
     operation_id: Option<String>,
+    voice_intent: crate::voice_intent::VoiceIntent,
 }
 
 #[derive(Debug, Clone)]
@@ -728,6 +742,7 @@ impl PipelineHandle {
             preloaded_dictionary: Arc::new(Mutex::new(None)),
             preloaded_correction_rules: Arc::new(Mutex::new(None)),
             preloaded_selected_text: Arc::new(Mutex::new(None)),
+            preloaded_voice_mode: Arc::new(Mutex::new(None)),
             cloud_operation_id: Arc::new(Mutex::new(None)),
             recording_start: Arc::new(Mutex::new(None)),
             shared_client,
@@ -868,6 +883,14 @@ impl PipelineHandle {
 
         // P0-2: Load config BEFORE starting audio capture — fail fast on missing API key
         let config_data = apply_pipeline_start_options(self.load_config().await, options);
+        *self
+            .preloaded_voice_mode
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(if options.force_translate {
+            crate::voice_intent::VoiceMode::Translate
+        } else {
+            crate::voice_intent::VoiceMode::Dictate
+        });
         *self
             .preloaded_config
             .lock()
@@ -1481,6 +1504,12 @@ impl PipelineHandle {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .take();
+        let voice_mode = self
+            .preloaded_voice_mode
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take()
+            .unwrap_or(crate::voice_intent::VoiceMode::Dictate);
 
         // Extract session token before releasing guard (for cloud LLM)
         let session_token = if config.llm_provider == "cloud" {
@@ -1508,6 +1537,8 @@ impl PipelineHandle {
                 return Ok(());
             } // aborted or no speech detected
         };
+        let voice_intent =
+            route_pipeline_voice_intent(voice_mode, &raw_text, selected_text.as_deref(), &config);
         let stt_elapsed = stop_start.elapsed();
         tracing::info!(
             "[Pipeline Timing] STT finalize: {}ms",
@@ -1534,6 +1565,7 @@ impl PipelineHandle {
                 selected_text,
                 session_token,
                 operation_id,
+                voice_intent,
             })
             .await;
         let final_text = polish_outcome.final_text;
@@ -1659,8 +1691,9 @@ impl PipelineHandle {
             selected_text,
             session_token,
             operation_id,
+            voice_intent,
         } = input;
-        let selected_text_policy = selected_text_output_policy(raw_text, selected_text.as_deref());
+        let selected_text_policy = selected_text_output_policy(&voice_intent);
 
         let llm_api_key = if config.llm_provider == "cloud" {
             session_token
@@ -1776,6 +1809,7 @@ impl PipelineHandle {
             target_lang: config.target_lang.clone(),
             selected_text,
             operation_id,
+            voice_intent: voice_intent.clone(),
         };
 
         let polish_result = provider.polish(&llm_config, &req, Some(&on_chunk)).await;
@@ -1963,33 +1997,12 @@ impl PipelineHandle {
                         self.show_selected_text_answer_or_copy(
                             raw_text,
                             &response.polished_text,
+                            voice_intent.kind,
                             &app_ctx.profile.app_label,
                             config,
                         )
                         .await;
                         return PolishTextOutcome::normal(response.polished_text, elapsed);
-                    }
-                    SelectedTextOutputPolicy::CopyToClipboard => {
-                        self.copy_text_to_clipboard_with_warning(
-                            &response.polished_text,
-                            &app_ctx.profile.app_label,
-                            config,
-                            crate::error::UserError {
-                                code: "output_fallback_clipboard".to_string(),
-                                details: Some(
-                                    "Selected-text answer copied to clipboard instead of replacing the selection"
-                                        .to_string(),
-                                ),
-                                retry_count: 0,
-                            },
-                        )
-                        .await;
-                        return PolishTextOutcome::with_history_status(
-                            response.polished_text,
-                            elapsed,
-                            "clipboard_fallback",
-                            "Selected-text answer copied to clipboard",
-                        );
                     }
                     SelectedTextOutputPolicy::ReplaceSelection => {}
                 }
@@ -2232,6 +2245,7 @@ impl PipelineHandle {
         &self,
         question: &str,
         answer: &str,
+        intent: crate::voice_intent::VoiceIntentKind,
         app_name: &str,
         config: &storage::AppConfig,
     ) {
@@ -2240,7 +2254,7 @@ impl PipelineHandle {
             &self.app_handle,
             question.to_string(),
             answer.to_string(),
-            crate::commands::ask::route_ask_intent(question, true),
+            intent,
             true,
             false,
         ) {
@@ -2691,24 +2705,58 @@ mod tests {
 
     #[test]
     fn selected_text_output_policy_copies_non_destructive_questions() {
-        assert_eq!(
-            selected_text_output_policy("这段什么意思", Some("selected text")),
-            SelectedTextOutputPolicy::PopupAnswer
+        let mut config = storage::AppConfig {
+            stt_language: "zh-Hans".to_string(),
+            ..Default::default()
+        };
+        let chinese = route_pipeline_voice_intent(
+            crate::voice_intent::VoiceMode::Dictate,
+            "这段是什么意思",
+            Some("selected text"),
+            &config,
         );
         assert_eq!(
-            selected_text_output_policy("summarize this", Some("selected text")),
+            selected_text_output_policy(&chinese),
+            SelectedTextOutputPolicy::PopupAnswer
+        );
+        config.stt_language = "en".to_string();
+        let english = route_pipeline_voice_intent(
+            crate::voice_intent::VoiceMode::Dictate,
+            "summarize this",
+            Some("selected text"),
+            &config,
+        );
+        assert_eq!(
+            selected_text_output_policy(&english),
             SelectedTextOutputPolicy::PopupAnswer
         );
     }
 
     #[test]
     fn selected_text_output_policy_replaces_for_explicit_editing() {
-        assert_eq!(
-            selected_text_output_policy("润色这段", Some("selected text")),
-            SelectedTextOutputPolicy::ReplaceSelection
+        let mut config = storage::AppConfig {
+            stt_language: "zh-Hans".to_string(),
+            ..Default::default()
+        };
+        let rewrite = route_pipeline_voice_intent(
+            crate::voice_intent::VoiceMode::Dictate,
+            "润色这段",
+            Some("selected text"),
+            &config,
         );
         assert_eq!(
-            selected_text_output_policy("translate this to English", Some("selected text")),
+            selected_text_output_policy(&rewrite),
+            SelectedTextOutputPolicy::ReplaceSelection
+        );
+        config.stt_language = "en".to_string();
+        let translation = route_pipeline_voice_intent(
+            crate::voice_intent::VoiceMode::Dictate,
+            "translate this to English",
+            Some("selected text"),
+            &config,
+        );
+        assert_eq!(
+            selected_text_output_policy(&translation),
             SelectedTextOutputPolicy::ReplaceSelection
         );
     }
@@ -2718,6 +2766,40 @@ mod tests {
         assert!(selected_text_command_requires_llm(Some("selected text")));
         assert!(!selected_text_command_requires_llm(None));
         assert!(!selected_text_command_requires_llm(Some(" \n\t ")));
+    }
+
+    #[test]
+    fn shared_voice_router_pipeline_keeps_discussed_commands_nondestructive() {
+        let config = storage::AppConfig {
+            stt_language: "en".to_string(),
+            ..Default::default()
+        };
+
+        let ordinary = route_pipeline_voice_intent(
+            crate::voice_intent::VoiceMode::Dictate,
+            "I need to draft tomorrow",
+            None,
+            &config,
+        );
+        assert_eq!(
+            ordinary.kind,
+            crate::voice_intent::VoiceIntentKind::DictateInsert
+        );
+
+        let selected = route_pipeline_voice_intent(
+            crate::voice_intent::VoiceMode::Dictate,
+            "do not rewrite this",
+            Some("selected text"),
+            &config,
+        );
+        assert_eq!(
+            selected.kind,
+            crate::voice_intent::VoiceIntentKind::AskSelection
+        );
+        assert_eq!(
+            selected.placement,
+            crate::voice_intent::VoiceOutputPlacement::PopupAnswer
+        );
     }
 
     #[test]

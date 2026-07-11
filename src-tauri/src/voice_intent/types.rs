@@ -21,6 +21,21 @@ pub enum VoiceIntentKind {
     Search,
 }
 
+impl VoiceIntentKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::DictateInsert => "dictate_insert",
+            Self::DraftInsert => "draft_insert",
+            Self::RewriteSelection => "rewrite_selection",
+            Self::TranslateInsert => "translate_insert",
+            Self::TranslateSelection => "translate_selection",
+            Self::AskSelection => "ask_selection",
+            Self::OpenQuestion => "open_question",
+            Self::Search => "search",
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum VoiceOutputPlacement {
@@ -28,6 +43,17 @@ pub enum VoiceOutputPlacement {
     ReplaceSelection,
     PopupAnswer,
     OpenUrl,
+}
+
+impl VoiceOutputPlacement {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::InsertAtCursor => "insert_at_cursor",
+            Self::ReplaceSelection => "replace_selection",
+            Self::PopupAnswer => "popup_answer",
+            Self::OpenUrl => "open_url",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

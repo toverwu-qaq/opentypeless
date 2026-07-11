@@ -6,6 +6,10 @@ use crate::error::{emit_cloud_session_invalid, managed_cloud_error, AppError};
 use crate::pipeline::PipelineState;
 use crate::storage;
 use crate::stt::{self, SttConfig, TranscriptEvent};
+use crate::voice_intent::{
+    SearchProvider, SpeechLanguageMode, VoiceIntent, VoiceIntentKind, VoiceIntentRouter, VoiceMode,
+    VoiceRouteRequest, VoiceRoutingFlags,
+};
 use crate::{api_base_url, with_desktop_client_version, SessionTokenStore};
 use serde_json::json;
 use std::sync::{Arc, Mutex};
@@ -17,67 +21,11 @@ pub const ASK_MAX_SELECTED_TEXT_CHARS: usize = 4_000;
 pub const ASK_OUTPUT_TOKEN_LIMIT: u32 = 80;
 const ASK_STT_FINALIZE_TIMEOUT_SECS: u64 = 12;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum AskCommandIntent {
-    OpenQuestion,
-    AskSelection,
-    SummarizeSelection,
-    TranslateSelection,
-    EditSelection,
-}
-
-impl AskCommandIntent {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::OpenQuestion => "open_question",
-            Self::AskSelection => "ask_selection",
-            Self::SummarizeSelection => "summarize_selection",
-            Self::TranslateSelection => "translate_selection",
-            Self::EditSelection => "edit_selection",
-        }
-    }
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum AskResultOutput {
     PopupAnswer,
     OpenedSearch,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum AskSearchProvider {
-    Google,
-    Youtube,
-    Amazon,
-    Github,
-}
-
-impl AskSearchProvider {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::Google => "Google",
-            Self::Youtube => "YouTube",
-            Self::Amazon => "Amazon",
-            Self::Github => "GitHub",
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-struct AskSearchCommand {
-    provider: AskSearchProvider,
-    query: String,
-}
-
-impl AskSearchCommand {
-    fn opened_message(&self) -> String {
-        format!(
-            "Opened {} search for \"{}\".",
-            self.provider.as_str(),
-            self.query
-        )
-    }
 }
 
 #[derive(Default)]
@@ -221,7 +169,7 @@ impl AskDictationStartResult {
 pub struct AskDictationResult {
     question: String,
     answer: String,
-    intent: String,
+    intent: VoiceIntentKind,
     output: AskResultOutput,
     used_selected_text: bool,
     selected_text_truncated: bool,
@@ -249,12 +197,12 @@ impl AskDictationResultMetadata {
         }
     }
 
-    fn opened_search(provider: AskSearchProvider, url: String) -> Self {
+    fn opened_search(provider: SearchProvider, url: String) -> Self {
         Self {
             output: AskResultOutput::OpenedSearch,
             used_selected_text: false,
             selected_text_truncated: false,
-            search_provider: Some(provider.as_str().to_string()),
+            search_provider: Some(provider.display_name().to_string()),
             search_url: Some(url),
         }
     }
@@ -264,13 +212,13 @@ impl AskDictationResult {
     pub(crate) fn new(
         question: String,
         answer: String,
-        intent: AskCommandIntent,
+        intent: VoiceIntentKind,
         metadata: AskDictationResultMetadata,
     ) -> Self {
         Self {
             question,
             answer,
-            intent: intent.as_str().to_string(),
+            intent,
             output: metadata.output,
             used_selected_text: metadata.used_selected_text,
             selected_text_truncated: metadata.selected_text_truncated,
@@ -309,7 +257,7 @@ pub(crate) fn show_answer_window_with_metadata(
     app: &tauri::AppHandle,
     question: String,
     answer: String,
-    intent: AskCommandIntent,
+    intent: VoiceIntentKind,
     used_selected_text: bool,
     selected_text_truncated: bool,
 ) -> Result<(), String> {
@@ -424,25 +372,23 @@ fn sanitize_selected_text_for_ask(selected_text: &str) -> Option<SanitizedSelect
     })
 }
 
-pub fn route_ask_intent(question: &str, has_selected_text: bool) -> AskCommandIntent {
-    if !has_selected_text {
-        return AskCommandIntent::OpenQuestion;
-    }
-
-    match crate::selection::route_selected_text_command(question, Some("selected text")).intent {
-        crate::selection::SelectedTextCommandIntent::Translate => {
-            AskCommandIntent::TranslateSelection
-        }
-        crate::selection::SelectedTextCommandIntent::Summarize => {
-            AskCommandIntent::SummarizeSelection
-        }
-        crate::selection::SelectedTextCommandIntent::Rewrite
-        | crate::selection::SelectedTextCommandIntent::FixGrammar
-        | crate::selection::SelectedTextCommandIntent::Shorten
-        | crate::selection::SelectedTextCommandIntent::Expand => AskCommandIntent::EditSelection,
-        crate::selection::SelectedTextCommandIntent::Ask
-        | crate::selection::SelectedTextCommandIntent::Explain => AskCommandIntent::AskSelection,
-    }
+pub fn route_ask_intent(
+    question: &str,
+    has_selected_text: bool,
+    speech_language: &str,
+    flags: VoiceRoutingFlags,
+) -> VoiceIntent {
+    VoiceIntentRouter::route(VoiceRouteRequest {
+        mode: VoiceMode::Ask,
+        utterance: question,
+        has_selected_text,
+        speech_language: if speech_language == "multi" {
+            SpeechLanguageMode::Automatic
+        } else {
+            SpeechLanguageMode::Explicit(speech_language)
+        },
+        flags,
+    })
 }
 
 fn validate_ask_answer(answer: &str) -> Result<String, String> {
@@ -453,72 +399,15 @@ fn validate_ask_answer(answer: &str) -> Result<String, String> {
     Ok(trimmed)
 }
 
-fn provider_pattern(provider: AskSearchProvider) -> &'static str {
+fn build_search_url(provider: SearchProvider, query: &str) -> String {
+    let encoded: String = url::form_urlencoded::byte_serialize(query.as_bytes()).collect();
     match provider {
-        AskSearchProvider::Google => "google",
-        AskSearchProvider::Youtube => "youtube",
-        AskSearchProvider::Amazon => "amazon",
-        AskSearchProvider::Github => "github",
-    }
-}
-
-fn parse_ask_search_command(question: &str) -> Option<AskSearchCommand> {
-    let trimmed = question.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-
-    let normalized = trimmed.to_ascii_lowercase();
-    if let Some(rest) = normalized.strip_prefix("search ") {
-        for provider in [
-            AskSearchProvider::Google,
-            AskSearchProvider::Youtube,
-            AskSearchProvider::Amazon,
-            AskSearchProvider::Github,
-        ] {
-            let marker = format!(" on {}", provider_pattern(provider));
-            if let Some(index) = rest.rfind(&marker) {
-                let query = trimmed[7..7 + index].trim();
-                if !query.is_empty() {
-                    return Some(AskSearchCommand {
-                        provider,
-                        query: query.to_string(),
-                    });
-                }
-            }
-        }
-    }
-
-    for provider in [
-        AskSearchProvider::Google,
-        AskSearchProvider::Youtube,
-        AskSearchProvider::Amazon,
-        AskSearchProvider::Github,
-    ] {
-        let marker = format!("在 {} 搜索", provider.as_str());
-        if trimmed.starts_with(&marker) {
-            let query = trimmed[marker.len()..].trim();
-            if !query.is_empty() {
-                return Some(AskSearchCommand {
-                    provider,
-                    query: query.to_string(),
-                });
-            }
-        }
-    }
-
-    None
-}
-
-fn build_search_url(command: &AskSearchCommand) -> String {
-    let encoded: String = url::form_urlencoded::byte_serialize(command.query.as_bytes()).collect();
-    match command.provider {
-        AskSearchProvider::Google => format!("https://www.google.com/search?q={encoded}"),
-        AskSearchProvider::Youtube => {
+        SearchProvider::Google => format!("https://www.google.com/search?q={encoded}"),
+        SearchProvider::YouTube => {
             format!("https://www.youtube.com/results?search_query={encoded}")
         }
-        AskSearchProvider::Amazon => format!("https://www.amazon.com/s?k={encoded}"),
-        AskSearchProvider::Github => format!("https://github.com/search?q={encoded}"),
+        SearchProvider::Amazon => format!("https://www.amazon.com/s?k={encoded}"),
+        SearchProvider::GitHub => format!("https://github.com/search?q={encoded}"),
     }
 }
 
@@ -637,12 +526,12 @@ fn build_cloud_ask_body(
     question: &str,
     selected_text: Option<&str>,
     operation_id: &str,
+    voice_intent: &VoiceIntent,
 ) -> Result<serde_json::Value, String> {
     let question = validate_ask_question(question)?;
     let selected_text = selected_text.and_then(sanitize_selected_text_for_ask);
     let stage_key = format!("{operation_id}:ask");
     let routed_question = build_ask_user_content_from_sanitized(&question, selected_text.as_ref());
-    let intent = route_ask_intent(&question, selected_text.is_some()).as_str();
 
     Ok(json!({
         "question": routed_question,
@@ -650,7 +539,7 @@ fn build_cloud_ask_body(
             "operationId": operation_id,
             "stageKey": stage_key,
             "requestType": "ask_anything",
-            "askIntent": intent,
+            "askIntent": voice_intent.kind.as_str(),
             "hasSelectedText": selected_text.is_some(),
             "selectedTextTruncated": selected_text.as_ref().is_some_and(|value| value.truncated),
             "clientVersion": crate::desktop_client_version()
@@ -753,6 +642,7 @@ async fn answer_question(
     question: &str,
     selected_text: Option<&str>,
     operation_id: Option<&str>,
+    voice_intent: &VoiceIntent,
 ) -> Result<String, AppError> {
     let llm_api_key = if config.llm_provider == "cloud" {
         String::new()
@@ -768,7 +658,15 @@ async fn answer_question(
     }
 
     if should_use_cloud(config) {
-        return ask_via_cloud(client, token_store, question, selected_text, operation_id).await;
+        return ask_via_cloud(
+            client,
+            token_store,
+            question,
+            selected_text,
+            operation_id,
+            voice_intent,
+        )
+        .await;
     }
 
     Err(AppError::Config(
@@ -919,6 +817,7 @@ async fn ask_via_cloud(
     question: &str,
     selected_text: Option<&str>,
     operation_id: Option<&str>,
+    voice_intent: &VoiceIntent,
 ) -> Result<String, AppError> {
     let token = token_store
         .0
@@ -932,8 +831,8 @@ async fn ask_via_cloud(
     let operation_id = operation_id
         .map(str::to_string)
         .unwrap_or_else(synthetic_operation_id);
-    let body =
-        build_cloud_ask_body(question, selected_text, &operation_id).map_err(AppError::Config)?;
+    let body = build_cloud_ask_body(question, selected_text, &operation_id, voice_intent)
+        .map_err(AppError::Config)?;
 
     let resp =
         with_desktop_client_version(client.post(format!("{}/api/proxy/ask", api_base_url())))
@@ -965,8 +864,24 @@ pub async fn ask_anything(
 ) -> Result<String, String> {
     let question = validate_ask_question(&question)?;
     let config = config_state.load().await.map_err(|e| e.to_string())?;
+    let voice_intent = route_ask_intent(
+        &question,
+        false,
+        &config.stt_language,
+        config.voice_routing_flags,
+    );
 
-    match answer_question(&config, &client, &token_store, &question, None, None).await {
+    match answer_question(
+        &config,
+        &client,
+        &token_store,
+        &question,
+        None,
+        None,
+        &voice_intent,
+    )
+    .await
+    {
         Ok(answer) => Ok(answer),
         Err(error) => {
             emit_cloud_session_invalid(&app, &error);
@@ -1275,21 +1190,31 @@ pub async fn stop_ask_dictation(
             .as_ref()
             .is_some_and(|selected_text| selected_text.truncated);
 
-        if !used_selected_text {
-            if let Some(search) = parse_ask_search_command(&question) {
-                let url = build_search_url(&search);
-                open_search_url(&url)?;
-                return Ok(AskDictationResult::new(
-                    question,
-                    search.opened_message(),
-                    AskCommandIntent::OpenQuestion,
-                    AskDictationResultMetadata::opened_search(search.provider, url),
-                ));
-            }
+        let config = config_state.load().await.map_err(|e| e.to_string())?;
+        let voice_intent = route_ask_intent(
+            &question,
+            used_selected_text,
+            &config.stt_language,
+            config.voice_routing_flags,
+        );
+        if voice_intent.kind == VoiceIntentKind::Search {
+            let provider = voice_intent
+                .search_provider
+                .ok_or_else(|| "Search route is missing a provider".to_string())?;
+            let query = voice_intent
+                .payload
+                .as_deref()
+                .ok_or_else(|| "Search route is missing a query".to_string())?;
+            let url = build_search_url(provider, query);
+            open_search_url(&url)?;
+            return Ok(AskDictationResult::new(
+                question,
+                format!("Opened {} search.", provider.display_name()),
+                voice_intent.kind,
+                AskDictationResultMetadata::opened_search(provider, url),
+            ));
         }
 
-        let config = config_state.load().await.map_err(|e| e.to_string())?;
-        let intent = route_ask_intent(&question, used_selected_text);
         let answer = answer_question(
             &config,
             &client,
@@ -1297,6 +1222,7 @@ pub async fn stop_ask_dictation(
             &question,
             session.selected_text.as_deref(),
             Some(&session.operation_id),
+            &voice_intent,
         )
         .await
         .map_err(|error| {
@@ -1307,7 +1233,7 @@ pub async fn stop_ask_dictation(
         Ok(AskDictationResult::new(
             question,
             answer,
-            intent,
+            voice_intent.kind,
             AskDictationResultMetadata::popup(used_selected_text, selected_text_truncated),
         ))
     }
@@ -1421,32 +1347,56 @@ mod tests {
 
     #[test]
     fn cloud_ask_body_reports_selected_text_truncation() {
+        let voice_intent =
+            route_ask_intent("Summarize this", true, "en", VoiceRoutingFlags::default());
         let body = build_cloud_ask_body(
             "Summarize this",
             Some(&"a".repeat(ASK_MAX_SELECTED_TEXT_CHARS + 1)),
             "operation-1",
+            &voice_intent,
         )
         .unwrap();
 
         assert_eq!(body["context"]["hasSelectedText"], true);
         assert_eq!(body["context"]["selectedTextTruncated"], true);
-        assert_eq!(body["context"]["askIntent"], "summarize_selection");
+        assert_eq!(body["context"]["askIntent"], "ask_selection");
     }
 
     #[test]
     fn selected_text_router_defaults_to_nondestructive_ask() {
+        let flags = VoiceRoutingFlags::default();
         assert_eq!(
-            route_ask_intent("What does this mean?", true),
-            AskCommandIntent::AskSelection
+            route_ask_intent("What does this mean?", true, "en", flags).kind,
+            VoiceIntentKind::AskSelection
         );
         assert_eq!(
-            route_ask_intent("Make this shorter", true),
-            AskCommandIntent::EditSelection
+            route_ask_intent("Make this shorter", true, "en", flags).kind,
+            VoiceIntentKind::AskSelection
         );
         assert_eq!(
-            route_ask_intent("What is OpenTypeless?", false),
-            AskCommandIntent::OpenQuestion
+            route_ask_intent("What is OpenTypeless?", false, "en", flags).kind,
+            VoiceIntentKind::OpenQuestion
         );
+    }
+
+    #[test]
+    fn shared_voice_router_ask_never_replaces_selected_text() {
+        let flags = crate::voice_intent::VoiceRoutingFlags::default();
+        for question in [
+            "rewrite this",
+            "translate this to French",
+            "do not rewrite this",
+        ] {
+            let route = route_ask_intent(question, true, "en", flags);
+            assert_eq!(
+                route.kind,
+                crate::voice_intent::VoiceIntentKind::AskSelection
+            );
+            assert_eq!(
+                route.placement,
+                crate::voice_intent::VoiceOutputPlacement::PopupAnswer
+            );
+        }
     }
 
     #[test]
@@ -1454,7 +1404,7 @@ mod tests {
         let result = AskDictationResult::new(
             "Summarize this".to_string(),
             "Short answer.".to_string(),
-            AskCommandIntent::SummarizeSelection,
+            VoiceIntentKind::AskSelection,
             AskDictationResultMetadata::popup(true, false),
         );
 
@@ -1462,7 +1412,7 @@ mod tests {
 
         assert_eq!(value["question"], "Summarize this");
         assert_eq!(value["answer"], "Short answer.");
-        assert_eq!(value["intent"], "summarize_selection");
+        assert_eq!(value["intent"], "ask_selection");
         assert_eq!(value["output"], "popupAnswer");
         assert_eq!(value["usedSelectedText"], true);
         assert_eq!(value["selectedTextTruncated"], false);
@@ -1472,23 +1422,47 @@ mod tests {
 
     #[test]
     fn parses_explicit_search_commands() {
-        let google = parse_ask_search_command("search rust tauri hotkeys on Google").unwrap();
-        assert_eq!(google.provider, AskSearchProvider::Google);
-        assert_eq!(google.query, "rust tauri hotkeys");
+        let google = route_ask_intent(
+            "search rust tauri hotkeys on Google",
+            false,
+            "en",
+            VoiceRoutingFlags::default(),
+        );
+        assert_eq!(google.search_provider, Some(SearchProvider::Google));
+        assert_eq!(google.payload.as_deref(), Some("rust tauri hotkeys"));
         assert_eq!(
-            build_search_url(&google),
+            build_search_url(SearchProvider::Google, google.payload.as_deref().unwrap()),
             "https://www.google.com/search?q=rust+tauri+hotkeys"
         );
 
-        let youtube = parse_ask_search_command("search React tutorial on YouTube").unwrap();
-        assert_eq!(youtube.provider, AskSearchProvider::Youtube);
-        assert_eq!(youtube.query, "React tutorial");
+        let youtube = route_ask_intent(
+            "search React tutorial on YouTube",
+            false,
+            "en",
+            VoiceRoutingFlags::default(),
+        );
+        assert_eq!(youtube.search_provider, Some(SearchProvider::YouTube));
+        assert_eq!(youtube.payload.as_deref(), Some("React tutorial"));
 
-        let github = parse_ask_search_command("在 GitHub 搜索 tauri global shortcut").unwrap();
-        assert_eq!(github.provider, AskSearchProvider::Github);
-        assert_eq!(github.query, "tauri global shortcut");
+        let github = route_ask_intent(
+            "在 GitHub 搜索 tauri global shortcut",
+            false,
+            "zh-Hans",
+            VoiceRoutingFlags::default(),
+        );
+        assert_eq!(github.search_provider, Some(SearchProvider::GitHub));
+        assert_eq!(github.payload.as_deref(), Some("tauri global shortcut"));
 
-        assert!(parse_ask_search_command("what is a good opener for this email").is_none());
+        assert_eq!(
+            route_ask_intent(
+                "what is a good opener for this email",
+                false,
+                "en",
+                VoiceRoutingFlags::default(),
+            )
+            .kind,
+            VoiceIntentKind::OpenQuestion
+        );
     }
 
     #[test]
@@ -1620,7 +1594,7 @@ mod tests {
         state.set_pending_result(AskDictationResult::new(
             "What is OpenTypeless?".to_string(),
             "A voice app.".to_string(),
-            AskCommandIntent::OpenQuestion,
+            VoiceIntentKind::OpenQuestion,
             AskDictationResultMetadata::popup(false, false),
         ));
 
