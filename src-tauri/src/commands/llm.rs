@@ -2,6 +2,20 @@ use crate::credentials::{resolve_config_secret, SystemCredentialVault};
 use crate::SessionTokenStore;
 use crate::{api_base_url, with_desktop_client_version};
 
+#[tauri::command]
+pub fn get_llm_model_capability(
+    provider: String,
+    base_url: String,
+    model: String,
+) -> crate::llm::model_capabilities::ModelCapability {
+    crate::llm::model_capabilities::model_capability(
+        &provider,
+        &base_url,
+        &model,
+        crate::llm::prompt::CONTEXT_PROMPT_VERSION,
+    )
+}
+
 fn synthetic_operation_id() -> String {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

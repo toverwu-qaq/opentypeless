@@ -4,8 +4,8 @@
   "models": [
     {
       "provider": "cloud",
-      "baseUrl": "https://www.opentypeless.com",
-      "model": "managed-reference",
+      "baseUrl": "https://www.opentypeless.com/api/proxy",
+      "model": "default",
       "capability": "certified"
     }
   ]

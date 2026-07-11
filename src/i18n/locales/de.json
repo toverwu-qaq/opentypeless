@@ -317,6 +317,8 @@
     "model": "Modell",
     "fetchModels": "Verfügbare Modelle abrufen",
     "modelsAvailable": "{{count}} Modelle verfügbar",
+    "modelCertified": "Optimized context and thought-aware support",
+    "modelBestEffort": "Context and thought-aware support is best effort",
     "baseUrl": "Basis-URL",
     "enableAiPolish": "KI-Glättung aktivieren",
     "enableAiPolishDesc": "Sprache automatisch bereinigen, formatieren und verbessern, bevor sie ausgegeben wird.",

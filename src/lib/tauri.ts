@@ -29,6 +29,16 @@ export async function updateConfig(config: AppConfig): Promise<void> {
   return invoke('update_config', { config })
 }
 
+export type LlmModelCapability = 'certified' | 'best_effort' | 'unknown'
+
+export async function getLlmModelCapability(
+  provider: string,
+  baseUrl: string,
+  model: string,
+): Promise<LlmModelCapability> {
+  return invoke('get_llm_model_capability', { provider, baseUrl, model })
+}
+
 export interface CredentialStatus {
   namespace: string
   provider: string

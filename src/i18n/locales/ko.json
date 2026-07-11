@@ -317,6 +317,8 @@
     "model": "모델",
     "fetchModels": "사용 가능한 모델 불러오기",
     "modelsAvailable": "{{count}}개 모델 사용 가능",
+    "modelCertified": "Optimized context and thought-aware support",
+    "modelBestEffort": "Context and thought-aware support is best effort",
     "baseUrl": "기본 URL",
     "enableAiPolish": "AI 다듬기 활성화",
     "enableAiPolishDesc": "출력 전에 음성 입력을 자동으로 정리하고 형식을 맞추며 개선합니다.",

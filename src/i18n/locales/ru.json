@@ -317,6 +317,8 @@
     "model": "Модель",
     "fetchModels": "Загрузить доступные модели",
     "modelsAvailable": "Доступно моделей: {{count}}",
+    "modelCertified": "Optimized context and thought-aware support",
+    "modelBestEffort": "Context and thought-aware support is best effort",
     "baseUrl": "Базовый URL",
     "enableAiPolish": "Включить обработку ИИ",
     "enableAiPolishDesc": "Автоматически очищает, форматирует и улучшает диктовку перед выводом.",

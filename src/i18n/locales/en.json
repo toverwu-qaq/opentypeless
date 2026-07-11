@@ -315,6 +315,8 @@
     "model": "Model",
     "fetchModels": "Fetch available models",
     "modelsAvailable": "{{count}} models available",
+    "modelCertified": "Optimized context and thought-aware support",
+    "modelBestEffort": "Context and thought-aware support is best effort",
     "baseUrl": "Base URL",
     "enableAiPolish": "AI cleanup for dictation",
     "enableAiPolishDesc": "Cleans up fillers, punctuation, and wording before output. Turn off to output raw transcription.",

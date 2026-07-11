@@ -315,6 +315,8 @@
     "model": "模型",
     "fetchModels": "获取可用模型",
     "modelsAvailable": "{{count}} 个模型可用",
+    "modelCertified": "已针对应用场景和思路整理优化",
+    "modelBestEffort": "应用场景和思路整理将尽力支持",
     "baseUrl": "Base URL",
     "enableAiPolish": "AI 整理听写",
     "enableAiPolishDesc": "输出前清理口癖、标点和语序。关闭后会直接输出原始转写。",

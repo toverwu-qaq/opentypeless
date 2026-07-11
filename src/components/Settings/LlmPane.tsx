@@ -7,10 +7,12 @@ import { LLM_PROVIDERS, LLM_DEFAULT_CONFIG, TARGET_LANGUAGES } from '../../lib/c
 import {
   benchLlmConnection,
   fetchLlmModels,
+  getLlmModelCapability,
   readCredential,
   setCredential,
   updateConfig as persistConfig,
 } from '../../lib/tauri'
+import type { LlmModelCapability } from '../../lib/tauri'
 import { FormField } from './shared/FormField'
 import { Toggle } from './shared/Toggle'
 import { CheckCircle2, XCircle, Loader2, RefreshCw, Crown, ChevronDown } from 'lucide-react'
@@ -41,6 +43,21 @@ export function LlmPane() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const credentialSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [llmApiKey, setLlmApiKey] = useState(config.llm_api_key)
+  const [modelCapability, setModelCapability] = useState<LlmModelCapability>('unknown')
+
+  useEffect(() => {
+    let cancelled = false
+    getLlmModelCapability(config.llm_provider, config.llm_base_url, config.llm_model)
+      .then((capability) => {
+        if (!cancelled) setModelCapability(capability)
+      })
+      .catch(() => {
+        if (!cancelled) setModelCapability('unknown')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [config.llm_base_url, config.llm_model, config.llm_provider])
 
   useEffect(() => {
     if (hasCustomPolishConfig) setPolishAdvancedOpen(true)
@@ -296,6 +313,14 @@ export function LlmPane() {
             />
           </FormField>
         </>
+      )}
+
+      {config.polish_enabled && config.llm_model.trim() && (
+        <p className="text-[11px] leading-relaxed text-text-tertiary">
+          {modelCapability === 'certified'
+            ? t('settings.modelCertified')
+            : t('settings.modelBestEffort')}
+        </p>
       )}
 
       <div className="space-y-3 pt-1">

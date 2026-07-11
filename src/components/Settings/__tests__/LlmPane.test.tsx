@@ -22,6 +22,8 @@ vi.mock('react-i18next', () => ({
         'settings.storedLocally': 'Stored locally',
         'settings.fetchModels': 'Fetch models',
         'settings.modelsAvailable': `${params?.count || 0} models available`,
+        'settings.modelCertified': 'Optimized context and thought-aware support',
+        'settings.modelBestEffort': 'Context and thought-aware support is best effort',
         'settings.llmModelPlaceholder': 'e.g. gpt-4o-mini',
         'settings.enableAiPolish': 'AI cleanup for dictation',
         'settings.enableAiPolishDesc': 'Cleans up dictation before output',
@@ -159,6 +161,7 @@ describe('LlmPane', () => {
     vi.clearAllMocks()
     vi.mocked(tauri.readCredential).mockResolvedValue(null)
     vi.mocked(tauri.setCredential).mockResolvedValue(undefined)
+    vi.mocked(tauri.getLlmModelCapability).mockResolvedValue('unknown')
   })
 
   afterEach(() => {
@@ -440,6 +443,26 @@ describe('LlmPane', () => {
   })
 
   describe('Model input', () => {
+    it('shows one restrained note for a certified model', async () => {
+      vi.mocked(tauri.getLlmModelCapability).mockResolvedValueOnce('certified')
+      render(<LlmPane />)
+
+      expect(
+        await screen.findByText('Optimized context and thought-aware support'),
+      ).toBeInTheDocument()
+      expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    })
+
+    it('labels unlisted models as best-effort without blocking them', async () => {
+      vi.mocked(tauri.getLlmModelCapability).mockResolvedValueOnce('best_effort')
+      render(<LlmPane />)
+
+      expect(
+        await screen.findByText('Context and thought-aware support is best effort'),
+      ).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('e.g. gpt-4o-mini')).not.toBeDisabled()
+    })
+
     it('updates config and resets latency when model changes', () => {
       render(<LlmPane />)
       const input = screen.getByPlaceholderText('e.g. gpt-4o-mini')

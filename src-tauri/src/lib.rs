@@ -861,6 +861,7 @@ pub fn run() {
             commands::stt::test_stt_connection,
             commands::llm::test_llm_connection,
             commands::llm::bench_llm_connection,
+            commands::llm::get_llm_model_capability,
             commands::stt::bench_stt_connection,
             commands::llm::fetch_llm_models,
             commands::history::get_history,
