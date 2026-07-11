@@ -1,0 +1,45 @@
+src-tauri/Cargo.toml
+  s_7724aa1accb26b::t_38f667220fb93f 45
+src-tauri/src/app_detector/cache.rs
+  s_7724aa1accb26b::t_b1862beb900f2b 1,12-14,30-31,38,46-49,75-76,80-81,83,86,94-107,115-116,124-125,131,144,153-154,174-183,186-195,202-235,316-317,337,343,355,359,369,372,374-376,378-383,385-390,399-400,549-573
+src-tauri/src/app_detector/mod.rs
+  s_7724aa1accb26b::t_b638227124c7c2 6
+src-tauri/src/app_detector/types.rs
+  s_7724aa1accb26b::t_74d51fe65695bd 146
+src-tauri/src/app_detector/user_mappings.rs
+  s_7724aa1accb26b::t_d2710739e2eb4e 1-809
+src-tauri/src/commands/app_mappings.rs
+  s_7724aa1accb26b::t_8718440255c6f4 1-265
+src-tauri/src/commands/mod.rs
+  s_7724aa1accb26b::t_f5ee07d861ad3a 1
+src-tauri/src/lib.rs
+  s_7724aa1accb26b::t_a06e3788a95b5d 574-581,595,860-867
+src-tauri/src/llm/cloud.rs
+  s_7724aa1accb26b::t_bbae2304014029 138
+src-tauri/src/llm/mod.rs
+  s_7724aa1accb26b::t_859eaa7293ec74 41
+src-tauri/src/llm/openai.rs
+  s_7724aa1accb26b::t_b58f5650eb0c14 50
+src-tauri/src/pipeline.rs
+  s_7724aa1accb26b::t_6b6ebdea30713f 2020-2025,2032
+src-tauri/src/storage/mod.rs
+  s_7724aa1accb26b::t_0aa3acefc813f1 42-57,275,326,436,806-890,2113-2215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d99d328816cf64175e0e6106e175f0fc246f898b",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
