@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+pub mod types;
+
 use crate::llm::AppType;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -179,5 +181,38 @@ fn classify_app(app_name: &str) -> AppType {
         AppType::Document
     } else {
         AppType::General
+    }
+}
+
+#[cfg(test)]
+mod context_types_tests {
+    use super::types::{ContextFamily, ContextProfile, ContextSource};
+
+    #[test]
+    fn context_types_serialize_without_raw_signals() {
+        assert_eq!(
+            serde_json::to_value(ContextFamily::DeveloperCollaboration).unwrap(),
+            "developer_collaboration"
+        );
+
+        let profile = ContextProfile {
+            id: "dev.github".to_string(),
+            family: ContextFamily::DeveloperCollaboration,
+            app_label: "GitHub".to_string(),
+            icon_key: "github".to_string(),
+            override_id: Some("github".to_string()),
+            source: ContextSource::BrowserDomain,
+            confidence: 1.0,
+        };
+        let serialized = serde_json::to_string(&profile).unwrap();
+        for forbidden in [
+            "window_title",
+            "browser_host",
+            "process_id",
+            "native_identity",
+            "url",
+        ] {
+            assert!(!serialized.contains(forbidden));
+        }
     }
 }
