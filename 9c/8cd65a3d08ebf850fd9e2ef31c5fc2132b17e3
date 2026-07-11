@@ -1,0 +1,59 @@
+src/components/AccountPage/index.tsx
+  s_7724aa1accb26b::t_a75c6e810a44c6 22,602
+src/components/Settings/AppStyleMappingDialog.tsx
+  s_7724aa1accb26b::t_d3e4532bb03b76 1-268
+src/components/Settings/LlmPane.tsx
+  s_7724aa1accb26b::t_4a78092935232e 10,12,17-21,24-32,35-36,66-120,429-476,582-612
+src/components/Settings/ManageAppMappingsDialog.tsx
+  s_7724aa1accb26b::t_22fa4987c9abcd 1-215
+src/components/Settings/__tests__/AppStyleMappingDialog.test.tsx
+  s_7724aa1accb26b::t_43176225647c1b 1-242
+src/components/Settings/__tests__/LlmPane.test.tsx
+  s_7724aa1accb26b::t_0efa6aad487b40 33-36,93,160,180-181,559-627
+src/i18n/locales/de.json
+  s_7724aa1accb26b::t_c12849edae14d4 405-442
+src/i18n/locales/en.json
+  s_7724aa1accb26b::t_6f2c5cf1d4ebbb 405-442
+src/i18n/locales/es.json
+  s_7724aa1accb26b::t_ce65643994b6e6 405-442
+src/i18n/locales/fr.json
+  s_7724aa1accb26b::t_bac172318f5611 405-442
+src/i18n/locales/it.json
+  s_7724aa1accb26b::t_16de7bf1309191 405-442
+src/i18n/locales/ja.json
+  s_7724aa1accb26b::t_204c7ad8e8511d 405-442
+src/i18n/locales/ko.json
+  s_7724aa1accb26b::t_f58a8eec2e27fd 405-442
+src/i18n/locales/pt.json
+  s_7724aa1accb26b::t_1ce2eb05e4109c 405-442
+src/i18n/locales/ru.json
+  s_7724aa1accb26b::t_35a80e9964894d 405-442
+src/i18n/locales/zh.json
+  s_7724aa1accb26b::t_c107c439980687 405-442
+src/lib/__tests__/backup-settings.test.ts
+  s_7724aa1accb26b::t_e3813166e65b48 1-55
+src/lib/backup-settings.ts
+  s_7724aa1accb26b::t_50d59ff2cd4880 1-158
+src/lib/tauri.ts
+  s_7724aa1accb26b::t_f3cd77d39eedec 9-10,30-105
+src/stores/appStore.ts
+  s_7724aa1accb26b::t_0244e03adcb23e 158-162,196,600
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9c8cd65a3d08ebf850fd9e2ef31c5fc2132b17e3",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
