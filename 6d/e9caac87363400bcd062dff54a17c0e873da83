@@ -1,0 +1,33 @@
+src-tauri/src/commands/ask.rs
+  s_7724aa1accb26b::t_1207dc4a72533b 9-12,172,200,205,215,221,260,375-391,402-403,405-406,409-410,529,542,645,661-669,820,834-835,867-872,874-884,1193-1215,1225,1236,1350-1351,1356,1362,1367,1369-1370,1373-1374,1377-1378,1382-1401,1407,1415,1425-1432,1434,1438-1454,1456-1465,1597
+src-tauri/src/llm/cloud.rs
+  s_7724aa1accb26b::t_0c016c47629995 139
+src-tauri/src/llm/mod.rs
+  s_7724aa1accb26b::t_8bf7f42915fa23 47,128,193-224
+src-tauri/src/llm/openai.rs
+  s_7724aa1accb26b::t_8671e4f48d1c08 56
+src-tauri/src/llm/prompt.rs
+  s_7724aa1accb26b::t_0b10f7ae8e8ddc 3,96,121,139,156,164-166,244-288
+src-tauri/src/pipeline.rs
+  s_7724aa1accb26b::t_e86fb7ce19a0bc 317,319-320,323-324,327,331-350,662,682,745,886-893,1507-1512,1540-1541,1568,1694,1696,1812,2000,2248,2257,2708-2717,2719,2722-2728,2730,2737-2746,2748,2751-2757,2759,2771-2804
+src-tauri/src/voice_intent/types.rs
+  s_7724aa1accb26b::t_35ddb00a26c046 24-38,48-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6de9caac87363400bcd062dff54a17c0e873da83",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
