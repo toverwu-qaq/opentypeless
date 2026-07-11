@@ -1,0 +1,31 @@
+src-tauri/src/llm/cloud.rs
+  s_7724aa1accb26b::t_d08d316802d76e 97-107,127-128,132-133,177-178,333,350-375
+src-tauri/src/llm/context_policy.rs
+  s_7724aa1accb26b::t_f0465df3c7925e 1-204
+src-tauri/src/llm/mod.rs
+  s_7724aa1accb26b::t_11429bee74bfce 2,9,36,97-217
+src-tauri/src/llm/openai.rs
+  s_7724aa1accb26b::t_8fa6a9d5ba7037 44-45,49-50
+src-tauri/src/llm/prompt.rs
+  s_7724aa1accb26b::t_047c83d0cc82df 1-4,7-10,53-54,58-66,83-96,106-108,112-113,123-141,145-146,155-163,165-175,178-200,204-210,212,214-221,224-227,231,234-289,292,294-302,311,316-331,390,394
+src-tauri/src/pipeline.rs
+  s_7724aa1accb26b::t_5df45420121483 9,1741
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ddc3d52e1395649b34047a4c78c463331fba3d9e",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
