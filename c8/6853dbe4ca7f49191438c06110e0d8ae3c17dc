@@ -1,0 +1,25 @@
+src-tauri/src/commands/config.rs
+  s_7724aa1accb26b::t_ad65db0eb703c6 54,63-69,75-91,104-128,405-419,442-449
+src-tauri/src/hotkey.rs
+  s_7724aa1accb26b::t_cc93eec2d45ce1 164-178,180-185,196-212,216-226,231-239,266,275,289,294,303-314,325-328,331,334-337,340-364,370,372,375-384,386-390,394-397,399-403,407-424,463-469,473-507,512,518-524,608-616,628-630,647-653,1210,1220-1224,1226-1230,1238,1252-1254,1256-1261,1287-1294,1296-1300,1396-1496
+src-tauri/src/native_hotkey.rs
+  s_7724aa1accb26b::t_8d7b68862ac341 67,74,191,999,1004,1062,1067
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c86853dbe4ca7f49191438c06110e0d8ae3c17dc",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
