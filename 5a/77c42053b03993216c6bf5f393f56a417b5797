@@ -1,0 +1,29 @@
+src-tauri/src/commands/ask.rs
+  s_7724aa1accb26b::t_64f2172521f15b 18,205,211,432-433,436-447,449-451,453-455,457-473,1251-1269,1274,1569-1574
+src-tauri/src/pipeline.rs
+  s_7724aa1accb26b::t_57a9c6f31e5b15 786
+src-tauri/src/voice_intent/executor.rs
+  s_7724aa1accb26b::t_e5f81d66763062 6-7,56,214-225,321,360,362,445-450
+src-tauri/src/voice_intent/mod.rs
+  s_7724aa1accb26b::t_57e842e1521ec2 5
+src-tauri/src/voice_intent/search.rs
+  s_7724aa1accb26b::t_7389f446d03843 1-165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5a77c42053b03993216c6bf5f393f56a417b5797",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
