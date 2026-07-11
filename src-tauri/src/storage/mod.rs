@@ -41,6 +41,22 @@ pub struct ActiveScene {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
+pub struct FamilySceneAssignment {
+    pub family: ContextFamily,
+    pub scene_id: String,
+}
+
+impl Default for FamilySceneAssignment {
+    fn default() -> Self {
+        Self {
+            family: ContextFamily::General,
+            scene_id: String::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
 pub struct ShortcutBinding {
     pub primary: String,
     pub modifiers: Vec<String>,
@@ -256,6 +272,7 @@ pub struct AppConfig {
     pub polish_chinese_script: String,
     pub custom_scenes: Vec<CustomScene>,
     pub active_scene: Option<ActiveScene>,
+    pub family_scene_assignments: Vec<FamilySceneAssignment>,
     pub translate_enabled: bool,
     pub target_lang: String,
     pub translation: TranslationConfig,
@@ -306,6 +323,7 @@ impl Default for AppConfig {
             polish_chinese_script: "preserve".to_string(),
             custom_scenes: Vec::new(),
             active_scene: None,
+            family_scene_assignments: Vec::new(),
             translate_enabled: false,
             target_lang: "en".to_string(),
             translation: TranslationConfig::default(),
@@ -415,6 +433,7 @@ impl AppConfig {
         self.polish_chinese_script = "preserve".to_string();
         sanitize_custom_scenes(&mut self.custom_scenes);
         sanitize_active_scene(&mut self.active_scene);
+        sanitize_family_scene_assignments(&mut self.family_scene_assignments, &self.custom_scenes);
         self.translation.normalize(&self.target_lang);
         self.target_lang = self.translation.active_target.clone();
         self.normalize_insertion_strategy();
@@ -782,6 +801,91 @@ fn sanitize_active_scene(active_scene: &mut Option<ActiveScene>) {
             *active_scene = None;
         }
     }
+}
+
+fn builtin_scene_prompt(scene_id: &str) -> Option<&'static str> {
+    match scene_id {
+        "builtin_clean_dictation" => Some(
+            "Lightly clean the transcript for readability while preserving the speaker meaning, wording choices, and factual content. Do not add new information.",
+        ),
+        "builtin_meeting_notes" => Some(
+            "Rewrite the transcript as concise meeting notes with clear bullets, decisions, and action items. Preserve factual content and do not invent details.",
+        ),
+        "builtin_professional_email" => Some(
+            "Rewrite the transcript as a concise professional email. Keep the tone clear, polite, and direct. Do not add facts that were not spoken.",
+        ),
+        "builtin_support_reply" => Some(
+            "Rewrite the transcript as a helpful customer support reply. Acknowledge the issue, give clear next steps, and avoid promising anything not stated.",
+        ),
+        "builtin_technical_explanation" => Some(
+            "Rewrite the transcript as a clear technical explanation. Preserve precise terms, organize the reasoning, and avoid oversimplifying important details.",
+        ),
+        "builtin_code_comment" => Some(
+            "Rewrite the transcript as a concise code review comment or inline engineering note. Keep it specific, actionable, and respectful.",
+        ),
+        "builtin_product_spec_notes" => Some(
+            "Rewrite the transcript as product spec notes with goals, requirements, edge cases, and open questions. Do not invent decisions that were not spoken.",
+        ),
+        _ => None,
+    }
+}
+
+pub(crate) fn scene_prompt_for_id(config: &AppConfig, scene_id: &str) -> Option<String> {
+    let scene_id = scene_id.trim();
+    builtin_scene_prompt(scene_id)
+        .map(str::to_string)
+        .or_else(|| {
+            config
+                .custom_scenes
+                .iter()
+                .find(|scene| scene.id == scene_id)
+                .map(|scene| scene.prompt_template.clone())
+        })
+}
+
+pub(crate) fn family_scene_prompt(config: &AppConfig, family: ContextFamily) -> Option<String> {
+    let scene_id = config
+        .family_scene_assignments
+        .iter()
+        .find(|assignment| assignment.family == family)?
+        .scene_id
+        .as_str();
+    scene_prompt_for_id(config, scene_id)
+}
+
+pub(crate) fn automatic_scene_prompt(
+    config: &AppConfig,
+    family: ContextFamily,
+    mapped_scene_id: Option<&str>,
+) -> Option<String> {
+    if config.active_scene.is_some() {
+        return None;
+    }
+
+    mapped_scene_id
+        .and_then(|scene_id| scene_prompt_for_id(config, scene_id))
+        .or_else(|| family_scene_prompt(config, family))
+}
+
+fn sanitize_family_scene_assignments(
+    assignments: &mut Vec<FamilySceneAssignment>,
+    custom_scenes: &[CustomScene],
+) {
+    let valid_custom_ids: HashSet<&str> = custom_scenes
+        .iter()
+        .map(|scene| scene.id.as_str())
+        .collect();
+    let mut seen_families = HashSet::new();
+
+    for assignment in assignments.iter_mut() {
+        assignment.scene_id = sanitize_scene_string(&assignment.scene_id, SCENE_ID_MAX_CHARS);
+    }
+    assignments.retain(|assignment| {
+        !assignment.scene_id.is_empty()
+            && (builtin_scene_prompt(&assignment.scene_id).is_some()
+                || valid_custom_ids.contains(assignment.scene_id.as_str()))
+            && seen_families.insert(assignment.family)
+    });
 }
 
 // ─── ConfigManager (tauri-plugin-store backed) ───
@@ -2006,6 +2110,109 @@ mod tests {
 
         assert!(config.custom_scenes.is_empty());
         assert!(config.active_scene.is_none());
+        assert!(config.family_scene_assignments.is_empty());
+    }
+
+    #[test]
+    fn app_config_sanitizes_family_scene_assignments_against_available_scenes() {
+        let mut value = serde_json::to_value(AppConfig::default()).unwrap();
+        value["custom_scenes"] = serde_json::json!([
+            {
+                "id": "custom_focus",
+                "name": "Focus",
+                "description": "",
+                "prompt_template": "Use short status bullets.",
+                "created_at": "",
+                "updated_at": ""
+            }
+        ]);
+        value["family_scene_assignments"] = serde_json::json!([
+            { "family": "email", "scene_id": "  builtin_professional_email  " },
+            { "family": "email", "scene_id": "builtin_clean_dictation" },
+            { "family": "work_chat", "scene_id": "custom_focus" },
+            { "family": "support", "scene_id": "missing_scene" },
+            { "family": "general", "scene_id": "\0" }
+        ]);
+
+        let config = AppConfig::from_stored_value(value).unwrap();
+
+        assert_eq!(
+            config.family_scene_assignments,
+            vec![
+                FamilySceneAssignment {
+                    family: ContextFamily::Email,
+                    scene_id: "builtin_professional_email".to_string(),
+                },
+                FamilySceneAssignment {
+                    family: ContextFamily::WorkChat,
+                    scene_id: "custom_focus".to_string(),
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn scene_prompt_resolution_supports_builtins_custom_scenes_and_family_lookup() {
+        let mut config = AppConfig::default();
+        config.custom_scenes.push(CustomScene {
+            id: "custom_focus".to_string(),
+            name: "Focus".to_string(),
+            description: String::new(),
+            prompt_template: "Use short status bullets.".to_string(),
+            created_at: String::new(),
+            updated_at: String::new(),
+        });
+        config.family_scene_assignments = vec![FamilySceneAssignment {
+            family: ContextFamily::WorkChat,
+            scene_id: "custom_focus".to_string(),
+        }];
+        config.normalize_values();
+
+        assert_eq!(
+            scene_prompt_for_id(&config, "builtin_professional_email").as_deref(),
+            Some(
+                "Rewrite the transcript as a concise professional email. Keep the tone clear, polite, and direct. Do not add facts that were not spoken."
+            )
+        );
+        assert_eq!(
+            scene_prompt_for_id(&config, "custom_focus").as_deref(),
+            Some("Use short status bullets.")
+        );
+        assert_eq!(
+            family_scene_prompt(&config, ContextFamily::WorkChat).as_deref(),
+            Some("Use short status bullets.")
+        );
+        assert_eq!(family_scene_prompt(&config, ContextFamily::Email), None);
+        assert_eq!(scene_prompt_for_id(&config, "missing_scene"), None);
+
+        assert_eq!(
+            automatic_scene_prompt(
+                &config,
+                ContextFamily::WorkChat,
+                Some("builtin_professional_email")
+            )
+            .as_deref(),
+            scene_prompt_for_id(&config, "builtin_professional_email").as_deref()
+        );
+        assert_eq!(
+            automatic_scene_prompt(&config, ContextFamily::WorkChat, None).as_deref(),
+            Some("Use short status bullets.")
+        );
+
+        config.active_scene = Some(ActiveScene {
+            id: "builtin_meeting_notes".to_string(),
+            source: "builtin".to_string(),
+            name: "Meeting Notes".to_string(),
+            prompt_template: "Manual scene wins.".to_string(),
+        });
+        assert_eq!(
+            automatic_scene_prompt(
+                &config,
+                ContextFamily::WorkChat,
+                Some("builtin_professional_email")
+            ),
+            None
+        );
     }
 
     #[test]

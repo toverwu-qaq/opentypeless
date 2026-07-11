@@ -143,6 +143,7 @@ impl From<&ContextSignals> for TargetAppGuard {
 pub struct RecordingContext {
     pub profile: ContextProfile,
     pub target_guard: TargetAppGuard,
+    pub mapped_scene_id: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

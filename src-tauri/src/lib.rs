@@ -571,8 +571,14 @@ pub fn run() {
                 .build()
                 .expect("Failed to create HTTP client");
 
-            let context_detector = app_detector::ContextDetectorHandle::start_default()
-                .map_err(|error| anyhow::anyhow!("Failed to init app context detector: {error}"))?;
+            let app_registry = app_detector::registry::AppRegistry::builtin()
+                .map_err(|error| anyhow::anyhow!("Failed to init app registry: {error}"))?;
+            let app_mapping_store = app_detector::user_mappings::UserAppMappingStore::new(
+                app_handle.clone(),
+                app_registry,
+            );
+            let context_detector =
+                app_detector::ContextDetectorHandle::start_default(app_mapping_store.clone());
             let pipeline_handle = pipeline::PipelineHandle::new(
                 app_handle.clone(),
                 shared_client.clone(),
@@ -586,6 +592,7 @@ pub fn run() {
             app.manage(config_manager);
             app.manage(history_store);
             app.manage(dictionary_store);
+            app.manage(app_mapping_store);
             app.manage(shared_client);
             app.manage(context_detector);
             app.manage(pipeline_handle);
@@ -850,6 +857,14 @@ pub fn run() {
             commands::ask::abort_ask_dictation,
             commands::ask::take_pending_ask_message,
             commands::translation::set_active_translation_target,
+            commands::app_mappings::get_latest_mapping_candidate,
+            commands::app_mappings::list_custom_app_mappings,
+            commands::app_mappings::save_custom_app_mapping,
+            commands::app_mappings::update_custom_app_mapping,
+            commands::app_mappings::set_custom_app_mapping_enabled,
+            commands::app_mappings::delete_custom_app_mapping,
+            commands::app_mappings::reset_custom_app_mappings,
+            commands::app_mappings::set_family_scene_assignment,
             show_ask_window,
             commands::misc::check_accessibility_permission,
             commands::misc::request_accessibility_permission,

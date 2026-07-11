@@ -1,3 +1,4 @@
+pub mod app_mappings;
 pub mod ask;
 pub mod config;
 pub mod credentials;

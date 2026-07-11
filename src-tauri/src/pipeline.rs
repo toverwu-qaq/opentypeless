@@ -2017,12 +2017,19 @@ impl PipelineHandle {
         });
 
         let selected_text_for_execution = selected_text.clone();
+        let mapped_scene_prompt = storage::automatic_scene_prompt(
+            &config,
+            app_ctx.profile.family,
+            app_ctx.mapped_scene_id.as_deref(),
+        )
+        .unwrap_or_default();
         let req = PolishRequest {
             raw_text: provider_text.to_string(),
             context: app_ctx.profile.summary(),
             dictionary: dictionary_words,
             correction_rules,
             polish_style: config.polish_style.clone(),
+            mapped_scene_prompt,
             active_scene_prompt: config
                 .active_scene
                 .as_ref()

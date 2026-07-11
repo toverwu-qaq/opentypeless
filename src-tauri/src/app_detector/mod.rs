@@ -3,6 +3,7 @@ pub mod platform;
 pub mod profiles;
 pub mod registry;
 pub mod types;
+pub mod user_mappings;
 
 pub use cache::ContextDetectorHandle;
 

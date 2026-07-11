@@ -135,7 +135,7 @@ impl LlmProvider for CloudLlmProvider {
             correction_rules: &req.correction_rules,
             polish_style: &req.polish_style,
             personal_style_prompt: "",
-            mapped_scene_prompt: "",
+            mapped_scene_prompt: &req.mapped_scene_prompt,
             active_scene_prompt: &req.active_scene_prompt,
             polish_custom_prompt: &req.polish_custom_prompt,
             translate_enabled: req.translate_enabled,

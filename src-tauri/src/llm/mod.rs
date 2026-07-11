@@ -38,6 +38,7 @@ pub struct PolishRequest {
     pub dictionary: Vec<String>,
     pub correction_rules: Vec<CorrectionRule>,
     pub polish_style: String,
+    pub mapped_scene_prompt: String,
     pub active_scene_prompt: String,
     pub polish_custom_prompt: String,
     pub translate_enabled: bool,

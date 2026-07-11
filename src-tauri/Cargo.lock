@@ -3425,6 +3425,7 @@ dependencies = [
  "tracing-subscriber",
  "unicode-normalization",
  "url",
+ "uuid",
  "windows-sys 0.59.0",
 ]
 
