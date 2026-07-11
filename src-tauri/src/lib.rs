@@ -15,6 +15,7 @@ pub mod selection;
 pub mod storage;
 pub mod stt;
 pub mod tray;
+pub mod voice_intent;
 
 pub use hotkey::{default_ask_shortcut, default_shortcut, parse_hotkey};
 pub use tray::{refresh_tray, TrayHandle};

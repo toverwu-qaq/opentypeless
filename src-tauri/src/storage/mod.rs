@@ -177,6 +177,7 @@ pub struct AppConfig {
     pub llm_base_url: String,
     pub polish_enabled: bool,
     pub context_adaptation_enabled: bool,
+    pub voice_routing_flags: crate::voice_intent::VoiceRoutingFlags,
     pub polish_style: String,
     pub polish_custom_prompt: String,
     pub polish_chinese_script: String,
@@ -225,6 +226,7 @@ impl Default for AppConfig {
             llm_base_url: "https://openrouter.ai/api/v1".to_string(),
             polish_enabled: true,
             context_adaptation_enabled: true,
+            voice_routing_flags: crate::voice_intent::VoiceRoutingFlags::default(),
             polish_style: "clean".to_string(),
             polish_custom_prompt: String::new(),
             polish_chinese_script: "preserve".to_string(),
@@ -1423,6 +1425,30 @@ mod tests {
         assert_eq!(config.polish_custom_prompt, "");
         assert_eq!(config.polish_chinese_script, "preserve");
         assert_eq!(config.polish_style, "clean");
+    }
+
+    #[test]
+    fn app_config_voice_routing_flags_migrate_on_and_preserve_independent_kill_switches() {
+        let missing = AppConfig::from_stored_value(serde_json::json!({})).unwrap();
+        assert_eq!(
+            missing.voice_routing_flags,
+            crate::voice_intent::VoiceRoutingFlags::default()
+        );
+
+        let mut partial_value = serde_json::to_value(AppConfig::default()).unwrap();
+        partial_value["voice_routing_flags"] = serde_json::json!({
+            "draft_insert": false
+        });
+        let partial = AppConfig::from_stored_value(partial_value).unwrap();
+        assert_eq!(
+            partial.voice_routing_flags,
+            crate::voice_intent::VoiceRoutingFlags {
+                draft_insert: false,
+                rewrite_selection: true,
+                translate_selection: true,
+                search: true,
+            }
+        );
     }
 
     #[test]
