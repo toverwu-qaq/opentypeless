@@ -1,0 +1,31 @@
+src-tauri/Cargo.lock
+  s_7724aa1accb26b::t_1309168f380b31 911-931,3398,3426,5847-5855
+src-tauri/Cargo.toml
+  s_7724aa1accb26b::t_b1052012fa82e9 43-44
+src-tauri/src/commands/dictionary.rs
+  s_7724aa1accb26b::t_6ab2d53938ecac 1-24,39,46-59,129-195,198-215
+src-tauri/src/dictionary_io.rs
+  s_7724aa1accb26b::t_c32b765b20c6c8 1-882
+src-tauri/src/lib.rs
+  s_7724aa1accb26b::t_f58f51cac49bde 5,874,878,881-884
+src-tauri/src/storage/mod.rs
+  s_7724aa1accb26b::t_1f7f43edc9bd55 11,1337-1341,1343-1345,1353-1372,1384-1385,1414-1416,1418-1420,1428-1453,1513-1552,1555-1594,2591-2633
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6f0e3e7b4bce641981c11fc96c1dacdf40b67a1b",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
