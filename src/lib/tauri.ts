@@ -277,15 +277,43 @@ export async function startAskFlow(): Promise<void> {
   return invoke('start_ask_flow')
 }
 
+export type VoiceIntentKind =
+  | 'dictate_insert'
+  | 'draft_insert'
+  | 'rewrite_selection'
+  | 'translate_insert'
+  | 'translate_selection'
+  | 'ask_selection'
+  | 'open_question'
+  | 'search'
+
+export type VoiceOutputPlacement =
+  | 'insert_at_cursor'
+  | 'replace_selection'
+  | 'popup_answer'
+  | 'open_url'
+
+export type VoiceExecutionFallbackReason =
+  | 'feature_disabled'
+  | 'empty_output'
+  | 'target_changed'
+  | 'selection_lost'
+  | 'focus_restore_failed'
+  | 'output_failed'
+
+export type AskResultOutput = 'popupAnswer' | 'openedSearch' | 'insertedText' | 'copiedFallback'
+
 export interface AskDictationResult {
   question: string
   answer: string
-  intent: string
-  output: 'popupAnswer' | 'openedSearch'
+  intent: VoiceIntentKind
+  output: AskResultOutput
   usedSelectedText: boolean
   selectedTextTruncated: boolean
   searchProvider: string | null
-  searchUrl: string | null
+  requestedPlacement: VoiceOutputPlacement
+  actualPlacement: VoiceOutputPlacement | null
+  fallbackReason: VoiceExecutionFallbackReason | null
 }
 
 export interface AskDictationStartResult {

@@ -152,6 +152,13 @@ export interface ActiveScene {
   prompt_template: string
 }
 
+export interface VoiceRoutingFlags {
+  draft_insert: boolean
+  rewrite_selection: boolean
+  translate_selection: boolean
+  search: boolean
+}
+
 export interface AppConfig {
   stt_provider: SttProvider
   stt_api_key: string
@@ -167,6 +174,7 @@ export interface AppConfig {
   llm_base_url: string
   polish_enabled: boolean
   context_adaptation_enabled: boolean
+  voice_routing_flags: VoiceRoutingFlags
   polish_style: PolishStyle
   polish_custom_prompt: string
   polish_chinese_script: PolishChineseScript
@@ -499,6 +507,12 @@ const defaultConfig: AppConfig = {
   llm_base_url: 'https://openrouter.ai/api/v1',
   polish_enabled: true,
   context_adaptation_enabled: true,
+  voice_routing_flags: {
+    draft_insert: true,
+    rewrite_selection: true,
+    translate_selection: true,
+    search: true,
+  },
   polish_style: 'clean',
   polish_custom_prompt: '',
   polish_chinese_script: 'preserve',

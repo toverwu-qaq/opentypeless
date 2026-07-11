@@ -32,7 +32,10 @@
     "questionLabel": "Вопрос",
     "usingSelectedText": "Используется выделенный текст",
     "usingSelectedTextTruncated": "Используется обрезанный выделенный текст",
-    "openedSearch": "Поиск открыт",
+    "targetChanged": "Цель изменилась; результат скопирован",
+    "copiedInstead": "Скопировано вместо вставки",
+    "routeDisabled": "Эта функция отключена",
+    "searchOpened": "Поиск {{provider}} открыт",
     "send": "Спросить"
   },
   "errors": {

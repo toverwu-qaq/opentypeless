@@ -32,7 +32,10 @@
     "questionLabel": "질문",
     "usingSelectedText": "선택한 텍스트 사용 중",
     "usingSelectedTextTruncated": "잘린 선택 텍스트 사용 중",
-    "openedSearch": "검색 열림",
+    "targetChanged": "대상이 변경되어 결과를 복사했습니다",
+    "copiedInstead": "삽입하지 않고 복사했습니다",
+    "routeDisabled": "이 기능은 비활성화되었습니다",
+    "searchOpened": "{{provider}} 검색을 열었습니다",
     "send": "질문"
   },
   "errors": {

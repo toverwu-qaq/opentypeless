@@ -32,7 +32,10 @@
     "questionLabel": "Domanda",
     "usingSelectedText": "Uso del testo selezionato",
     "usingSelectedTextTruncated": "Uso del testo selezionato troncato",
-    "openedSearch": "Ricerca aperta",
+    "targetChanged": "Destinazione cambiata; risultato copiato",
+    "copiedInstead": "Copiato invece di inserito",
+    "routeDisabled": "Questa funzione è disattivata",
+    "searchOpened": "Ricerca {{provider}} aperta",
     "send": "Chiedi"
   },
   "errors": {

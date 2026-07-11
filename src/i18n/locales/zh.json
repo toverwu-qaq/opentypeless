@@ -32,7 +32,10 @@
     "questionLabel": "问题",
     "usingSelectedText": "已使用选中文本",
     "usingSelectedTextTruncated": "已使用选中文本（已截断）",
-    "openedSearch": "已打开 {{provider}} 搜索",
+    "targetChanged": "目标已变化，结果已复制",
+    "copiedInstead": "未插入，结果已复制",
+    "routeDisabled": "此功能路径已停用",
+    "searchOpened": "已打开 {{provider}} 搜索",
     "send": "提问"
   },
   "errors": {

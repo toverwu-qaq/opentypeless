@@ -32,7 +32,10 @@
     "questionLabel": "Question",
     "usingSelectedText": "Using selected text",
     "usingSelectedTextTruncated": "Using selected text (truncated)",
-    "openedSearch": "Opened {{provider}} search",
+    "targetChanged": "Target changed; result copied",
+    "copiedInstead": "Copied instead of inserting",
+    "routeDisabled": "This route is disabled",
+    "searchOpened": "Opened {{provider}} search",
     "send": "Ask"
   },
   "errors": {

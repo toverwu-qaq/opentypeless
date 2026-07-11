@@ -179,7 +179,9 @@ pub struct AskDictationResult {
     used_selected_text: bool,
     selected_text_truncated: bool,
     search_provider: Option<String>,
-    search_url: Option<String>,
+    requested_placement: crate::voice_intent::VoiceOutputPlacement,
+    actual_placement: Option<crate::voice_intent::VoiceOutputPlacement>,
+    fallback_reason: Option<crate::voice_intent::executor::VoiceExecutionFallbackReason>,
 }
 
 #[derive(Clone, Debug)]
@@ -188,7 +190,9 @@ pub(crate) struct AskDictationResultMetadata {
     used_selected_text: bool,
     selected_text_truncated: bool,
     search_provider: Option<String>,
-    search_url: Option<String>,
+    requested_placement: crate::voice_intent::VoiceOutputPlacement,
+    actual_placement: Option<crate::voice_intent::VoiceOutputPlacement>,
+    fallback_reason: Option<crate::voice_intent::executor::VoiceExecutionFallbackReason>,
 }
 
 impl AskDictationResultMetadata {
@@ -198,7 +202,9 @@ impl AskDictationResultMetadata {
             used_selected_text,
             selected_text_truncated,
             search_provider: None,
-            search_url: None,
+            requested_placement: crate::voice_intent::VoiceOutputPlacement::PopupAnswer,
+            actual_placement: Some(crate::voice_intent::VoiceOutputPlacement::PopupAnswer),
+            fallback_reason: None,
         }
     }
 
@@ -208,7 +214,9 @@ impl AskDictationResultMetadata {
             used_selected_text: false,
             selected_text_truncated: false,
             search_provider: Some(provider.display_name().to_string()),
-            search_url: None,
+            requested_placement: crate::voice_intent::VoiceOutputPlacement::OpenUrl,
+            actual_placement: Some(crate::voice_intent::VoiceOutputPlacement::OpenUrl),
+            fallback_reason: None,
         }
     }
 
@@ -229,7 +237,9 @@ impl AskDictationResultMetadata {
             used_selected_text: false,
             selected_text_truncated: false,
             search_provider: None,
-            search_url: None,
+            requested_placement: execution.requested_placement,
+            actual_placement: execution.actual_placement,
+            fallback_reason: execution.fallback_reason,
         }
     }
 }
@@ -249,7 +259,9 @@ impl AskDictationResult {
             used_selected_text: metadata.used_selected_text,
             selected_text_truncated: metadata.selected_text_truncated,
             search_provider: metadata.search_provider,
-            search_url: metadata.search_url,
+            requested_placement: metadata.requested_placement,
+            actual_placement: metadata.actual_placement,
+            fallback_reason: metadata.fallback_reason,
         }
     }
 
@@ -1510,7 +1522,10 @@ mod tests {
         assert_eq!(value["usedSelectedText"], true);
         assert_eq!(value["selectedTextTruncated"], false);
         assert!(value["searchProvider"].is_null());
-        assert!(value["searchUrl"].is_null());
+        assert_eq!(value["requestedPlacement"], "popup_answer");
+        assert_eq!(value["actualPlacement"], "popup_answer");
+        assert!(value["fallbackReason"].is_null());
+        assert!(value.get("searchUrl").is_none());
     }
 
     #[test]

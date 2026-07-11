@@ -32,7 +32,10 @@
     "questionLabel": "質問",
     "usingSelectedText": "選択テキストを使用中",
     "usingSelectedTextTruncated": "切り詰めた選択テキストを使用中",
-    "openedSearch": "検索を開きました",
+    "targetChanged": "対象が変わったため結果をコピーしました",
+    "copiedInstead": "挿入せずにコピーしました",
+    "routeDisabled": "この機能は無効です",
+    "searchOpened": "{{provider}} 検索を開きました",
     "send": "質問"
   },
   "errors": {
