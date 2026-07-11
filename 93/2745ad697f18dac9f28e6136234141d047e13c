@@ -1,0 +1,23 @@
+src-tauri/src/app_detector/cache.rs
+  s_7724aa1accb26b::t_0b3c3297026cf9 8,90
+src-tauri/src/commands/misc.rs
+  s_7724aa1accb26b::t_ef26ce4b6ee7ac 1400
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "932745ad697f18dac9f28e6136234141d047e13c",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
