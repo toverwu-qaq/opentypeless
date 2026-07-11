@@ -6,7 +6,7 @@ use tauri::Manager;
 use tokio::sync::{mpsc, Notify};
 
 use crate::app_detector;
-use crate::app_detector::types::{ContextFamily, RecordingContext, TargetAppGuard};
+use crate::app_detector::types::{RecordingContext, TargetAppGuard};
 use crate::audio::{AudioCaptureHandle, AudioConfig};
 use crate::credentials::{
     resolve_llm_config_secret, resolve_stt_config_secret, SystemCredentialVault,
@@ -285,20 +285,6 @@ fn selected_text_has_content(selected_text: Option<&str>) -> bool {
 
 fn selected_text_command_requires_llm(selected_text: Option<&str>) -> bool {
     selected_text_has_content(selected_text)
-}
-
-fn legacy_app_type_for_family(family: ContextFamily) -> llm::AppType {
-    match family {
-        ContextFamily::Email => llm::AppType::Email,
-        ContextFamily::WorkChat | ContextFamily::PersonalChat | ContextFamily::Support => {
-            llm::AppType::Chat
-        }
-        ContextFamily::Document => llm::AppType::Document,
-        ContextFamily::DeveloperCollaboration | ContextFamily::PromptOrCode => llm::AppType::Code,
-        ContextFamily::ProjectManagement | ContextFamily::Social | ContextFamily::General => {
-            llm::AppType::General
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1752,7 +1738,7 @@ impl PipelineHandle {
 
         let req = PolishRequest {
             raw_text: raw_text.to_string(),
-            app_type: legacy_app_type_for_family(app_ctx.profile.family),
+            context: app_ctx.profile.summary(),
             dictionary: dictionary_words,
             correction_rules,
             polish_style: config.polish_style.clone(),
@@ -1762,7 +1748,6 @@ impl PipelineHandle {
                 .map(|scene| scene.prompt_template.clone())
                 .unwrap_or_default(),
             polish_custom_prompt: config.polish_custom_prompt.clone(),
-            polish_chinese_script: config.polish_chinese_script.clone(),
             translate_enabled: config.translate_enabled,
             target_lang: config.target_lang.clone(),
             selected_text,

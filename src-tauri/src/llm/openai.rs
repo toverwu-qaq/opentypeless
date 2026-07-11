@@ -41,14 +41,15 @@ impl LlmProvider for OpenAiProvider {
             .as_ref()
             .is_some_and(|s| !s.trim().is_empty());
 
-        let system_prompt = prompt::build_system_prompt_with_scene(prompt::SystemPromptOptions {
-            app_type: req.app_type,
+        let system_prompt = prompt::build_context_system_prompt(prompt::ContextPromptOptions {
+            context: &req.context,
             dictionary: &req.dictionary,
             correction_rules: &req.correction_rules,
             polish_style: &req.polish_style,
+            personal_style_prompt: "",
+            mapped_scene_prompt: "",
             active_scene_prompt: &req.active_scene_prompt,
             polish_custom_prompt: &req.polish_custom_prompt,
-            polish_chinese_script: &req.polish_chinese_script,
             translate_enabled: req.translate_enabled,
             target_lang: &req.target_lang,
             has_selected_text,

@@ -94,6 +94,17 @@ fn cloud_llm_forbidden_error(body: &str) -> AppError {
     AppError::Auth("Cloud LLM access denied".to_string())
 }
 
+fn cloud_context_metadata(
+    context: &crate::app_detector::types::ContextProfileSummary,
+) -> serde_json::Value {
+    serde_json::json!({
+        "profileId": context.profile_id,
+        "family": context.family,
+        "overrideId": context.override_id,
+        "promptVersion": prompt::CONTEXT_PROMPT_VERSION,
+    })
+}
+
 #[async_trait]
 impl LlmProvider for CloudLlmProvider {
     async fn polish(
@@ -113,14 +124,15 @@ impl LlmProvider for CloudLlmProvider {
             .as_ref()
             .is_some_and(|s| !s.trim().is_empty());
 
-        let system_prompt = prompt::build_system_prompt_with_scene(prompt::SystemPromptOptions {
-            app_type: req.app_type,
+        let system_prompt = prompt::build_context_system_prompt(prompt::ContextPromptOptions {
+            context: &req.context,
             dictionary: &req.dictionary,
             correction_rules: &req.correction_rules,
             polish_style: &req.polish_style,
+            personal_style_prompt: "",
+            mapped_scene_prompt: "",
             active_scene_prompt: &req.active_scene_prompt,
             polish_custom_prompt: &req.polish_custom_prompt,
-            polish_chinese_script: &req.polish_chinese_script,
             translate_enabled: req.translate_enabled,
             target_lang: &req.target_lang,
             has_selected_text,
@@ -162,7 +174,8 @@ impl LlmProvider for CloudLlmProvider {
         let body = serde_json::json!({
             "messages": messages,
             "stream": on_chunk.is_some(),
-            "context": context
+            "context": context,
+            "contextMetadata": cloud_context_metadata(&req.context)
         });
 
         // Retry the initial connection (not once streaming starts)
@@ -317,6 +330,7 @@ impl LlmProvider for CloudLlmProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::app_detector::types::{ContextFamily, ContextProfileSummary};
 
     #[test]
     fn forbidden_error_uses_llm_quota_code() {
@@ -332,5 +346,31 @@ mod tests {
             r#"{"error":{"code":"llm_quota_exceeded","message":"LLM quota exceeded"}}"#,
         );
         assert!(matches!(err, AppError::LlmQuota(_)));
+    }
+
+    #[test]
+    fn managed_context_metadata_excludes_labels_icons_and_raw_signals() {
+        let metadata = cloud_context_metadata(&ContextProfileSummary {
+            profile_id: "email.gmail".to_string(),
+            family: ContextFamily::Email,
+            app_label: "Gmail private label".to_string(),
+            icon_key: "gmail".to_string(),
+            override_id: Some("gmail".to_string()),
+        });
+
+        assert_eq!(metadata["profileId"], "email.gmail");
+        assert_eq!(metadata["family"], "email");
+        assert_eq!(metadata["promptVersion"], prompt::CONTEXT_PROMPT_VERSION);
+        let serialized = metadata.to_string();
+        for forbidden in [
+            "private label",
+            "iconKey",
+            "processName",
+            "windowTitle",
+            "browserHost",
+            "transcript",
+        ] {
+            assert!(!serialized.contains(forbidden));
+        }
     }
 }
