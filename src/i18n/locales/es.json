@@ -322,6 +322,10 @@
     "baseUrl": "URL base",
     "enableAiPolish": "Habilitar pulido con IA",
     "enableAiPolishDesc": "Limpia, formatea y mejora automáticamente tu voz antes de insertarla.",
+    "contextAdaptation": "Adapt writing to the current app",
+    "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "lastDictationContext": "Last dictation context",
+    "generalContext": "General",
     "polishStyle": "Estilo de pulido",
     "polishStyleMinimal": "Mínimo",
     "polishStyleClean": "Limpio",
@@ -498,6 +502,11 @@
     "clearConfirm": "¿Estás seguro de que quieres borrar todo el historial? Esta acción no se puede deshacer.",
     "failedToCopy": "Error al copiar al portapapeles",
     "failedToClear": "Error al borrar el historial",
+    "providers": {
+      "managed_cloud": "Cloud",
+      "byok": "BYOK",
+      "local": "Local"
+    },
     "outputStatus": {
       "partial": "Partial result",
       "fallback": "Fallback output",

@@ -50,6 +50,17 @@ export type Theme = 'light' | 'dark' | 'system'
 export type PolishChineseScript = 'preserve' | 'simplified' | 'traditional'
 export type PolishStyle = 'minimal' | 'clean' | 'structured' | 'professional'
 export type SceneSource = 'custom' | 'builtin' | 'cloud'
+export type ContextFamily =
+  | 'email'
+  | 'work_chat'
+  | 'personal_chat'
+  | 'document'
+  | 'project_management'
+  | 'developer_collaboration'
+  | 'prompt_or_code'
+  | 'support'
+  | 'social'
+  | 'general'
 
 export interface ShortcutBinding {
   primary: string
@@ -80,17 +91,7 @@ export interface HistoryEntry {
   context_profile_id: string
   context_label: string
   context_icon_key: string
-  context_family:
-    | 'email'
-    | 'work_chat'
-    | 'personal_chat'
-    | 'document'
-    | 'project_management'
-    | 'developer_collaboration'
-    | 'prompt_or_code'
-    | 'support'
-    | 'social'
-    | 'general'
+  context_family: ContextFamily
   provider_kind: 'managed_cloud' | 'byok' | 'local'
   raw_text: string
   polished_text: string
@@ -103,6 +104,14 @@ export interface HistoryEntry {
   active_scene_prompt_truncated: boolean
   output_status: string | null
   output_error: string | null
+}
+
+export interface ContextProfileSummary {
+  profileId: string
+  family: ContextFamily
+  appLabel: string
+  iconKey: string
+  overrideId: string | null
 }
 
 export interface InsertResult {
@@ -211,6 +220,8 @@ interface AppState {
   setTargetApp: (app: string) => void
   lastInsertResult: InsertResult | null
   setLastInsertResult: (result: InsertResult | null) => void
+  lastContext: ContextProfileSummary | null
+  setLastContext: (context: ContextProfileSummary | null) => void
 
   // Config
   config: AppConfig
@@ -545,6 +556,8 @@ export const useAppStore = create<AppState>((set) => ({
   setTargetApp: (targetApp) => set({ targetApp }),
   lastInsertResult: null,
   setLastInsertResult: (lastInsertResult) => set({ lastInsertResult }),
+  lastContext: null,
+  setLastContext: (lastContext) => set({ lastContext }),
 
   config: defaultConfig,
   setConfig: (config) => set((s) => ({ config: syncHotkeyConfig(s.config, config) })),

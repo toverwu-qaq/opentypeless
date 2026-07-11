@@ -322,6 +322,10 @@
     "baseUrl": "URL di base",
     "enableAiPolish": "Abilita rifinitura IA",
     "enableAiPolishDesc": "Pulisce, formatta e migliora automaticamente la dettatura prima dell'output.",
+    "contextAdaptation": "Adapt writing to the current app",
+    "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "lastDictationContext": "Last dictation context",
+    "generalContext": "General",
     "polishStyle": "Stile di rifinitura",
     "polishStyleMinimal": "Minimo",
     "polishStyleClean": "Pulito",
@@ -498,6 +502,11 @@
     "clearConfirm": "Sei sicuro di voler cancellare tutta la cronologia? Questa azione non può essere annullata.",
     "failedToCopy": "Copia negli appunti non riuscita",
     "failedToClear": "Cancellazione cronologia non riuscita",
+    "providers": {
+      "managed_cloud": "Cloud",
+      "byok": "BYOK",
+      "local": "Local"
+    },
     "outputStatus": {
       "partial": "Partial result",
       "fallback": "Fallback output",

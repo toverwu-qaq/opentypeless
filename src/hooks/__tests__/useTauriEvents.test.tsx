@@ -45,7 +45,7 @@ function HookHarness() {
 describe('useTauriEvents', () => {
   beforeEach(() => {
     eventListeners.clear()
-    useAppStore.setState({ hotkeyRegistrationError: null })
+    useAppStore.setState({ hotkeyRegistrationError: null, lastContext: null })
   })
 
   afterEach(() => {
@@ -106,5 +106,33 @@ describe('useTauriEvents', () => {
     })
 
     expect(invalidateCloudSessionOnce).toHaveBeenCalledTimes(1)
+  })
+
+  it('stores only the safe context summary emitted for the completed operation', async () => {
+    render(<HookHarness />)
+
+    await waitFor(() => {
+      expect(eventListeners.has('pipeline:context')).toBe(true)
+    })
+
+    act(() => {
+      eventListeners.get('pipeline:context')?.({
+        payload: {
+          profileId: 'chat.slack',
+          family: 'work_chat',
+          appLabel: 'Slack',
+          iconKey: 'slack',
+          overrideId: 'slack',
+        },
+      })
+    })
+
+    expect(useAppStore.getState().lastContext).toEqual({
+      profileId: 'chat.slack',
+      family: 'work_chat',
+      appLabel: 'Slack',
+      iconKey: 'slack',
+      overrideId: 'slack',
+    })
   })
 })

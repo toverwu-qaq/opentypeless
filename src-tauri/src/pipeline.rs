@@ -1569,6 +1569,10 @@ impl PipelineHandle {
             }),
         );
 
+        let _ = self
+            .app_handle
+            .emit("pipeline:context", app_ctx.profile.summary());
+
         // Save to history
         self.save_history(
             &raw_text,

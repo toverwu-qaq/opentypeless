@@ -322,6 +322,10 @@
     "baseUrl": "기본 URL",
     "enableAiPolish": "AI 다듬기 활성화",
     "enableAiPolishDesc": "출력 전에 음성 입력을 자동으로 정리하고 형식을 맞추며 개선합니다.",
+    "contextAdaptation": "Adapt writing to the current app",
+    "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "lastDictationContext": "Last dictation context",
+    "generalContext": "General",
     "polishStyle": "다듬기 스타일",
     "polishStyleMinimal": "최소",
     "polishStyleClean": "깔끔하게",
@@ -498,6 +502,11 @@
     "clearConfirm": "모든 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
     "failedToCopy": "클립보드 복사에 실패했습니다",
     "failedToClear": "기록 삭제에 실패했습니다",
+    "providers": {
+      "managed_cloud": "Cloud",
+      "byok": "BYOK",
+      "local": "Local"
+    },
     "outputStatus": {
       "partial": "Partial result",
       "fallback": "Fallback output",

@@ -320,6 +320,10 @@
     "baseUrl": "Base URL",
     "enableAiPolish": "AI cleanup for dictation",
     "enableAiPolishDesc": "Cleans up fillers, punctuation, and wording before output. Turn off to output raw transcription.",
+    "contextAdaptation": "Adapt writing to the current app",
+    "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "lastDictationContext": "Last dictation context",
+    "generalContext": "General",
     "polishStyle": "Polish style",
     "polishStyleMinimal": "Minimal",
     "polishStyleClean": "Clean",
@@ -498,6 +502,11 @@
     "clearConfirm": "Are you sure you want to clear all history? This cannot be undone.",
     "failedToCopy": "Failed to copy to clipboard",
     "failedToClear": "Failed to clear history",
+    "providers": {
+      "managed_cloud": "Cloud",
+      "byok": "BYOK",
+      "local": "Local"
+    },
     "outputStatus": {
       "partial": "Partial result",
       "fallback": "Fallback output",

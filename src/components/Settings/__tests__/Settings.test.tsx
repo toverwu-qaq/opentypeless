@@ -165,6 +165,7 @@ vi.mock('../../../lib/tauri', () => ({
   readCredential: vi.fn().mockResolvedValue(null),
   setCredential: vi.fn().mockResolvedValue(undefined),
   fetchLlmModels: vi.fn().mockResolvedValue(['gpt-4o', 'gpt-3.5-turbo']),
+  getLlmModelCapability: vi.fn().mockResolvedValue('unknown'),
   addDictionaryEntry: vi.fn().mockResolvedValue(undefined),
   removeDictionaryEntry: vi.fn().mockResolvedValue(undefined),
   getDictionary: vi.fn().mockResolvedValue([]),

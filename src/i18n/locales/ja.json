@@ -322,6 +322,10 @@
     "baseUrl": "ベースURL",
     "enableAiPolish": "AI整形を有効にする",
     "enableAiPolishDesc": "出力前に音声入力を自動で整え、形式を整えて改善します。",
+    "contextAdaptation": "Adapt writing to the current app",
+    "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "lastDictationContext": "Last dictation context",
+    "generalContext": "General",
     "polishStyle": "整形スタイル",
     "polishStyleMinimal": "最小",
     "polishStyleClean": "クリーン",
@@ -498,6 +502,11 @@
     "clearConfirm": "すべての履歴を消去してもよろしいですか？この操作は元に戻せません。",
     "failedToCopy": "クリップボードへのコピーに失敗しました",
     "failedToClear": "履歴の消去に失敗しました",
+    "providers": {
+      "managed_cloud": "Cloud",
+      "byok": "BYOK",
+      "local": "Local"
+    },
     "outputStatus": {
       "partial": "Partial result",
       "fallback": "Fallback output",

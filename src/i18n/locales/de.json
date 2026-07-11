@@ -322,6 +322,10 @@
     "baseUrl": "Basis-URL",
     "enableAiPolish": "KI-Glättung aktivieren",
     "enableAiPolishDesc": "Sprache automatisch bereinigen, formatieren und verbessern, bevor sie ausgegeben wird.",
+    "contextAdaptation": "Adapt writing to the current app",
+    "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "lastDictationContext": "Last dictation context",
+    "generalContext": "General",
     "polishStyle": "Schreibstil",
     "polishStyleMinimal": "Minimal",
     "polishStyleClean": "Klar",
@@ -498,6 +502,11 @@
     "clearConfirm": "Möchten Sie wirklich den gesamten Verlauf löschen? Dies kann nicht rückgängig gemacht werden.",
     "failedToCopy": "Kopieren in die Zwischenablage fehlgeschlagen",
     "failedToClear": "Verlauf konnte nicht gelöscht werden",
+    "providers": {
+      "managed_cloud": "Cloud",
+      "byok": "BYOK",
+      "local": "Local"
+    },
     "outputStatus": {
       "partial": "Partial result",
       "fallback": "Fallback output",

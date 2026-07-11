@@ -6,6 +6,7 @@ import { spring } from '../../lib/animations'
 import { useAppStore } from '../../stores/appStore'
 import { clearHistory } from '../../lib/tauri'
 import { toast } from '../Toast'
+import { AppContextMeta } from './AppContextMeta'
 
 export function History() {
   const history = useAppStore((s) => s.history)
@@ -135,10 +136,13 @@ export function History() {
                         <p className="text-[13px] text-text-primary leading-relaxed">
                           {entry.polished_text}
                         </p>
-                        <p className="text-[11px] text-text-tertiary mt-1">
-                          {entry.created_at.split('T')[1]?.slice(0, 5) || ''} ·{' '}
-                          {entry.context_label}
-                        </p>
+                        <AppContextMeta
+                          iconKey={entry.context_icon_key}
+                          family={entry.context_family}
+                          label={entry.context_label}
+                          time={entry.created_at.split('T')[1]?.slice(0, 5) || ''}
+                          providerKind={entry.provider_kind}
+                        />
                         {entry.output_status && outputStatusLabel(entry.output_status) && (
                           <p className="text-[11px] text-warning mt-1 leading-snug break-words">
                             {outputStatusLabel(entry.output_status)}

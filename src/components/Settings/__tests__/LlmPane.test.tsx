@@ -27,6 +27,9 @@ vi.mock('react-i18next', () => ({
         'settings.llmModelPlaceholder': 'e.g. gpt-4o-mini',
         'settings.enableAiPolish': 'AI cleanup for dictation',
         'settings.enableAiPolishDesc': 'Cleans up dictation before output',
+        'settings.contextAdaptation': 'Adapt writing to the current app',
+        'settings.contextAdaptationHint': 'Uses a private local app category',
+        'settings.lastDictationContext': 'Last dictation context',
         'settings.polishStyle': 'Polish style',
         'settings.polishStyleMinimal': 'Minimal',
         'settings.polishStyleClean': 'Clean',
@@ -77,6 +80,7 @@ const mockAppStore = {
     llm_base_url: 'https://api.openai.com/v1',
     llm_model: 'gpt-4o-mini',
     polish_enabled: true,
+    context_adaptation_enabled: true,
     polish_style: 'clean',
     polish_custom_prompt: '',
     polish_chinese_script: 'preserve',
@@ -95,6 +99,7 @@ const mockAppStore = {
   setLlmLatencyMs: vi.fn(),
   llmModels: [] as string[],
   setLlmModels: vi.fn(),
+  lastContext: null as any,
 }
 
 const mockAuthStore = {
@@ -140,6 +145,7 @@ describe('LlmPane', () => {
       llm_base_url: 'https://api.openai.com/v1',
       llm_model: 'gpt-4o-mini',
       polish_enabled: true,
+      context_adaptation_enabled: true,
       polish_style: 'clean',
       polish_custom_prompt: '',
       polish_chinese_script: 'preserve',
@@ -152,6 +158,7 @@ describe('LlmPane', () => {
     mockAppStore.llmTestStatus = 'idle'
     mockAppStore.llmLatencyMs = null
     mockAppStore.llmModels = []
+    mockAppStore.lastContext = null
     mockAuthStore.user = null
     mockAuthStore.plan = null
     mockAuthStore.source = 'free'
@@ -495,6 +502,50 @@ describe('LlmPane', () => {
   })
 
   describe('Feature toggles', () => {
+    it('keeps context adaptation adjacent to AI polish and disables it when polish is off', () => {
+      mockAppStore.config.polish_enabled = false
+      render(<LlmPane />)
+
+      const contextSwitch = screen
+        .getByText('Adapt writing to the current app')
+        .closest('label')
+        ?.querySelector('[role="switch"]')
+      expect(contextSwitch).toBeDisabled()
+    })
+
+    it('updates the context adaptation preference', () => {
+      render(<LlmPane />)
+      const contextSwitch = screen
+        .getByText('Adapt writing to the current app')
+        .closest('label')
+        ?.querySelector('[role="switch"]')
+      expect(contextSwitch).not.toBeNull()
+      fireEvent.click(contextSwitch!)
+      expect(mockAppStore.updateConfig).toHaveBeenCalledWith({
+        context_adaptation_enabled: false,
+      })
+    })
+
+    it('hides last context until an operation snapshot exists', () => {
+      render(<LlmPane />)
+      expect(screen.queryByText('Last dictation context')).not.toBeInTheDocument()
+    })
+
+    it('shows only the safe last operation context after dictation', () => {
+      mockAppStore.lastContext = {
+        profileId: 'chat.slack',
+        family: 'work_chat',
+        appLabel: 'Slack',
+        iconKey: 'slack',
+        overrideId: 'slack',
+      }
+      render(<LlmPane />)
+
+      expect(screen.getByText('Last dictation context')).toBeInTheDocument()
+      expect(screen.getByText('Slack')).toBeInTheDocument()
+      expect(screen.queryByText(/window|host|confidence/i)).not.toBeInTheDocument()
+    })
+
     it('shows target language selector when translation is enabled', () => {
       mockAppStore.config.translate_enabled = true
 

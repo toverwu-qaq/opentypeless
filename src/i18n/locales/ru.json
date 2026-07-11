@@ -322,6 +322,10 @@
     "baseUrl": "Базовый URL",
     "enableAiPolish": "Включить обработку ИИ",
     "enableAiPolishDesc": "Автоматически очищает, форматирует и улучшает диктовку перед выводом.",
+    "contextAdaptation": "Adapt writing to the current app",
+    "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "lastDictationContext": "Last dictation context",
+    "generalContext": "General",
     "polishStyle": "Стиль обработки",
     "polishStyleMinimal": "Минимальный",
     "polishStyleClean": "Чистый",
@@ -498,6 +502,11 @@
     "clearConfirm": "Вы уверены, что хотите очистить всю историю? Это действие нельзя отменить.",
     "failedToCopy": "Не удалось скопировать в буфер обмена",
     "failedToClear": "Не удалось очистить историю",
+    "providers": {
+      "managed_cloud": "Cloud",
+      "byok": "BYOK",
+      "local": "Local"
+    },
     "outputStatus": {
       "partial": "Partial result",
       "fallback": "Fallback output",

@@ -16,6 +16,7 @@ import type { LlmModelCapability } from '../../lib/tauri'
 import { FormField } from './shared/FormField'
 import { Toggle } from './shared/Toggle'
 import { CheckCircle2, XCircle, Loader2, RefreshCw, Crown, ChevronDown } from 'lucide-react'
+import { AppLogo } from '../AppLogo'
 
 export function LlmPane() {
   const config = useAppStore((s) => s.config)
@@ -26,6 +27,7 @@ export function LlmPane() {
   const setLlmTestStatus = useAppStore((s) => s.setLlmTestStatus)
   const llmLatencyMs = useAppStore((s) => s.llmLatencyMs)
   const setLlmLatencyMs = useAppStore((s) => s.setLlmLatencyMs)
+  const lastContext = useAppStore((s) => s.lastContext)
   const { user } = useAuthStore()
   const hasCloudAccess = useAuthStore(hasManagedCloudAccess)
   const { t } = useTranslation()
@@ -333,6 +335,28 @@ export function LlmPane() {
           <p className="mt-1 ml-[52px] text-[11px] leading-relaxed text-text-tertiary">
             {t('settings.enableAiPolishDesc')}
           </p>
+        </div>
+        <div>
+          <Toggle
+            checked={config.context_adaptation_enabled}
+            disabled={!config.polish_enabled}
+            onChange={(checked) => updateConfig({ context_adaptation_enabled: checked })}
+            label={t('settings.contextAdaptation')}
+          />
+          <p className="mt-1 ml-[52px] text-[11px] leading-relaxed text-text-tertiary">
+            {t('settings.contextAdaptationHint')}
+          </p>
+          {lastContext && (
+            <div className="mt-2 ml-[52px] min-w-0">
+              <p className="text-[11px] leading-relaxed text-text-tertiary">
+                {t('settings.lastDictationContext')}
+              </p>
+              <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] text-text-secondary">
+                <AppLogo iconKey={lastContext.iconKey} family={lastContext.family} />
+                <span className="min-w-0 truncate">{lastContext.appLabel}</span>
+              </div>
+            </div>
+          )}
         </div>
         <div>
           <Toggle

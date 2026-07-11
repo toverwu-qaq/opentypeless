@@ -322,6 +322,10 @@
     "baseUrl": "URL de base",
     "enableAiPolish": "Activer l'amélioration IA",
     "enableAiPolishDesc": "Nettoie, met en forme et améliore automatiquement votre dictée avant la sortie.",
+    "contextAdaptation": "Adapt writing to the current app",
+    "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "lastDictationContext": "Last dictation context",
+    "generalContext": "General",
     "polishStyle": "Style de réécriture",
     "polishStyleMinimal": "Minimal",
     "polishStyleClean": "Clair",
@@ -498,6 +502,11 @@
     "clearConfirm": "Voulez-vous vraiment effacer tout l'historique ? Cette action est irréversible.",
     "failedToCopy": "Impossible de copier dans le presse-papiers",
     "failedToClear": "Impossible d'effacer l'historique",
+    "providers": {
+      "managed_cloud": "Cloud",
+      "byok": "BYOK",
+      "local": "Local"
+    },
     "outputStatus": {
       "partial": "Partial result",
       "fallback": "Fallback output",

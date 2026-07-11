@@ -322,6 +322,10 @@
     "baseUrl": "URL Base",
     "enableAiPolish": "Ativar Polimento por IA",
     "enableAiPolishDesc": "Limpa, formata e melhora automaticamente sua fala antes da saída.",
+    "contextAdaptation": "Adapt writing to the current app",
+    "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "lastDictationContext": "Last dictation context",
+    "generalContext": "General",
     "polishStyle": "Estilo de polimento",
     "polishStyleMinimal": "Mínimo",
     "polishStyleClean": "Limpo",
@@ -498,6 +502,11 @@
     "clearConfirm": "Tem certeza de que deseja limpar todo o histórico? Esta ação não pode ser desfeita.",
     "failedToCopy": "Falha ao copiar para a área de transferência",
     "failedToClear": "Falha ao limpar o histórico",
+    "providers": {
+      "managed_cloud": "Cloud",
+      "byok": "BYOK",
+      "local": "Local"
+    },
     "outputStatus": {
       "partial": "Partial result",
       "fallback": "Fallback output",
