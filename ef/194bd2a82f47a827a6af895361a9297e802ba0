@@ -1,0 +1,39 @@
+src-tauri/src/app_detector/cache.rs
+  s_7724aa1accb26b::t_5635bad5fd3bf3 184-203
+src-tauri/src/app_detector/platform/linux.rs
+  s_7724aa1accb26b::t_13213d1484c512 5,9-32
+src-tauri/src/app_detector/platform/macos.rs
+  s_7724aa1accb26b::t_319568ea3a3b02 6,10-22
+src-tauri/src/app_detector/platform/mod.rs
+  s_7724aa1accb26b::t_dda36c0ba10e22 4,36-55
+src-tauri/src/app_detector/platform/windows.rs
+  s_7724aa1accb26b::t_0d31a8a73c8d7f 5,9-57
+src-tauri/src/commands/ask.rs
+  s_7724aa1accb26b::t_396d3436f1d1da 1,30-31,141,213-233,254-257,567,970-972,1034,1252-1270,1314-1315,1417-1429,1490-1531
+src-tauri/src/hotkey.rs
+  s_7724aa1accb26b::t_63b5ef13294164 602-603
+src-tauri/src/llm/cloud.rs
+  s_7724aa1accb26b::t_0c099f65cc3dfe 108-112,184-185,383-408
+src-tauri/src/voice_intent/mod.rs
+  s_7724aa1accb26b::t_ae5ff73a160940 15-43,572-701
+src-tauri/src/voice_intent/types.rs
+  s_7724aa1accb26b::t_2e82bb21576172 118-153,472-536
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ef194bd2a82f47a827a6af895361a9297e802ba0",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
