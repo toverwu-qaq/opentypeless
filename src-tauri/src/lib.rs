@@ -848,6 +848,7 @@ pub fn run() {
             commands::ask::stop_ask_flow,
             commands::ask::abort_ask_dictation,
             commands::ask::take_pending_ask_message,
+            commands::translation::set_active_translation_target,
             show_ask_window,
             commands::misc::check_accessibility_permission,
             commands::misc::request_accessibility_permission,

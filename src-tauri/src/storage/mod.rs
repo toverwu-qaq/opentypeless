@@ -160,6 +160,78 @@ impl HotkeyConfig {
     }
 }
 
+pub const SUPPORTED_TRANSLATION_LANGUAGES: &[&str] = &[
+    "en", "zh", "ja", "ko", "fr", "de", "es", "pt", "ru", "ar", "hi", "th", "vi", "it", "nl", "tr",
+    "pl", "uk", "id", "ms",
+];
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
+pub struct TranslationConfig {
+    pub targets: Vec<String>,
+    pub active_target: String,
+}
+
+impl Default for TranslationConfig {
+    fn default() -> Self {
+        Self {
+            targets: vec!["en".to_string()],
+            active_target: "en".to_string(),
+        }
+    }
+}
+
+impl TranslationConfig {
+    fn from_legacy(target_lang: &str) -> Self {
+        let target = normalize_translation_code(target_lang).unwrap_or_else(|| "en".to_string());
+        Self {
+            targets: vec![target.clone()],
+            active_target: target,
+        }
+    }
+
+    fn normalize(&mut self, legacy_target: &str) {
+        let mut normalized = Vec::new();
+        for target in &self.targets {
+            let Some(target) = normalize_translation_code(target) else {
+                continue;
+            };
+            if !normalized.contains(&target) {
+                normalized.push(target);
+            }
+            if normalized.len() == 5 {
+                break;
+            }
+        }
+
+        let legacy = normalize_translation_code(legacy_target);
+        if normalized.is_empty() {
+            normalized.push(legacy.clone().unwrap_or_else(|| "en".to_string()));
+        }
+        if let Some(legacy) = legacy.as_ref() {
+            if !normalized.contains(legacy) && normalized.len() < 5 {
+                normalized.push(legacy.clone());
+            }
+        }
+
+        let requested_active = normalize_translation_code(&self.active_target);
+        let active_target = legacy
+            .filter(|target| normalized.contains(target))
+            .or_else(|| requested_active.filter(|target| normalized.contains(target)))
+            .unwrap_or_else(|| normalized[0].clone());
+
+        self.targets = normalized;
+        self.active_target = active_target;
+    }
+}
+
+fn normalize_translation_code(value: &str) -> Option<String> {
+    let normalized = value.trim().to_ascii_lowercase();
+    SUPPORTED_TRANSLATION_LANGUAGES
+        .contains(&normalized.as_str())
+        .then_some(normalized)
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct AppConfig {
@@ -185,6 +257,7 @@ pub struct AppConfig {
     pub active_scene: Option<ActiveScene>,
     pub translate_enabled: bool,
     pub target_lang: String,
+    pub translation: TranslationConfig,
     pub hotkey: String,
     pub ask_hotkey: String,
     pub hotkey_mode: String,
@@ -234,6 +307,7 @@ impl Default for AppConfig {
             active_scene: None,
             translate_enabled: false,
             target_lang: "en".to_string(),
+            translation: TranslationConfig::default(),
             hotkey: default_dictation_hotkey().to_string(),
             ask_hotkey: default_ask_hotkey().to_string(),
             hotkey_mode: default_dictation_hotkey_mode().to_string(),
@@ -340,6 +414,8 @@ impl AppConfig {
         self.polish_chinese_script = "preserve".to_string();
         sanitize_custom_scenes(&mut self.custom_scenes);
         sanitize_active_scene(&mut self.active_scene);
+        self.translation.normalize(&self.target_lang);
+        self.target_lang = self.translation.active_target.clone();
         self.normalize_insertion_strategy();
         self.normalize_paste_shortcut();
         self.normalize_windows_sendinput_newline_mode();
@@ -402,7 +478,18 @@ impl AppConfig {
         let has_hotkeys = value
             .as_object()
             .is_some_and(|object| object.contains_key("hotkeys"));
+        let has_translation = value
+            .as_object()
+            .is_some_and(|object| object.contains_key("translation"));
+        let has_legacy_target = value
+            .as_object()
+            .is_some_and(|object| object.contains_key("target_lang"));
         let mut config: Self = serde_json::from_value(value)?;
+        if !has_translation {
+            config.translation = TranslationConfig::from_legacy(&config.target_lang);
+        } else if !has_legacy_target {
+            config.target_lang = config.translation.active_target.clone();
+        }
         if has_hotkeys {
             config.sync_legacy_hotkey_fields_from_typed();
         }
@@ -1449,6 +1536,49 @@ mod tests {
                 search: true,
             }
         );
+    }
+
+    #[test]
+    fn translation_config_migrates_legacy_target_and_enforces_ordered_invariants() {
+        let legacy = AppConfig::from_stored_value(serde_json::json!({
+            "target_lang": "ja"
+        }))
+        .unwrap();
+        assert_eq!(
+            legacy.translation,
+            TranslationConfig {
+                targets: vec!["ja".to_string()],
+                active_target: "ja".to_string(),
+            }
+        );
+        assert_eq!(legacy.target_lang, "ja");
+
+        let normalized = AppConfig::from_stored_value(serde_json::json!({
+            "target_lang": "de",
+            "translation": {
+                "targets": [" FR ", "fr", "xx", "ja", "de", "es", "pt", "it"],
+                "active_target": "ko"
+            }
+        }))
+        .unwrap();
+        assert_eq!(
+            normalized.translation.targets,
+            ["fr", "ja", "de", "es", "pt"]
+        );
+        assert_eq!(normalized.translation.active_target, "de");
+        assert_eq!(normalized.target_lang, "de");
+
+        let empty = AppConfig::from_stored_value(serde_json::json!({
+            "target_lang": "xx",
+            "translation": {
+                "targets": [],
+                "active_target": "xx"
+            }
+        }))
+        .unwrap();
+        assert_eq!(empty.translation.targets, ["en"]);
+        assert_eq!(empty.translation.active_target, "en");
+        assert_eq!(serde_json::to_value(&empty).unwrap()["target_lang"], "en");
     }
 
     #[test]

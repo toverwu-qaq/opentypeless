@@ -620,6 +620,39 @@ pub struct PipelineStartOptions {
     pub force_translate: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TranslationOperationPhase {
+    Capturing,
+    Finalizing,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct TranslationOperationState {
+    target: String,
+    phase: TranslationOperationPhase,
+}
+
+impl TranslationOperationState {
+    fn new(target: String) -> Self {
+        Self {
+            target,
+            phase: TranslationOperationPhase::Capturing,
+        }
+    }
+
+    fn switch_target(&mut self, target: String) -> std::result::Result<String, &'static str> {
+        if self.phase != TranslationOperationPhase::Capturing {
+            return Err("translation_operation_finished");
+        }
+        Ok(std::mem::replace(&mut self.target, target))
+    }
+
+    fn finalize(&mut self) -> String {
+        self.phase = TranslationOperationPhase::Finalizing;
+        self.target.clone()
+    }
+}
+
 fn apply_pipeline_start_options(
     mut config: storage::AppConfig,
     options: PipelineStartOptions,
@@ -649,6 +682,7 @@ pub struct PipelineHandle {
     preloaded_voice_mode: Arc<Mutex<Option<crate::voice_intent::VoiceMode>>>,
     cloud_operation_id: Arc<Mutex<Option<String>>>,
     recording_start: Arc<Mutex<Option<std::time::Instant>>>,
+    active_translation_operation: Arc<Mutex<Option<TranslationOperationState>>>,
     shared_client: reqwest::Client,
     /// Serializes start()/stop() so that stop() waits for start() to finish
     /// its setup before reading shared state (preloaded_config, audio_handle, etc.).
@@ -857,6 +891,7 @@ impl PipelineHandle {
             preloaded_voice_mode: Arc::new(Mutex::new(None)),
             cloud_operation_id: Arc::new(Mutex::new(None)),
             recording_start: Arc::new(Mutex::new(None)),
+            active_translation_operation: Arc::new(Mutex::new(None)),
             shared_client,
             pipeline_lock: tokio::sync::Mutex::new(()),
         }
@@ -864,6 +899,16 @@ impl PipelineHandle {
 
     fn set_state(&self, new_state: PipelineState) {
         self.state.store(new_state.as_u8(), Ordering::SeqCst);
+        if new_state == PipelineState::Idle {
+            *self
+                .active_translation_operation
+                .lock()
+                .unwrap_or_else(|error| error.into_inner()) = None;
+            let _ = self.app_handle.emit(
+                "pipeline:voice_mode",
+                Option::<crate::voice_intent::VoiceMode>::None,
+            );
+        }
         let _ = self.app_handle.emit("pipeline:state", new_state);
 
         // Update tray tooltip + menu to reflect pipeline state
@@ -887,6 +932,24 @@ impl PipelineHandle {
 
     pub fn current_state(&self) -> PipelineState {
         PipelineState::from_u8(self.state.load(Ordering::SeqCst))
+    }
+
+    pub(crate) fn switch_active_translation_target(
+        &self,
+        target: String,
+    ) -> std::result::Result<String, String> {
+        if self.current_state() != PipelineState::Recording {
+            return Err("translation_operation_finished".to_string());
+        }
+        let mut operation = self
+            .active_translation_operation
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        operation
+            .as_mut()
+            .ok_or_else(|| "translation_not_recording".to_string())?
+            .switch_target(target)
+            .map_err(str::to_string)
     }
 
     /// Immediately abort the pipeline regardless of current state.
@@ -995,14 +1058,15 @@ impl PipelineHandle {
 
         // P0-2: Load config BEFORE starting audio capture — fail fast on missing API key
         let config_data = apply_pipeline_start_options(self.load_config().await, options);
-        *self
-            .preloaded_voice_mode
-            .lock()
-            .unwrap_or_else(|e| e.into_inner()) = Some(if options.force_translate {
+        let voice_mode = if options.force_translate {
             crate::voice_intent::VoiceMode::Translate
         } else {
             crate::voice_intent::VoiceMode::Dictate
-        });
+        };
+        *self
+            .preloaded_voice_mode
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(voice_mode);
         *self
             .preloaded_config
             .lock()
@@ -1314,7 +1378,14 @@ impl PipelineHandle {
             .recording_start
             .lock()
             .unwrap_or_else(|e| e.into_inner()) = Some(std::time::Instant::now());
+        *self
+            .active_translation_operation
+            .lock()
+            .unwrap_or_else(|error| error.into_inner()) = options
+            .force_translate
+            .then(|| TranslationOperationState::new(config_data.translation.active_target.clone()));
         self.set_state(PipelineState::Recording);
+        let _ = self.app_handle.emit("pipeline:voice_mode", voice_mode);
 
         // Volume monitoring task
         let app_handle = self.app_handle.clone();
@@ -1525,6 +1596,12 @@ impl PipelineHandle {
         let _ = self
             .app_handle
             .emit("pipeline:state", PipelineState::Transcribing);
+        let finalized_translation_target = self
+            .active_translation_operation
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .as_mut()
+            .map(TranslationOperationState::finalize);
         // Update tray for transcribing state
         if let Some(tray_handle) = self.app_handle.try_state::<crate::TrayHandle>() {
             if let Ok(t) = tray_handle.tray.lock() {
@@ -1581,10 +1658,14 @@ impl PipelineHandle {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .take();
-        let config = match preloaded_config {
+        let mut config = match preloaded_config {
             Some(c) => c,
             None => self.load_config().await,
         };
+        if let Some(target) = finalized_translation_target {
+            config.translation.active_target = target.clone();
+            config.target_lang = target;
+        }
         let app_ctx = self
             .preloaded_app_ctx
             .lock()
@@ -1949,7 +2030,7 @@ impl PipelineHandle {
                 .unwrap_or_default(),
             polish_custom_prompt: config.polish_custom_prompt.clone(),
             translate_enabled: config.translate_enabled,
-            target_lang: config.target_lang.clone(),
+            target_lang: config.translation.active_target.clone(),
             selected_text,
             operation_id,
             voice_intent: voice_intent.clone(),
@@ -2901,6 +2982,10 @@ mod tests {
         let config = storage::AppConfig {
             translate_enabled: false,
             target_lang: "ja".to_string(),
+            translation: storage::TranslationConfig {
+                targets: vec!["ja".to_string()],
+                active_target: "ja".to_string(),
+            },
             ..storage::AppConfig::default()
         };
 
@@ -2914,6 +2999,21 @@ mod tests {
         assert!(next_config.translate_enabled);
         assert_eq!(next_config.target_lang, "ja");
         assert!(!config.translate_enabled);
+    }
+
+    #[test]
+    fn switch_translation_target_updates_capture_without_restart_and_freezes_at_finalization() {
+        let mut operation = TranslationOperationState::new("ja".to_string());
+        let previous = operation.switch_target("fr".to_string()).unwrap();
+        assert_eq!(previous, "ja");
+        assert_eq!(operation.phase, TranslationOperationPhase::Capturing);
+        assert_eq!(operation.finalize(), "fr");
+        assert_eq!(operation.phase, TranslationOperationPhase::Finalizing);
+        assert_eq!(
+            operation.switch_target("de".to_string()),
+            Err("translation_operation_finished")
+        );
+        assert_eq!(operation.target, "fr");
     }
 
     #[test]

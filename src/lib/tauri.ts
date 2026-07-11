@@ -5,6 +5,7 @@ import type {
   DictionaryEntry,
   CorrectionRule,
   PlatformCapabilities,
+  TranslationConfig,
 } from '../stores/appStore'
 
 // Pipeline commands
@@ -18,6 +19,10 @@ export async function stopRecording(): Promise<void> {
 
 export async function abortRecording(): Promise<void> {
   return invoke('abort_recording')
+}
+
+export async function setActiveTranslationTarget(code: string): Promise<TranslationConfig> {
+  return invoke('set_active_translation_target', { code })
 }
 
 // Config commands

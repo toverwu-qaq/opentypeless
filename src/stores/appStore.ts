@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { TARGET_LANGUAGES } from '../lib/constants'
 
 export type PipelineState =
   | 'idle'
@@ -9,6 +10,8 @@ export type PipelineState =
   | 'outputting'
   | 'ask_recording'
   | 'ask_thinking'
+
+export type VoiceMode = 'dictate' | 'ask' | 'translate'
 
 export type SttProvider =
   | 'deepgram'
@@ -159,6 +162,11 @@ export interface VoiceRoutingFlags {
   search: boolean
 }
 
+export interface TranslationConfig {
+  targets: string[]
+  active_target: string
+}
+
 export interface AppConfig {
   stt_provider: SttProvider
   stt_api_key: string
@@ -182,6 +190,7 @@ export interface AppConfig {
   active_scene: ActiveScene | null
   translate_enabled: boolean
   target_lang: string
+  translation: TranslationConfig
   hotkey: string
   ask_hotkey: string
   hotkey_mode: HotkeyMode
@@ -211,6 +220,8 @@ interface AppState {
   // Pipeline
   pipelineState: PipelineState
   setPipelineState: (state: PipelineState) => void
+  activeVoiceMode: VoiceMode | null
+  setActiveVoiceMode: (mode: VoiceMode | null) => void
 
   // Recording
   audioVolume: number
@@ -292,6 +303,8 @@ interface AppState {
   setContextMenuOpen: (open: boolean) => void
   contextMenuReady: boolean
   setContextMenuReady: (ready: boolean) => void
+  translationTargetMenuOpen: boolean
+  setTranslationTargetMenuOpen: (open: boolean) => void
 
   // Reset recording state
   resetRecording: () => void
@@ -483,8 +496,68 @@ function syncTypedHotkeysToLegacy(config: AppConfig): AppConfig {
   }
 }
 
-function syncHotkeyConfig(previous: AppConfig, partial: Partial<AppConfig>): AppConfig {
+const supportedTranslationCodes = new Set(TARGET_LANGUAGES.map((language) => language.value))
+
+function normalizeTranslationTargets(targets: string[]): string[] {
+  const normalized: string[] = []
+  for (const value of targets) {
+    const code = value.trim().toLowerCase()
+    if (!supportedTranslationCodes.has(code) || normalized.includes(code)) continue
+    normalized.push(code)
+    if (normalized.length === 5) break
+  }
+  return normalized
+}
+
+function syncTranslationConfig(previous: AppConfig, partial: Partial<AppConfig>): AppConfig {
   const merged = { ...previous, ...partial }
+  if (partial.translation) {
+    const targets = normalizeTranslationTargets(partial.translation.targets)
+    const requestedActive = partial.translation.active_target.trim().toLowerCase()
+    if (targets.length === 0) {
+      targets.push(supportedTranslationCodes.has(requestedActive) ? requestedActive : 'en')
+    }
+    const activeTarget = targets.includes(requestedActive) ? requestedActive : targets[0]
+    return {
+      ...merged,
+      target_lang: activeTarget,
+      translation: { targets, active_target: activeTarget },
+    }
+  }
+
+  if ('target_lang' in partial) {
+    const requested = partial.target_lang?.trim().toLowerCase() ?? ''
+    const activeTarget = supportedTranslationCodes.has(requested)
+      ? requested
+      : previous.translation?.active_target || 'en'
+    const targets = normalizeTranslationTargets(previous.translation?.targets ?? [activeTarget])
+    if (!targets.includes(activeTarget)) {
+      if (targets.length === 5) targets[targets.length - 1] = activeTarget
+      else targets.push(activeTarget)
+    }
+    return {
+      ...merged,
+      target_lang: activeTarget,
+      translation: { targets, active_target: activeTarget },
+    }
+  }
+
+  const current = merged.translation
+  if (!current) {
+    const activeTarget = supportedTranslationCodes.has(merged.target_lang)
+      ? merged.target_lang
+      : 'en'
+    return {
+      ...merged,
+      target_lang: activeTarget,
+      translation: { targets: [activeTarget], active_target: activeTarget },
+    }
+  }
+  return merged
+}
+
+function syncHotkeyConfig(previous: AppConfig, partial: Partial<AppConfig>): AppConfig {
+  const merged = syncTranslationConfig(previous, partial)
   if (partial.hotkeys) return syncTypedHotkeysToLegacy(merged)
   if ('hotkey' in partial || 'ask_hotkey' in partial || 'hotkey_mode' in partial) {
     return syncLegacyHotkeysToTyped(merged)
@@ -520,6 +593,7 @@ const defaultConfig: AppConfig = {
   active_scene: null,
   translate_enabled: false,
   target_lang: 'en',
+  translation: { targets: ['en'], active_target: 'en' },
   hotkey: defaultDictationHotkey(),
   ask_hotkey: defaultAskHotkey(),
   hotkey_mode: defaultDictationHotkeyMode(),
@@ -554,6 +628,8 @@ const defaultConfig: AppConfig = {
 export const useAppStore = create<AppState>((set) => ({
   pipelineState: 'idle',
   setPipelineState: (pipelineState) => set({ pipelineState }),
+  activeVoiceMode: null,
+  setActiveVoiceMode: (activeVoiceMode) => set({ activeVoiceMode }),
 
   audioVolume: 0,
   setAudioVolume: (audioVolume) => set({ audioVolume }),
@@ -627,6 +703,8 @@ export const useAppStore = create<AppState>((set) => ({
   setContextMenuOpen: (contextMenuOpen) => set({ contextMenuOpen }),
   contextMenuReady: false,
   setContextMenuReady: (contextMenuReady) => set({ contextMenuReady }),
+  translationTargetMenuOpen: false,
+  setTranslationTargetMenuOpen: (translationTargetMenuOpen) => set({ translationTargetMenuOpen }),
 
   resetRecording: () =>
     set({

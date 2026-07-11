@@ -8,6 +8,7 @@ import type {
   ContextProfileSummary,
   InsertResult,
   PipelineState,
+  VoiceMode,
 } from '../stores/appStore'
 import { getHistory } from '../lib/tauri'
 import { toast } from '../components/Toast'
@@ -32,6 +33,7 @@ export function useTauriEvents() {
     setFinalTranscript,
     appendPolishedChunk,
     setPipelineState,
+    setActiveVoiceMode,
     setTargetApp,
     setLastInsertResult,
     setLastContext,
@@ -81,6 +83,7 @@ export function useTauriEvents() {
           })
       }
     })
+    addListener<VoiceMode | null>('pipeline:voice_mode', setActiveVoiceMode)
     addListener<string>('pipeline:target_app', setTargetApp)
     addListener<InsertResult>('pipeline:insert_result', setLastInsertResult)
     addListener<ContextProfileSummary>('pipeline:context', setLastContext)
@@ -137,6 +140,7 @@ export function useTauriEvents() {
     setFinalTranscript,
     appendPolishedChunk,
     setPipelineState,
+    setActiveVoiceMode,
     setTargetApp,
     setLastInsertResult,
     setLastContext,

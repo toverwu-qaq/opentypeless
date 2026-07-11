@@ -6,3 +6,4 @@ pub mod history;
 pub mod llm;
 pub mod misc;
 pub mod stt;
+pub mod translation;

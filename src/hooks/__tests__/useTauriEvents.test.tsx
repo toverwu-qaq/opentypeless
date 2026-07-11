@@ -45,7 +45,11 @@ function HookHarness() {
 describe('useTauriEvents', () => {
   beforeEach(() => {
     eventListeners.clear()
-    useAppStore.setState({ hotkeyRegistrationError: null, lastContext: null })
+    useAppStore.setState({
+      hotkeyRegistrationError: null,
+      lastContext: null,
+      activeVoiceMode: null,
+    })
   })
 
   afterEach(() => {
@@ -134,5 +138,23 @@ describe('useTauriEvents', () => {
       iconKey: 'slack',
       overrideId: 'slack',
     })
+  })
+
+  it('tracks the operation voice mode without inferring it from pipeline state', async () => {
+    render(<HookHarness />)
+
+    await waitFor(() => {
+      expect(eventListeners.has('pipeline:voice_mode')).toBe(true)
+    })
+
+    act(() => {
+      eventListeners.get('pipeline:voice_mode')?.({ payload: 'translate' })
+    })
+    expect(useAppStore.getState().activeVoiceMode).toBe('translate')
+
+    act(() => {
+      eventListeners.get('pipeline:voice_mode')?.({ payload: null })
+    })
+    expect(useAppStore.getState().activeVoiceMode).toBeNull()
   })
 })

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAppStore } from '../../stores/appStore'
 import type { PolishStyle } from '../../stores/appStore'
 import { hasManagedCloudAccess, useAuthStore } from '../../stores/authStore'
-import { LLM_PROVIDERS, LLM_DEFAULT_CONFIG, TARGET_LANGUAGES } from '../../lib/constants'
+import { LLM_PROVIDERS, LLM_DEFAULT_CONFIG } from '../../lib/constants'
 import {
   benchLlmConnection,
   fetchLlmModels,
@@ -17,6 +17,7 @@ import { FormField } from './shared/FormField'
 import { Toggle } from './shared/Toggle'
 import { CheckCircle2, XCircle, Loader2, RefreshCw, Crown, ChevronDown } from 'lucide-react'
 import { AppLogo } from '../AppLogo'
+import { TranslationTargets } from './TranslationTargets'
 
 export function LlmPane() {
   const config = useAppStore((s) => s.config)
@@ -453,17 +454,10 @@ export function LlmPane() {
 
       {config.translate_enabled && (
         <FormField label={t('settings.targetLanguage')}>
-          <select
-            value={config.target_lang}
-            onChange={(e) => updateConfig({ target_lang: e.target.value })}
-            className="w-full px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
-          >
-            {TARGET_LANGUAGES.map((l) => (
-              <option key={l.value} value={l.value}>
-                {l.labelKey ? t(l.labelKey) : l.label}
-              </option>
-            ))}
-          </select>
+          <TranslationTargets
+            value={config.translation}
+            onChange={(translation) => updateConfig({ translation })}
+          />
         </FormField>
       )}
     </div>

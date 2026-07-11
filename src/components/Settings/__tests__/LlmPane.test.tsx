@@ -89,6 +89,7 @@ const mockAppStore = {
     translate_enabled: false,
     selected_text_enabled: false,
     target_lang: 'en',
+    translation: { targets: ['en'], active_target: 'en' },
   },
   updateConfig: vi.fn(),
   setConfig: vi.fn(),
@@ -154,6 +155,7 @@ describe('LlmPane', () => {
       translate_enabled: false,
       selected_text_enabled: false,
       target_lang: 'en',
+      translation: { targets: ['en'], active_target: 'en' },
     }
     mockAppStore.llmTestStatus = 'idle'
     mockAppStore.llmLatencyMs = null
