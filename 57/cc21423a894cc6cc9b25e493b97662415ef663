@@ -1,0 +1,47 @@
+src-tauri/src/commands/ask.rs
+  s_7724aa1accb26b::t_039b74e4a68dcb 182-184,193-195,205-207,217-219,240-242,262-264,1525-1528
+src/components/AskPanel/AskPanel.tsx
+  s_7724aa1accb26b::t_48c6aee4ba7068 11,19,318,324-338,454,502
+src/components/AskPanel/__tests__/AskPanel.test.tsx
+  s_7724aa1accb26b::t_fb278a66560350 82-84,88,93-95,160-231,426-428
+src/i18n/locales/de.json
+  s_7724aa1accb26b::t_4bbc92a1511c99 35-38
+src/i18n/locales/en.json
+  s_7724aa1accb26b::t_86eef955f0ed3c 35-38
+src/i18n/locales/es.json
+  s_7724aa1accb26b::t_c70044d274a2ab 35-38
+src/i18n/locales/fr.json
+  s_7724aa1accb26b::t_09a3cdf34ea3f3 35-38
+src/i18n/locales/it.json
+  s_7724aa1accb26b::t_83f5223ddaa9b2 35-38
+src/i18n/locales/ja.json
+  s_7724aa1accb26b::t_e8a0f13c534f7b 35-38
+src/i18n/locales/ko.json
+  s_7724aa1accb26b::t_4b5cc6aad9c7ff 35-38
+src/i18n/locales/pt.json
+  s_7724aa1accb26b::t_0e8bae7f00c4fb 35-38
+src/i18n/locales/ru.json
+  s_7724aa1accb26b::t_c4043ef16c1460 35-38
+src/i18n/locales/zh.json
+  s_7724aa1accb26b::t_bb8f2210e808cd 35-38
+src/stores/appStore.ts
+  s_7724aa1accb26b::t_93d58f8366033b 155-161,177,510-515
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "57cc21423a894cc6cc9b25e493b97662415ef663",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
