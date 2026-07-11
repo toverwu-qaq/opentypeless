@@ -1,0 +1,43 @@
+src-tauri/src/app_detector/cache.rs
+  s_7724aa1accb26b::t_2e56423c197d1d 1-444
+src-tauri/src/app_detector/mod.rs
+  s_7724aa1accb26b::t_f3b75ed609a015 1-2,7
+src-tauri/src/app_detector/platform/linux.rs
+  s_7724aa1accb26b::t_67c3e8e4c4b9bf 1-57
+src-tauri/src/app_detector/platform/macos.rs
+  s_7724aa1accb26b::t_ab75841e6e290e 1-106
+src-tauri/src/app_detector/platform/mod.rs
+  s_7724aa1accb26b::t_cbe230109ed67b 1-43
+src-tauri/src/app_detector/platform/windows.rs
+  s_7724aa1accb26b::t_e03b99895dfec9 1-87
+src-tauri/src/app_detector/registry.rs
+  s_7724aa1accb26b::t_b274b304e9bcaa 396-399
+src-tauri/src/app_detector/types.rs
+  s_7724aa1accb26b::t_e07b176d58ab74 106-132,142-147
+src-tauri/src/lib.rs
+  s_7724aa1accb26b::t_9d0693f9701cbe 572-578,588
+src-tauri/src/pipeline.rs
+  s_7724aa1accb26b::t_8108e71e0565fb 9,290-303,505,508-509,515,518-519,528,531-532,545,549-550,630,640,657,704-708,711,872-875,1452-1455,1692-1700,1727,1735-1736,1755,1792-1795,1825,1839,1844,1856,1861,1870,1882,1887,1899,1904,1928,1957,1966,1989-1994,2016-2019,2026,2050-2058,2086,2102-2103,2264,2269-2284,2339,2612-2621
+src-tauri/src/storage/mod.rs
+  s_7724aa1accb26b::t_6ce46eabf2c521 177,225
+src/stores/appStore.ts
+  s_7724aa1accb26b::t_63d17fb8836eeb 147,477
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0e7c1e5ca4c673d45e372d5939b20e5acdda5079",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
