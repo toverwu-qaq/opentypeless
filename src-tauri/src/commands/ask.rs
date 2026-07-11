@@ -1,3 +1,4 @@
+use crate::app_detector::types::RecordingContext;
 use crate::audio::{AudioCaptureHandle, AudioConfig};
 use crate::credentials::{
     resolve_llm_config_secret, resolve_stt_config_secret, SystemCredentialVault,
@@ -26,6 +27,8 @@ const ASK_STT_FINALIZE_TIMEOUT_SECS: u64 = 12;
 pub enum AskResultOutput {
     PopupAnswer,
     OpenedSearch,
+    InsertedText,
+    CopiedFallback,
 }
 
 #[derive(Default)]
@@ -135,6 +138,7 @@ impl AskDictationState {
 pub struct AskDictationSession {
     handle: AudioCaptureHandle,
     operation_id: String,
+    recording_context: RecordingContext,
     selected_text: Option<String>,
     transcript: Arc<Mutex<String>>,
     error: Arc<Mutex<Option<String>>>,
@@ -206,6 +210,27 @@ impl AskDictationResultMetadata {
             search_url: Some(url),
         }
     }
+
+    fn from_draft_execution(
+        execution: &crate::voice_intent::executor::VoiceExecutionResult,
+    ) -> Self {
+        let output = if execution.status
+            == crate::voice_intent::executor::VoiceExecutionStatus::Completed
+            && execution.actual_placement
+                == Some(crate::voice_intent::VoiceOutputPlacement::InsertAtCursor)
+        {
+            AskResultOutput::InsertedText
+        } else {
+            AskResultOutput::CopiedFallback
+        };
+        Self {
+            output,
+            used_selected_text: false,
+            selected_text_truncated: false,
+            search_provider: None,
+            search_url: None,
+        }
+    }
 }
 
 impl AskDictationResult {
@@ -225,6 +250,10 @@ impl AskDictationResult {
             search_provider: metadata.search_provider,
             search_url: metadata.search_url,
         }
+    }
+
+    pub(crate) fn should_show_window(&self) -> bool {
+        self.output != AskResultOutput::InsertedText
     }
 }
 
@@ -535,6 +564,7 @@ fn build_cloud_ask_body(
 
     Ok(json!({
         "question": routed_question,
+        "voiceIntentMetadata": crate::voice_intent::VoiceIntentMetadata::from(voice_intent),
         "context": {
             "operationId": operation_id,
             "stageKey": stage_key,
@@ -937,6 +967,9 @@ pub(crate) async fn start_reserved_ask_dictation(
 ) -> Result<AskDictationStartResult, String> {
     let result = async {
         let config = config_state.load().await.map_err(|e| e.to_string())?;
+        let recording_context = app
+            .state::<crate::app_detector::ContextDetectorHandle>()
+            .snapshot_for_recording_enabled(config.context_adaptation_enabled);
         let selected_text = if include_selected_text && config.selected_text_enabled {
             tokio::task::block_in_place(crate::selection::capture_selected_text)
         } else {
@@ -998,6 +1031,7 @@ pub(crate) async fn start_reserved_ask_dictation(
                 guard.session = Some(AskDictationSession {
                     handle: handle.take().expect("Ask audio handle was already consumed"),
                     operation_id,
+                    recording_context,
                     selected_text,
                     transcript: transcript.clone(),
                     error: error.clone(),
@@ -1215,6 +1249,25 @@ pub async fn stop_ask_dictation(
             ));
         }
 
+        if voice_intent.kind == VoiceIntentKind::DraftInsert {
+            let draft = app
+                .state::<crate::pipeline::PipelineHandle>()
+                .run_ask_draft(
+                    &config,
+                    &session.recording_context,
+                    &question,
+                    &session.operation_id,
+                    voice_intent.clone(),
+                )
+                .await?;
+            return Ok(AskDictationResult::new(
+                question,
+                draft.text,
+                voice_intent.kind,
+                AskDictationResultMetadata::from_draft_execution(&draft.execution),
+            ));
+        }
+
         let answer = answer_question(
             &config,
             &client,
@@ -1258,7 +1311,8 @@ pub async fn stop_ask_flow(
     }
 
     match stop_ask_dictation(app.clone(), state, config_state, token_store, client).await {
-        Ok(result) => show_answer_window(&app, result),
+        Ok(result) if result.should_show_window() => show_answer_window(&app, result),
+        Ok(_) => Ok(()),
         Err(message) => show_error_window(&app, message),
     }
 }
@@ -1360,6 +1414,19 @@ mod tests {
         assert_eq!(body["context"]["hasSelectedText"], true);
         assert_eq!(body["context"]["selectedTextTruncated"], true);
         assert_eq!(body["context"]["askIntent"], "ask_selection");
+        assert_eq!(
+            body["voiceIntentMetadata"],
+            serde_json::json!({
+                "kind": "ask_selection",
+                "placement": "popup_answer",
+                "grammarLocale": "en",
+                "confidenceBand": "exact"
+            })
+        );
+        let serialized_metadata = body["voiceIntentMetadata"].to_string();
+        for forbidden in ["payload", "utterance", "selectedText", "query", "searchUrl"] {
+            assert!(!serialized_metadata.contains(forbidden));
+        }
     }
 
     #[test]
@@ -1418,6 +1485,48 @@ mod tests {
         assert_eq!(value["selectedTextTruncated"], false);
         assert!(value["searchProvider"].is_null());
         assert!(value["searchUrl"].is_null());
+    }
+
+    #[test]
+    fn ask_draft_result_stays_silent_on_insert_and_surfaces_only_fallbacks() {
+        let inserted = crate::voice_intent::executor::VoiceExecutionResult {
+            intent_kind: VoiceIntentKind::DraftInsert,
+            requested_placement: crate::voice_intent::VoiceOutputPlacement::InsertAtCursor,
+            actual_placement: Some(crate::voice_intent::VoiceOutputPlacement::InsertAtCursor),
+            status: crate::voice_intent::executor::VoiceExecutionStatus::Completed,
+            fallback_reason: None,
+        };
+        let inserted_result = AskDictationResult::new(
+            "draft a launch note".to_string(),
+            "Launch note".to_string(),
+            VoiceIntentKind::DraftInsert,
+            AskDictationResultMetadata::from_draft_execution(&inserted),
+        );
+        assert!(!inserted_result.should_show_window());
+        assert_eq!(
+            serde_json::to_value(&inserted_result).unwrap()["output"],
+            "insertedText"
+        );
+
+        let copied = crate::voice_intent::executor::VoiceExecutionResult {
+            status: crate::voice_intent::executor::VoiceExecutionStatus::CopiedFallback,
+            actual_placement: None,
+            fallback_reason: Some(
+                crate::voice_intent::executor::VoiceExecutionFallbackReason::FocusRestoreFailed,
+            ),
+            ..inserted
+        };
+        let copied_result = AskDictationResult::new(
+            "draft a launch note".to_string(),
+            "Launch note".to_string(),
+            VoiceIntentKind::DraftInsert,
+            AskDictationResultMetadata::from_draft_execution(&copied),
+        );
+        assert!(copied_result.should_show_window());
+        assert_eq!(
+            serde_json::to_value(&copied_result).unwrap()["output"],
+            "copiedFallback"
+        );
     }
 
     #[test]

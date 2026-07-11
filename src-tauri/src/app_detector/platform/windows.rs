@@ -2,9 +2,58 @@ use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 
 use super::ContextSignalSource;
-use crate::app_detector::types::ContextSignals;
+use crate::app_detector::types::{ContextSignals, TargetAppGuard};
 
 pub struct WindowsContextSource;
+
+pub(crate) fn restore_target_application(target: &TargetAppGuard) -> bool {
+    let Some(process_id) = target.process_id else {
+        return false;
+    };
+    unsafe { restore_process_window(process_id) }
+}
+
+#[repr(C)]
+struct WindowSearch {
+    process_id: u32,
+    window: windows_sys::Win32::Foundation::HWND,
+}
+
+unsafe extern "system" fn find_process_window(
+    window: windows_sys::Win32::Foundation::HWND,
+    parameter: windows_sys::Win32::Foundation::LPARAM,
+) -> windows_sys::Win32::Foundation::BOOL {
+    let search = &mut *(parameter as *mut WindowSearch);
+    if windows_sys::Win32::UI::WindowsAndMessaging::IsWindowVisible(window) == 0 {
+        return 1;
+    }
+    let mut process_id = 0u32;
+    windows_sys::Win32::UI::WindowsAndMessaging::GetWindowThreadProcessId(window, &mut process_id);
+    if process_id == search.process_id {
+        search.window = window;
+        return 0;
+    }
+    1
+}
+
+unsafe fn restore_process_window(process_id: u32) -> bool {
+    let mut search = WindowSearch {
+        process_id,
+        window: std::ptr::null_mut(),
+    };
+    windows_sys::Win32::UI::WindowsAndMessaging::EnumWindows(
+        Some(find_process_window),
+        &mut search as *mut WindowSearch as isize,
+    );
+    if search.window.is_null() {
+        return false;
+    }
+    windows_sys::Win32::UI::WindowsAndMessaging::ShowWindow(
+        search.window,
+        windows_sys::Win32::UI::WindowsAndMessaging::SW_RESTORE,
+    );
+    windows_sys::Win32::UI::WindowsAndMessaging::SetForegroundWindow(search.window) != 0
+}
 
 impl ContextSignalSource for WindowsContextSource {
     fn collect(&self) -> Option<ContextSignals> {

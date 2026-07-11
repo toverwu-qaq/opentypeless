@@ -3,9 +3,22 @@ use std::process::Command;
 use url::Url;
 
 use super::ContextSignalSource;
-use crate::app_detector::types::ContextSignals;
+use crate::app_detector::types::{ContextSignals, TargetAppGuard};
 
 pub struct MacOsContextSource;
+
+pub(crate) fn restore_target_application(target: &TargetAppGuard) -> bool {
+    let Some(process_id) = target.process_id else {
+        return false;
+    };
+    let script = format!(
+        "tell application \"System Events\" to set frontmost of first application process whose unix id is {process_id} to true"
+    );
+    Command::new("/usr/bin/osascript")
+        .args(["-e", &script])
+        .status()
+        .is_ok_and(|status| status.success())
+}
 
 impl ContextSignalSource for MacOsContextSource {
     fn collect(&self) -> Option<ContextSignals> {

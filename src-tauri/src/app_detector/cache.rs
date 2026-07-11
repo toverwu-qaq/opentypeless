@@ -181,6 +181,26 @@ impl ContextDetectorHandle {
             .unwrap_or(false)
     }
 
+    pub fn restore_target_application(&self, expected: &TargetAppGuard) -> bool {
+        if expected.is_empty() {
+            return false;
+        }
+        if self.target_still_matches_now(expected) {
+            return true;
+        }
+        if !super::platform::restore_target_application(expected) {
+            return false;
+        }
+        for _ in 0..5 {
+            std::thread::sleep(Duration::from_millis(40));
+            if self.target_still_matches_now(expected) {
+                self.notify_focus_changed();
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn notify_focus_changed(&self) {
         let _ = self.refresh_tx.try_send(RefreshSignal::FocusChanged);
     }

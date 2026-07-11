@@ -12,6 +12,35 @@ use normalize::NormalizedUtterance;
 
 pub struct VoiceIntentRouter;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VoiceProviderWorkPlan {
+    pub provider_call_limit: u8,
+    pub provider_input: Option<String>,
+    pub allow_streaming: bool,
+    pub restore_target_before_insert: bool,
+}
+
+pub fn plan_voice_provider_work(
+    mode: VoiceMode,
+    utterance: &str,
+    intent: &VoiceIntent,
+) -> VoiceProviderWorkPlan {
+    let provider_input = match intent.kind {
+        VoiceIntentKind::Search => None,
+        VoiceIntentKind::DraftInsert => intent.payload.clone(),
+        _ => Some(utterance.to_string()),
+    };
+
+    VoiceProviderWorkPlan {
+        provider_call_limit: u8::from(provider_input.is_some()),
+        provider_input,
+        allow_streaming: mode == VoiceMode::Dictate
+            && intent.kind == VoiceIntentKind::DictateInsert,
+        restore_target_before_insert: mode == VoiceMode::Ask
+            && intent.kind == VoiceIntentKind::DraftInsert,
+    }
+}
+
 enum LocaleResolution {
     Supported(CommandLocale),
     Unsupported,
@@ -538,6 +567,136 @@ mod tests {
         assert_eq!(mixed.kind, VoiceIntentKind::DictateInsert);
         assert_eq!(mixed.grammar_locale, None);
         assert_eq!(mixed.fallback_reason, Some(RouteFallbackReason::Ambiguous));
+    }
+
+    #[test]
+    fn voice_route_e2e_plans_one_provider_call_max_and_exact_output_behavior() {
+        struct Case<'a> {
+            mode: VoiceMode,
+            utterance: &'a str,
+            has_selection: bool,
+            kind: VoiceIntentKind,
+            provider_calls: u8,
+            provider_input: Option<&'a str>,
+            allow_streaming: bool,
+            restore_target: bool,
+        }
+
+        let cases = [
+            Case {
+                mode: VoiceMode::Dictate,
+                utterance: "ordinary dictated text",
+                has_selection: false,
+                kind: VoiceIntentKind::DictateInsert,
+                provider_calls: 1,
+                provider_input: Some("ordinary dictated text"),
+                allow_streaming: true,
+                restore_target: false,
+            },
+            Case {
+                mode: VoiceMode::Dictate,
+                utterance: "draft a concise launch email",
+                has_selection: false,
+                kind: VoiceIntentKind::DraftInsert,
+                provider_calls: 1,
+                provider_input: Some("a concise launch email"),
+                allow_streaming: false,
+                restore_target: false,
+            },
+            Case {
+                mode: VoiceMode::Dictate,
+                utterance: "rewrite this more warmly",
+                has_selection: true,
+                kind: VoiceIntentKind::RewriteSelection,
+                provider_calls: 1,
+                provider_input: Some("rewrite this more warmly"),
+                allow_streaming: false,
+                restore_target: false,
+            },
+            Case {
+                mode: VoiceMode::Ask,
+                utterance: "what does this mean?",
+                has_selection: true,
+                kind: VoiceIntentKind::AskSelection,
+                provider_calls: 1,
+                provider_input: Some("what does this mean?"),
+                allow_streaming: false,
+                restore_target: false,
+            },
+            Case {
+                mode: VoiceMode::Ask,
+                utterance: "draft a concise launch email",
+                has_selection: false,
+                kind: VoiceIntentKind::DraftInsert,
+                provider_calls: 1,
+                provider_input: Some("a concise launch email"),
+                allow_streaming: false,
+                restore_target: true,
+            },
+            Case {
+                mode: VoiceMode::Ask,
+                utterance: "search Rust Tauri hotkeys on Google",
+                has_selection: false,
+                kind: VoiceIntentKind::Search,
+                provider_calls: 0,
+                provider_input: None,
+                allow_streaming: false,
+                restore_target: false,
+            },
+            Case {
+                mode: VoiceMode::Translate,
+                utterance: "See you tomorrow",
+                has_selection: false,
+                kind: VoiceIntentKind::TranslateInsert,
+                provider_calls: 1,
+                provider_input: Some("See you tomorrow"),
+                allow_streaming: false,
+                restore_target: false,
+            },
+            Case {
+                mode: VoiceMode::Translate,
+                utterance: "translate this",
+                has_selection: true,
+                kind: VoiceIntentKind::TranslateSelection,
+                provider_calls: 1,
+                provider_input: Some("translate this"),
+                allow_streaming: false,
+                restore_target: false,
+            },
+        ];
+
+        for case in cases {
+            let intent = VoiceIntentRouter::route(request(
+                case.mode,
+                case.utterance,
+                case.has_selection,
+                SpeechLanguageMode::Explicit("en"),
+            ));
+            assert_eq!(intent.kind, case.kind, "{}", case.utterance);
+
+            let plan = plan_voice_provider_work(case.mode, case.utterance, &intent);
+            assert_eq!(
+                plan.provider_call_limit, case.provider_calls,
+                "{}",
+                case.utterance
+            );
+            assert_eq!(
+                plan.provider_input.as_deref(),
+                case.provider_input,
+                "{}",
+                case.utterance
+            );
+            assert_eq!(
+                plan.allow_streaming, case.allow_streaming,
+                "{}",
+                case.utterance
+            );
+            assert_eq!(
+                plan.restore_target_before_insert, case.restore_target,
+                "{}",
+                case.utterance
+            );
+        }
     }
 
     #[derive(Debug, Deserialize)]

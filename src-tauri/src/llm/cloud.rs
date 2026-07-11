@@ -105,6 +105,11 @@ fn cloud_context_metadata(
     })
 }
 
+fn cloud_voice_intent_metadata(intent: &crate::voice_intent::VoiceIntent) -> serde_json::Value {
+    serde_json::to_value(crate::voice_intent::VoiceIntentMetadata::from(intent))
+        .expect("voice intent metadata must serialize")
+}
+
 #[async_trait]
 impl LlmProvider for CloudLlmProvider {
     async fn polish(
@@ -176,7 +181,8 @@ impl LlmProvider for CloudLlmProvider {
             "messages": messages,
             "stream": on_chunk.is_some(),
             "context": context,
-            "contextMetadata": cloud_context_metadata(&req.context)
+            "contextMetadata": cloud_context_metadata(&req.context),
+            "voiceIntentMetadata": cloud_voice_intent_metadata(&req.voice_intent)
         });
 
         // Retry the initial connection (not once streaming starts)
@@ -373,5 +379,31 @@ mod tests {
         ] {
             assert!(!serialized.contains(forbidden));
         }
+    }
+
+    #[test]
+    fn managed_voice_intent_metadata_excludes_payload_and_uses_closed_bands() {
+        let intent = crate::voice_intent::VoiceIntent::from_parts(
+            crate::voice_intent::VoiceIntentKind::DraftInsert,
+            crate::voice_intent::VoiceOutputPlacement::InsertAtCursor,
+            1.0,
+            None,
+            Some("private draft payload".to_string()),
+            Some(crate::voice_intent::CommandLocale::En),
+            None,
+        )
+        .unwrap();
+        let metadata = cloud_voice_intent_metadata(&intent);
+
+        assert_eq!(
+            metadata,
+            serde_json::json!({
+                "kind": "draft_insert",
+                "placement": "insert_at_cursor",
+                "grammarLocale": "en",
+                "confidenceBand": "exact"
+            })
+        );
+        assert!(!metadata.to_string().contains("private draft payload"));
     }
 }

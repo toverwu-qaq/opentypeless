@@ -115,6 +115,42 @@ pub struct VoiceIntent {
     pub fallback_reason: Option<RouteFallbackReason>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VoiceConfidenceBand {
+    Exact,
+    Guarded,
+    Fallback,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VoiceIntentMetadata {
+    pub kind: VoiceIntentKind,
+    pub placement: VoiceOutputPlacement,
+    pub grammar_locale: Option<CommandLocale>,
+    pub confidence_band: VoiceConfidenceBand,
+}
+
+impl From<&VoiceIntent> for VoiceIntentMetadata {
+    fn from(intent: &VoiceIntent) -> Self {
+        let confidence_band = if intent.fallback_reason.is_some() {
+            VoiceConfidenceBand::Fallback
+        } else if intent.confidence >= 0.99 {
+            VoiceConfidenceBand::Exact
+        } else {
+            VoiceConfidenceBand::Guarded
+        };
+
+        Self {
+            kind: intent.kind,
+            placement: intent.placement,
+            grammar_locale: intent.grammar_locale,
+            confidence_band,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum VoiceIntentError {
     InvalidPlacement,
@@ -431,6 +467,71 @@ mod tests {
                 translate_selection: true,
                 search: true,
             }
+        );
+    }
+
+    #[test]
+    fn voice_intent_metadata_is_closed_banded_and_never_contains_operation_payload() {
+        let exact = VoiceIntent::from_parts(
+            VoiceIntentKind::DraftInsert,
+            VoiceOutputPlacement::InsertAtCursor,
+            1.0,
+            None,
+            Some("private launch details".to_string()),
+            Some(CommandLocale::En),
+            None,
+        )
+        .unwrap();
+        let exact_value = serde_json::to_value(VoiceIntentMetadata::from(&exact)).unwrap();
+        assert_eq!(
+            exact_value,
+            serde_json::json!({
+                "kind": "draft_insert",
+                "placement": "insert_at_cursor",
+                "grammarLocale": "en",
+                "confidenceBand": "exact"
+            })
+        );
+        let serialized = exact_value.to_string();
+        for forbidden in [
+            "private launch details",
+            "payload",
+            "utterance",
+            "selectedText",
+            "query",
+            "searchUrl",
+        ] {
+            assert!(!serialized.contains(forbidden));
+        }
+
+        let guarded = VoiceIntent::from_parts(
+            VoiceIntentKind::OpenQuestion,
+            VoiceOutputPlacement::PopupAnswer,
+            0.72,
+            None,
+            None,
+            Some(CommandLocale::ZhHans),
+            None,
+        )
+        .unwrap();
+        assert_eq!(
+            VoiceIntentMetadata::from(&guarded).confidence_band,
+            VoiceConfidenceBand::Guarded
+        );
+
+        let fallback = VoiceIntent::from_parts(
+            VoiceIntentKind::DictateInsert,
+            VoiceOutputPlacement::InsertAtCursor,
+            1.0,
+            None,
+            None,
+            None,
+            Some(RouteFallbackReason::Ambiguous),
+        )
+        .unwrap();
+        assert_eq!(
+            VoiceIntentMetadata::from(&fallback).confidence_band,
+            VoiceConfidenceBand::Fallback
         );
     }
 }

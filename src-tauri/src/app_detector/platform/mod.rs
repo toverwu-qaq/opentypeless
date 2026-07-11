@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use super::types::ContextSignals;
+use super::types::TargetAppGuard;
 
 #[cfg(target_os = "linux")]
 mod linux;
@@ -29,6 +30,26 @@ pub(crate) fn default_source() -> Arc<dyn ContextSignalSource> {
     #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
     {
         Arc::new(UnsupportedContextSource)
+    }
+}
+
+pub(crate) fn restore_target_application(target: &TargetAppGuard) -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        macos::restore_target_application(target)
+    }
+    #[cfg(target_os = "windows")]
+    {
+        windows::restore_target_application(target)
+    }
+    #[cfg(target_os = "linux")]
+    {
+        linux::restore_target_application(target)
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
+    {
+        let _ = target;
+        false
     }
 }
 

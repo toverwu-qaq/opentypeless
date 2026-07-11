@@ -287,6 +287,14 @@ fn selected_text_command_requires_llm(selected_text: Option<&str>) -> bool {
     selected_text_has_content(selected_text)
 }
 
+fn voice_intent_requires_generated_output(kind: crate::voice_intent::VoiceIntentKind) -> bool {
+    !matches!(
+        kind,
+        crate::voice_intent::VoiceIntentKind::DictateInsert
+            | crate::voice_intent::VoiceIntentKind::Search
+    )
+}
+
 fn history_provider_kind(config: &storage::AppConfig) -> storage::HistoryProviderKind {
     let provider = if config.polish_enabled {
         config.llm_provider.as_str()
@@ -651,6 +659,7 @@ pub struct PipelineHandle {
 
 struct PolishTextInput<'a> {
     raw_text: &'a str,
+    voice_mode: crate::voice_intent::VoiceMode,
     config: &'a storage::AppConfig,
     app_ctx: &'a RecordingContext,
     dictionary_words: Vec<String>,
@@ -659,6 +668,7 @@ struct PolishTextInput<'a> {
     session_token: String,
     operation_id: Option<String>,
     voice_intent: crate::voice_intent::VoiceIntent,
+    popup_fallback_enabled: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -667,6 +677,12 @@ struct PolishTextOutcome {
     llm_elapsed: std::time::Duration,
     history_output_status: Option<String>,
     history_output_error: Option<String>,
+    voice_execution: Option<crate::voice_intent::executor::VoiceExecutionResult>,
+}
+
+pub(crate) struct AskVoiceDraftOutcome {
+    pub text: String,
+    pub execution: crate::voice_intent::executor::VoiceExecutionResult,
 }
 
 struct HistoryOutputMetadata {
@@ -682,6 +698,7 @@ struct PipelineVoiceExecutionBackend<'a> {
     target_guard: &'a TargetAppGuard,
     config: &'a storage::AppConfig,
     already_copied: bool,
+    popup_fallback_enabled: bool,
 }
 
 #[async_trait::async_trait]
@@ -696,10 +713,14 @@ impl crate::voice_intent::executor::VoiceExecutionBackend for PipelineVoiceExecu
         &mut self,
         guard: &TargetAppGuard,
     ) -> std::result::Result<bool, String> {
-        Ok(self
-            .pipeline
-            .context_detector
-            .target_still_matches_now(guard))
+        if let Some(window) = self.pipeline.app_handle.get_webview_window("ask") {
+            let _ = window.hide();
+        }
+        let detector = self.pipeline.context_detector.clone();
+        let guard = guard.clone();
+        tokio::task::spawn_blocking(move || detector.restore_target_application(&guard))
+            .await
+            .map_err(|error| error.to_string())
     }
 
     async fn insert_at_cursor(&mut self, text: &str) -> std::result::Result<(), String> {
@@ -723,6 +744,9 @@ impl crate::voice_intent::executor::VoiceExecutionBackend for PipelineVoiceExecu
     }
 
     async fn popup_answer(&mut self, text: &str) -> std::result::Result<(), String> {
+        if !self.popup_fallback_enabled {
+            return Err("popup fallback is owned by the Ask caller".to_string());
+        }
         crate::commands::ask::show_answer_window_with_metadata(
             &self.pipeline.app_handle,
             self.question.to_string(),
@@ -773,6 +797,7 @@ impl PolishTextOutcome {
             llm_elapsed,
             history_output_status: None,
             history_output_error: None,
+            voice_execution: None,
         }
     }
 
@@ -787,6 +812,23 @@ impl PolishTextOutcome {
             llm_elapsed,
             history_output_status: Some(status.to_string()),
             history_output_error: Some(error.into()),
+            voice_execution: None,
+        }
+    }
+
+    fn with_execution(
+        final_text: String,
+        llm_elapsed: std::time::Duration,
+        execution: crate::voice_intent::executor::VoiceExecutionResult,
+        history_output_status: Option<String>,
+        history_output_error: Option<String>,
+    ) -> Self {
+        Self {
+            final_text,
+            llm_elapsed,
+            history_output_status,
+            history_output_error,
+            voice_execution: Some(execution),
         }
     }
 }
@@ -1629,6 +1671,7 @@ impl PipelineHandle {
         let polish_outcome = self
             .polish_text(PolishTextInput {
                 raw_text: &raw_text,
+                voice_mode,
                 config: &config,
                 app_ctx: &app_ctx,
                 dictionary_words,
@@ -1637,6 +1680,7 @@ impl PipelineHandle {
                 session_token,
                 operation_id,
                 voice_intent,
+                popup_fallback_enabled: true,
             })
             .await;
         let final_text = polish_outcome.final_text;
@@ -1755,6 +1799,7 @@ impl PipelineHandle {
     async fn polish_text(&self, input: PolishTextInput<'_>) -> PolishTextOutcome {
         let PolishTextInput {
             raw_text,
+            voice_mode,
             config,
             app_ctx,
             dictionary_words,
@@ -1763,7 +1808,27 @@ impl PipelineHandle {
             session_token,
             operation_id,
             voice_intent,
+            popup_fallback_enabled,
         } = input;
+        let provider_plan =
+            crate::voice_intent::plan_voice_provider_work(voice_mode, raw_text, &voice_intent);
+        let Some(provider_text) = provider_plan.provider_input.as_deref() else {
+            let message = "Search must bypass the language model and use the safe search executor.";
+            let _ = self.app_handle.emit(
+                "pipeline:error",
+                crate::error::UserError {
+                    code: "voice_route_failed".to_string(),
+                    details: Some(message.to_string()),
+                    retry_count: 0,
+                },
+            );
+            return PolishTextOutcome::with_history_status(
+                String::new(),
+                std::time::Duration::ZERO,
+                "fallback",
+                message,
+            );
+        };
         let llm_api_key = if config.llm_provider == "cloud" {
             session_token
         } else {
@@ -1778,11 +1843,13 @@ impl PipelineHandle {
 
         // Check if polish is enabled and API key / token is available
         if !config.polish_enabled || (llm_api_key.is_empty() && config.llm_provider != "cloud") {
-            if selected_text_command_requires_llm(selected_text.as_deref()) {
+            if selected_text_command_requires_llm(selected_text.as_deref())
+                || voice_intent_requires_generated_output(voice_intent.kind)
+            {
                 let message = if !config.polish_enabled {
-                    "Selected-text commands need AI polish. Enable AI polish before editing or asking about selected text."
+                    "This voice command needs AI polish. Enable AI polish before drafting, translating, or editing."
                 } else {
-                    "Selected-text commands need a configured LLM provider or Cloud sign-in."
+                    "This voice command needs a configured LLM provider or Cloud sign-in."
                 };
                 if let Err(error) =
                     crate::commands::ask::show_error_window(&self.app_handle, message.to_string())
@@ -1797,13 +1864,18 @@ impl PipelineHandle {
                         },
                     );
                 }
-                return PolishTextOutcome::normal(raw_text.to_string(), std::time::Duration::ZERO);
+                return PolishTextOutcome::with_history_status(
+                    String::new(),
+                    std::time::Duration::ZERO,
+                    "fallback",
+                    message,
+                );
             }
 
             // No polishing — output raw text directly
             if let Err(e) = self
                 .output_text(
-                    raw_text,
+                    provider_text,
                     &app_ctx.profile.app_label,
                     &app_ctx.target_guard,
                     config,
@@ -1815,7 +1887,7 @@ impl PipelineHandle {
                     .app_handle
                     .emit("pipeline:error", output_user_error(&e));
             }
-            return PolishTextOutcome::normal(raw_text.to_string(), std::time::Duration::ZERO);
+            return PolishTextOutcome::normal(provider_text.to_string(), std::time::Duration::ZERO);
         }
 
         self.set_state(PipelineState::Polishing);
@@ -1830,8 +1902,10 @@ impl PipelineHandle {
         };
         let provider = llm::create_provider(&config.llm_provider, Some(self.shared_client.clone()));
 
-        let streaming_strategy =
-            streaming_insert_strategy_for_runtime(config, selected_text.as_deref());
+        let streaming_strategy = provider_plan
+            .allow_streaming
+            .then(|| streaming_insert_strategy_for_runtime(config, selected_text.as_deref()))
+            .flatten();
         let mut streaming_worker = streaming_strategy.map(|strategy| {
             spawn_streaming_insert_worker(
                 self.app_handle.clone(),
@@ -1864,7 +1938,7 @@ impl PipelineHandle {
 
         let selected_text_for_execution = selected_text.clone();
         let req = PolishRequest {
-            raw_text: raw_text.to_string(),
+            raw_text: provider_text.to_string(),
             context: app_ctx.profile.summary(),
             dictionary: dictionary_words,
             correction_rules,
@@ -2082,6 +2156,7 @@ impl PipelineHandle {
                     target_guard: &app_ctx.target_guard,
                     config,
                     already_copied: false,
+                    popup_fallback_enabled,
                 };
                 let execution = crate::voice_intent::executor::execute_voice_intent(
                     crate::voice_intent::executor::VoiceExecutionRequest {
@@ -2089,7 +2164,7 @@ impl PipelineHandle {
                         generated_output: &response.polished_text,
                         target_guard: &app_ctx.target_guard,
                         selected_text_available,
-                        restore_target_before_insert: false,
+                        restore_target_before_insert: provider_plan.restore_target_before_insert,
                         flags: config.voice_routing_flags,
                     },
                     &mut backend,
@@ -2097,29 +2172,32 @@ impl PipelineHandle {
                 .await;
                 let _ = self.app_handle.emit("pipeline:voice_execution", &execution);
 
-                match execution.status {
-                    crate::voice_intent::executor::VoiceExecutionStatus::Completed => {
-                        PolishTextOutcome::normal(response.polished_text, elapsed)
-                    }
-                    crate::voice_intent::executor::VoiceExecutionStatus::CopiedFallback => {
-                        PolishTextOutcome::with_history_status(
-                            response.polished_text,
-                            elapsed,
-                            "clipboard_fallback",
-                            format!("Voice output fallback: {:?}", execution.fallback_reason),
-                        )
-                    }
+                let (history_status, history_error) = match execution.status {
+                    crate::voice_intent::executor::VoiceExecutionStatus::Completed => (None, None),
+                    crate::voice_intent::executor::VoiceExecutionStatus::CopiedFallback => (
+                        Some("clipboard_fallback".to_string()),
+                        Some(format!(
+                            "Voice output fallback: {:?}",
+                            execution.fallback_reason
+                        )),
+                    ),
                     crate::voice_intent::executor::VoiceExecutionStatus::PopupFallback
                     | crate::voice_intent::executor::VoiceExecutionStatus::Prevented
-                    | crate::voice_intent::executor::VoiceExecutionStatus::Failed => {
-                        PolishTextOutcome::with_history_status(
-                            response.polished_text,
-                            elapsed,
-                            "fallback",
-                            format!("Voice output fallback: {:?}", execution.fallback_reason),
-                        )
-                    }
-                }
+                    | crate::voice_intent::executor::VoiceExecutionStatus::Failed => (
+                        Some("fallback".to_string()),
+                        Some(format!(
+                            "Voice output fallback: {:?}",
+                            execution.fallback_reason
+                        )),
+                    ),
+                };
+                PolishTextOutcome::with_execution(
+                    response.polished_text,
+                    elapsed,
+                    execution,
+                    history_status,
+                    history_error,
+                )
             }
             Err(e) => {
                 crate::error::emit_cloud_session_invalid(&self.app_handle, &e);
@@ -2160,24 +2238,26 @@ impl PipelineHandle {
                 // Check abort after LLM error — skip fallback output if cancelled.
                 if self.abort_flag.load(Ordering::SeqCst) {
                     tracing::info!("Pipeline aborted after LLM error, skipping output");
-                    return PolishTextOutcome::normal(raw_text.to_string(), elapsed);
+                    return PolishTextOutcome::normal(String::new(), elapsed);
                 }
-                tracing::error!("LLM polish failed: {}, outputting raw text", e);
+                tracing::error!("LLM polish failed: {}", e);
 
                 let _ = self
                     .app_handle
                     .emit("pipeline:error", llm_polish_user_error(&e));
-                if selected_text_has_content(selected_text_for_execution.as_deref()) {
+                if selected_text_has_content(selected_text_for_execution.as_deref())
+                    || voice_intent_requires_generated_output(voice_intent.kind)
+                {
                     return PolishTextOutcome::with_history_status(
-                        raw_text.to_string(),
+                        String::new(),
                         elapsed,
                         "fallback",
-                        "LLM polish failed; selected text was left unchanged",
+                        "LLM generation failed; no application text was changed",
                     );
                 }
                 if let Err(e) = self
                     .output_text(
-                        raw_text,
+                        provider_text,
                         &app_ctx.profile.app_label,
                         &app_ctx.target_guard,
                         config,
@@ -2190,7 +2270,7 @@ impl PipelineHandle {
                         .emit("pipeline:error", output_user_error(&e));
                 }
                 PolishTextOutcome::with_history_status(
-                    raw_text.to_string(),
+                    provider_text.to_string(),
                     elapsed,
                     "fallback",
                     format!("LLM polish failed; output raw text: {e}"),
@@ -2204,6 +2284,75 @@ impl PipelineHandle {
         );
 
         polish_outcome
+    }
+
+    pub(crate) async fn run_ask_draft(
+        &self,
+        config: &storage::AppConfig,
+        app_ctx: &RecordingContext,
+        utterance: &str,
+        operation_id: &str,
+        voice_intent: crate::voice_intent::VoiceIntent,
+    ) -> std::result::Result<AskVoiceDraftOutcome, String> {
+        if voice_intent.kind != crate::voice_intent::VoiceIntentKind::DraftInsert {
+            return Err("Ask draft execution requires a draft intent".to_string());
+        }
+        if self.current_state() != PipelineState::Idle {
+            return Err("Another voice operation is already active".to_string());
+        }
+        self.abort_flag.store(false, Ordering::SeqCst);
+
+        let dictionary_store = self.app_handle.state::<storage::DictionaryStore>();
+        let dictionary_words = dictionary_store.words().await;
+        let correction_rules = dictionary_store
+            .enabled_correction_rules()
+            .await
+            .into_iter()
+            .map(|rule| llm::CorrectionRule {
+                id: rule.id,
+                pattern: rule.pattern,
+                replacement: rule.replacement,
+                enabled: rule.enabled,
+            })
+            .collect::<Vec<_>>();
+        let session_token = if config.llm_provider == "cloud" {
+            self.app_handle
+                .state::<SessionTokenStore>()
+                .0
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .clone()
+        } else {
+            String::new()
+        };
+
+        let outcome = self
+            .polish_text(PolishTextInput {
+                raw_text: utterance,
+                voice_mode: crate::voice_intent::VoiceMode::Ask,
+                config,
+                app_ctx,
+                dictionary_words,
+                correction_rules,
+                selected_text: None,
+                session_token,
+                operation_id: Some(operation_id.to_string()),
+                voice_intent,
+                popup_fallback_enabled: false,
+            })
+            .await;
+        self.set_state(PipelineState::Idle);
+
+        let execution = outcome.voice_execution.ok_or_else(|| {
+            "Draft was not generated; no application text was changed".to_string()
+        })?;
+        if outcome.final_text.trim().is_empty() {
+            return Err("Draft generation returned empty output".to_string());
+        }
+        Ok(AskVoiceDraftOutcome {
+            text: outcome.final_text,
+            execution,
+        })
     }
 
     /// Save the transcription to history.

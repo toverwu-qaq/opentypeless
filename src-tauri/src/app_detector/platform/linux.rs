@@ -2,9 +2,33 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use super::ContextSignalSource;
-use crate::app_detector::types::ContextSignals;
+use crate::app_detector::types::{ContextSignals, TargetAppGuard};
 
 pub struct LinuxContextSource;
+
+pub(crate) fn restore_target_application(target: &TargetAppGuard) -> bool {
+    if crate::platform::is_wayland_session() {
+        return false;
+    }
+    let Some(process_id) = target.process_id else {
+        return false;
+    };
+    let output = Command::new("xdotool")
+        .args(["search", "--onlyvisible", "--pid", &process_id.to_string()])
+        .output();
+    let Some(window_id) = output
+        .ok()
+        .filter(|output| output.status.success())
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .and_then(|value| value.lines().next().map(str::to_string))
+    else {
+        return false;
+    };
+    Command::new("xdotool")
+        .args(["windowactivate", "--sync", &window_id])
+        .status()
+        .is_ok_and(|status| status.success())
+}
 
 impl ContextSignalSource for LinuxContextSource {
     fn collect(&self) -> Option<ContextSignals> {
