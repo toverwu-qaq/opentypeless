@@ -1397,6 +1397,7 @@ mod tests {
     fn diagnostics_rows_cover_core_runtime_health_for_configured_native_hook() {
         let config = storage::AppConfig {
             hotkey: "RightAlt".to_string(),
+            ask_hotkey: "Ctrl+.".to_string(),
             hotkey_mode: "toggle".to_string(),
             hotkeys: storage::HotkeyConfig::from_legacy("RightAlt", "Ctrl+.", "toggle"),
             ..storage::AppConfig::default()

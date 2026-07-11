@@ -5,6 +5,7 @@ use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
 use super::platform::{default_source, ContextSignalSource};
+#[cfg(test)]
 use super::registry::AppRegistry;
 use super::types::{
     ContextProfile, ContextSnapshot, ContextSource, RecordingContext, TargetAppGuard,
@@ -86,6 +87,7 @@ impl ContextDetectorHandle {
         )
     }
 
+    #[cfg(test)]
     pub(crate) fn start_with_source(
         source: Arc<dyn ContextSignalSource>,
         registry: AppRegistry,
