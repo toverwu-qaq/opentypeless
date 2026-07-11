@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { hasManagedCloudAccess, useAuthStore } from '../authStore'
 
 // Mock external dependencies
@@ -34,6 +36,12 @@ function getState() {
 }
 
 describe('authStore', () => {
+  it('pins the Better Auth desktop client version', () => {
+    const packageJson = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'))
+
+    expect(packageJson.dependencies['better-auth']).toBe('1.6.17')
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
 
