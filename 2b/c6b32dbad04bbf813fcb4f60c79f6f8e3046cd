@@ -1,0 +1,53 @@
+src/components/History/CreateCorrectionDialog.tsx
+  s_7724aa1accb26b::t_d1827445f4eeec 1-108
+src/components/History/__tests__/History.test.tsx
+  s_7724aa1accb26b::t_babb20241ff2a8 1-116
+src/components/Settings/DictionaryImportDialog.tsx
+  s_7724aa1accb26b::t_2153c4d3fec3a7 1-97
+src/components/Settings/DictionaryPane.tsx
+  s_7724aa1accb26b::t_c5787692039a42 1,3-14,19-21,24,28-31,34-70,73-76,82-134,142-144,152-154,167-169,177-179,187-189,194-267,269-348,352,354,358,360,363-364,366,373-374,379,384-388,390-463,472,474,478,480,483-484,487,494-495,500-540,542-545,547-588,592-601
+src/components/Settings/__tests__/DictionaryPane.test.tsx
+  s_7724aa1accb26b::t_71452c8b1dae2f 22-37,72-87,125-232
+src/components/Settings/__tests__/Settings.test.tsx
+  s_7724aa1accb26b::t_708b8fa9b7f47b 170,173-191
+src/i18n/locales/de.json
+  s_7724aa1accb26b::t_c0931bf939c722 425-447,538-542,690
+src/i18n/locales/en.json
+  s_7724aa1accb26b::t_9ae63e60692a7f 425-447,538-542,690
+src/i18n/locales/es.json
+  s_7724aa1accb26b::t_c6f85cd062249c 425-447,538-542,690
+src/i18n/locales/fr.json
+  s_7724aa1accb26b::t_4a97826a410a6e 425-447,538-542,690
+src/i18n/locales/it.json
+  s_7724aa1accb26b::t_c3b7f58ad026fa 425-447,538-542,690
+src/i18n/locales/ja.json
+  s_7724aa1accb26b::t_8da637d56d1400 425-447,538-542,690
+src/i18n/locales/ko.json
+  s_7724aa1accb26b::t_46c71396e5de5b 425-447,538-542,690
+src/i18n/locales/pt.json
+  s_7724aa1accb26b::t_53e9b49a1351d5 425-447,538-542,690
+src/i18n/locales/ru.json
+  s_7724aa1accb26b::t_aa1ad8059a4857 425-447,538-542,690
+src/i18n/locales/zh.json
+  s_7724aa1accb26b::t_480b02c542be98 425-447,538-542,690
+src/lib/tauri.ts
+  s_7724aa1accb26b::t_4afc2d98a8790c 379-386,403-447
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2bc6b32dbad04bbf813fcb4f60c79f6f8e3046cd",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
