@@ -88,13 +88,13 @@ function buildEnglish() {
   const locale = 'en'
 
   const mandatory = [
-    ['draft-follow-up', "draft a follow-up email about tomorrow's launch", 'draft_insert', 'insert_at_cursor', "a follow-up email about tomorrow's launch", false],
-    ['discuss-draft', 'I need to draft a follow-up email tomorrow', 'dictate_insert', 'insert_at_cursor', null, true],
-    ['negated-draft', 'do not draft this yet', 'dictate_insert', 'insert_at_cursor', null, true],
-    ['reported-draft', 'she said "draft a reply"', 'dictate_insert', 'insert_at_cursor', null, true],
-    ['compose-file', 'compose.yaml belongs in the config directory', 'dictate_insert', 'insert_at_cursor', null, true],
+    ['draft-follow-up', "draft a follow-up email about tomorrow's launch", 'draft_insert', 'insert_at_cursor', "a follow-up email about tomorrow's launch", null],
+    ['discuss-draft', 'I need to draft a follow-up email tomorrow', 'dictate_insert', 'insert_at_cursor', null, 'ambiguous'],
+    ['negated-draft', 'do not draft this yet', 'dictate_insert', 'insert_at_cursor', null, 'negated'],
+    ['reported-draft', 'she said "draft a reply"', 'dictate_insert', 'insert_at_cursor', null, 'quoted_or_reported'],
+    ['compose-file', 'compose.yaml belongs in the config directory', 'dictate_insert', 'insert_at_cursor', null, 'code_or_identifier'],
   ]
-  for (const [id, utterance, expectedKind, expectedPlacement, expectedPayload, blocker] of mandatory) {
+  for (const [id, utterance, expectedKind, expectedPlacement, expectedPayload, reason] of mandatory) {
     corpus.add({
       id,
       locale,
@@ -102,8 +102,8 @@ function buildEnglish() {
       expectedKind,
       expectedPlacement,
       expectedPayload,
-      expectedFallbackReason: blocker ? 'ambiguous' : null,
-      destructiveBlocker: blocker,
+      expectedFallbackReason: reason,
+      destructiveBlocker: reason !== null,
     })
   }
   corpus.add({
@@ -260,10 +260,10 @@ function buildEnglish() {
     'I wrote the first draft yesterday',
     'Search quality matters for this feature',
     'Please keep the existing wording',
-    'Compose the modules in dependency order',
+    'Module composition follows dependency order',
     'The reply arrived late',
     'Translation quality improved this week',
-    'We should discuss the rewrite strategy',
+    'The rewrite strategy needs discussion',
     'A concise update would be useful',
     'The selected paragraph has three claims',
   ]
@@ -287,6 +287,19 @@ function buildEnglish() {
       expectedKind: 'draft_insert',
       expectedPlacement: 'insert_at_cursor',
       expectedPayload: payload,
+    })
+  }
+  for (const utterance of [
+    'draft 帮我写一封邮件',
+    'write 幫我寫一封郵件',
+    '起草 project update',
+    'compose 搜索 Rust 在 Google',
+  ]) {
+    corpus.blocked({
+      id: 'automatic-mixed-blocker',
+      locale: 'automatic',
+      utterance,
+      reason: 'ambiguous',
     })
   }
 
@@ -475,18 +488,18 @@ function buildChinese({ traditional }) {
 
   const mandatory = traditional
     ? [
-        ['draft-follow-up', '幫我寫一封明天發佈會的跟進郵件', 'draft_insert', 'insert_at_cursor', '一封明天發佈會的跟進郵件', false],
-        ['discuss-draft', '我明天需要起草一封跟進郵件', 'dictate_insert', 'insert_at_cursor', null, true],
-        ['negated-draft', '不要幫我寫這封郵件', 'dictate_insert', 'insert_at_cursor', null, true],
-        ['reported-draft', '他說「起草一封回覆」', 'dictate_insert', 'insert_at_cursor', null, true],
+        ['draft-follow-up', '幫我寫一封明天發佈會的跟進郵件', 'draft_insert', 'insert_at_cursor', '一封明天發佈會的跟進郵件', null],
+        ['discuss-draft', '我明天需要起草一封跟進郵件', 'dictate_insert', 'insert_at_cursor', null, 'ambiguous'],
+        ['negated-draft', '不要幫我寫這封郵件', 'dictate_insert', 'insert_at_cursor', null, 'negated'],
+        ['reported-draft', '他說「起草一封回覆」', 'dictate_insert', 'insert_at_cursor', null, 'quoted_or_reported'],
       ]
     : [
-        ['draft-follow-up', '帮我写一封明天发布会的跟进邮件', 'draft_insert', 'insert_at_cursor', '一封明天发布会的跟进邮件', false],
-        ['discuss-draft', '我明天需要起草一封跟进邮件', 'dictate_insert', 'insert_at_cursor', null, true],
-        ['negated-draft', '不要帮我写这封邮件', 'dictate_insert', 'insert_at_cursor', null, true],
-        ['reported-draft', '他说“起草一封回复”', 'dictate_insert', 'insert_at_cursor', null, true],
+        ['draft-follow-up', '帮我写一封明天发布会的跟进邮件', 'draft_insert', 'insert_at_cursor', '一封明天发布会的跟进邮件', null],
+        ['discuss-draft', '我明天需要起草一封跟进邮件', 'dictate_insert', 'insert_at_cursor', null, 'ambiguous'],
+        ['negated-draft', '不要帮我写这封邮件', 'dictate_insert', 'insert_at_cursor', null, 'negated'],
+        ['reported-draft', '他说“起草一封回复”', 'dictate_insert', 'insert_at_cursor', null, 'quoted_or_reported'],
       ]
-  for (const [id, utterance, expectedKind, expectedPlacement, expectedPayload, blocker] of mandatory) {
+  for (const [id, utterance, expectedKind, expectedPlacement, expectedPayload, reason] of mandatory) {
     corpus.add({
       id,
       locale,
@@ -494,8 +507,8 @@ function buildChinese({ traditional }) {
       expectedKind,
       expectedPlacement,
       expectedPayload,
-      expectedFallbackReason: blocker ? 'ambiguous' : null,
-      destructiveBlocker: blocker,
+      expectedFallbackReason: reason,
+      destructiveBlocker: reason !== null,
     })
   }
   corpus.add({
@@ -610,6 +623,16 @@ function buildChinese({ traditional }) {
       expectedPayload: payload,
     })
   }
+  for (const utterance of traditional
+    ? ['draft 幫我寫一封郵件', 'write 寫個通知', '起草 project update', '幫我写一封混合文字郵件']
+    : ['draft 帮我写一封邮件', 'write 写个通知', '起草 project update', '帮我寫一封混合文字邮件']) {
+    corpus.blocked({
+      id: 'automatic-mixed-blocker',
+      locale: 'automatic',
+      utterance,
+      reason: 'ambiguous',
+    })
+  }
 
   const destructiveCommands = [
     `${words.draft[0]}回覆`,
@@ -664,7 +687,7 @@ function buildChinese({ traditional }) {
         locale,
         utterance: `${utterance}${suffix}`,
         hasSelection: /改写|改寫|翻译|翻譯|润色|潤色|精简|精簡|修正/.test(utterance),
-        reason: 'ambiguous',
+        reason: /有人说|有人說/.test(utterance) ? 'quoted_or_reported' : 'ambiguous',
       })
     }
   }

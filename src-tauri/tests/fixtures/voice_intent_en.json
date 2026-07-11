@@ -53,7 +53,7 @@
     "expectedPlacement": "insert_at_cursor",
     "expectedProvider": null,
     "expectedPayload": null,
-    "expectedFallbackReason": "ambiguous",
+    "expectedFallbackReason": "negated",
     "destructiveBlocker": true
   },
   {
@@ -72,7 +72,7 @@
     "expectedPlacement": "insert_at_cursor",
     "expectedProvider": null,
     "expectedPayload": null,
-    "expectedFallbackReason": "ambiguous",
+    "expectedFallbackReason": "quoted_or_reported",
     "destructiveBlocker": true
   },
   {
@@ -91,7 +91,7 @@
     "expectedPlacement": "insert_at_cursor",
     "expectedProvider": null,
     "expectedPayload": null,
-    "expectedFallbackReason": "ambiguous",
+    "expectedFallbackReason": "code_or_identifier",
     "destructiveBlocker": true
   },
   {
@@ -2530,7 +2530,7 @@
     "id": "en-134-default-safe",
     "mode": "dictate",
     "locale": "en",
-    "utterance": "Compose the modules in dependency order",
+    "utterance": "Module composition follows dependency order",
     "hasSelection": false,
     "flags": {
       "draft_insert": true,
@@ -2549,7 +2549,7 @@
     "id": "en-135-default-safe",
     "mode": "ask",
     "locale": "en",
-    "utterance": "Compose the modules in dependency order",
+    "utterance": "Module composition follows dependency order",
     "hasSelection": false,
     "flags": {
       "draft_insert": true,
@@ -2644,7 +2644,7 @@
     "id": "en-140-default-safe",
     "mode": "dictate",
     "locale": "en",
-    "utterance": "We should discuss the rewrite strategy",
+    "utterance": "The rewrite strategy needs discussion",
     "hasSelection": false,
     "flags": {
       "draft_insert": true,
@@ -2663,7 +2663,7 @@
     "id": "en-141-default-safe",
     "mode": "ask",
     "locale": "en",
-    "utterance": "We should discuss the rewrite strategy",
+    "utterance": "The rewrite strategy needs discussion",
     "hasSelection": false,
     "flags": {
       "draft_insert": true,
@@ -2831,7 +2831,83 @@
     "destructiveBlocker": false
   },
   {
-    "id": "en-150-negated-command",
+    "id": "en-150-automatic-mixed-blocker",
+    "mode": "dictate",
+    "locale": "automatic",
+    "utterance": "draft 帮我写一封邮件",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "dictate_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "ambiguous",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "en-151-automatic-mixed-blocker",
+    "mode": "dictate",
+    "locale": "automatic",
+    "utterance": "write 幫我寫一封郵件",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "dictate_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "ambiguous",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "en-152-automatic-mixed-blocker",
+    "mode": "dictate",
+    "locale": "automatic",
+    "utterance": "起草 project update",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "dictate_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "ambiguous",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "en-153-automatic-mixed-blocker",
+    "mode": "dictate",
+    "locale": "automatic",
+    "utterance": "compose 搜索 Rust 在 Google",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "dictate_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "ambiguous",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "en-154-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "do not draft a reply",
@@ -2850,7 +2926,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-151-negated-command",
+    "id": "en-155-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "do not draft a reply please",
@@ -2869,7 +2945,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-152-negated-command",
+    "id": "en-156-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "do not draft a reply today",
@@ -2888,7 +2964,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-153-negated-command",
+    "id": "en-157-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "don't write an email",
@@ -2907,7 +2983,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-154-negated-command",
+    "id": "en-158-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "don't write an email please",
@@ -2926,7 +3002,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-155-negated-command",
+    "id": "en-159-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "don't write an email today",
@@ -2945,7 +3021,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-156-negated-command",
+    "id": "en-160-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "never compose this message",
@@ -2964,7 +3040,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-157-negated-command",
+    "id": "en-161-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "never compose this message please",
@@ -2983,7 +3059,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-158-negated-command",
+    "id": "en-162-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "never compose this message today",
@@ -3002,7 +3078,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-159-negated-command",
+    "id": "en-163-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "not yet, draft the response",
@@ -3021,7 +3097,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-160-negated-command",
+    "id": "en-164-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "not yet, draft the response please",
@@ -3040,7 +3116,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-161-negated-command",
+    "id": "en-165-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "not yet, draft the response today",
@@ -3059,7 +3135,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-162-negated-command",
+    "id": "en-166-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "please do not rewrite this",
@@ -3078,7 +3154,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-163-negated-command",
+    "id": "en-167-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "please do not rewrite this please",
@@ -3097,7 +3173,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-164-negated-command",
+    "id": "en-168-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "please do not rewrite this today",
@@ -3116,7 +3192,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-165-negated-command",
+    "id": "en-169-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "please don't translate this to French",
@@ -3135,7 +3211,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-166-negated-command",
+    "id": "en-170-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "please don't translate this to French please",
@@ -3154,7 +3230,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-167-negated-command",
+    "id": "en-171-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "please don't translate this to French today",
@@ -3173,7 +3249,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-168-negated-command",
+    "id": "en-172-negated-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "do not search Rust on Google",
@@ -3192,7 +3268,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-169-negated-command",
+    "id": "en-173-negated-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "do not search Rust on Google please",
@@ -3211,7 +3287,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-170-negated-command",
+    "id": "en-174-negated-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "do not search Rust on Google today",
@@ -3230,7 +3306,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-171-negated-command",
+    "id": "en-175-negated-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "never search YouTube for this",
@@ -3249,7 +3325,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-172-negated-command",
+    "id": "en-176-negated-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "never search YouTube for this please",
@@ -3268,7 +3344,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-173-negated-command",
+    "id": "en-177-negated-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "never search YouTube for this today",
@@ -3287,7 +3363,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-174-negated-command",
+    "id": "en-178-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "do not make this shorter",
@@ -3306,7 +3382,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-175-negated-command",
+    "id": "en-179-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "do not make this shorter please",
@@ -3325,7 +3401,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-176-negated-command",
+    "id": "en-180-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "do not make this shorter today",
@@ -3344,7 +3420,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-177-negated-command",
+    "id": "en-181-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "not yet, fix the grammar",
@@ -3363,7 +3439,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-178-negated-command",
+    "id": "en-182-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "not yet, fix the grammar please",
@@ -3382,7 +3458,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-179-negated-command",
+    "id": "en-183-negated-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "not yet, fix the grammar today",
@@ -3401,7 +3477,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-180-reported-command",
+    "id": "en-184-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "she said \"draft a reply\"",
@@ -3420,7 +3496,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-181-reported-command",
+    "id": "en-185-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "she said \"draft a reply\" yesterday",
@@ -3439,7 +3515,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-182-reported-command",
+    "id": "en-186-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "she said \"draft a reply\" in the transcript",
@@ -3458,7 +3534,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-183-reported-command",
+    "id": "en-187-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "he says write a note",
@@ -3477,7 +3553,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-184-reported-command",
+    "id": "en-188-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "he says write a note yesterday",
@@ -3496,7 +3572,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-185-reported-command",
+    "id": "en-189-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "he says write a note in the transcript",
@@ -3515,7 +3591,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-186-reported-command",
+    "id": "en-190-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "they asked me to compose an email",
@@ -3534,7 +3610,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-187-reported-command",
+    "id": "en-191-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "they asked me to compose an email yesterday",
@@ -3553,7 +3629,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-188-reported-command",
+    "id": "en-192-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "they asked me to compose an email in the transcript",
@@ -3572,7 +3648,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-189-reported-command",
+    "id": "en-193-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "the phrase \"rewrite this\" appears here",
@@ -3591,7 +3667,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-190-reported-command",
+    "id": "en-194-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "the phrase \"rewrite this\" appears here yesterday",
@@ -3610,7 +3686,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-191-reported-command",
+    "id": "en-195-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "the phrase \"rewrite this\" appears here in the transcript",
@@ -3629,7 +3705,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-192-reported-command",
+    "id": "en-196-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "the word draft is a verb",
@@ -3648,7 +3724,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-193-reported-command",
+    "id": "en-197-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "the word draft is a verb yesterday",
@@ -3667,7 +3743,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-194-reported-command",
+    "id": "en-198-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "the word draft is a verb in the transcript",
@@ -3686,7 +3762,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-195-reported-command",
+    "id": "en-199-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "quote: translate this to French",
@@ -3705,7 +3781,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-196-reported-command",
+    "id": "en-200-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "quote: translate this to French yesterday",
@@ -3724,7 +3800,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-197-reported-command",
+    "id": "en-201-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "quote: translate this to French in the transcript",
@@ -3743,7 +3819,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-198-reported-command",
+    "id": "en-202-reported-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "she said search React on Google",
@@ -3762,7 +3838,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-199-reported-command",
+    "id": "en-203-reported-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "she said search React on Google yesterday",
@@ -3781,7 +3857,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-200-reported-command",
+    "id": "en-204-reported-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "she said search React on Google in the transcript",
@@ -3800,7 +3876,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-201-reported-command",
+    "id": "en-205-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "he says make this warmer",
@@ -3819,7 +3895,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-202-reported-command",
+    "id": "en-206-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "he says make this warmer yesterday",
@@ -3838,7 +3914,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-203-reported-command",
+    "id": "en-207-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "he says make this warmer in the transcript",
@@ -3857,7 +3933,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-204-reported-command",
+    "id": "en-208-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "they asked me to fix the grammar",
@@ -3876,7 +3952,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-205-reported-command",
+    "id": "en-209-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "they asked me to fix the grammar yesterday",
@@ -3895,7 +3971,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-206-reported-command",
+    "id": "en-210-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "they asked me to fix the grammar in the transcript",
@@ -3914,7 +3990,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-207-reported-command",
+    "id": "en-211-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "quoted command tokens include compose",
@@ -3933,7 +4009,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-208-reported-command",
+    "id": "en-212-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "quoted command tokens include compose yesterday",
@@ -3952,7 +4028,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-209-reported-command",
+    "id": "en-213-reported-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "quoted command tokens include compose in the transcript",
@@ -3971,7 +4047,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-210-identifier-command",
+    "id": "en-214-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "compose.yaml belongs in config",
@@ -3990,7 +4066,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-211-identifier-command",
+    "id": "en-215-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "search(query) returns a result",
@@ -4009,7 +4085,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-212-identifier-command",
+    "id": "en-216-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "draft_email is the function name",
@@ -4028,7 +4104,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-213-identifier-command",
+    "id": "en-217-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "rewriteThis handles formatting",
@@ -4047,7 +4123,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-214-identifier-command",
+    "id": "en-218-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "write_file should remain unchanged",
@@ -4066,7 +4142,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-215-identifier-command",
+    "id": "en-219-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "translate_selection is an enum",
@@ -4085,7 +4161,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-216-identifier-command",
+    "id": "en-220-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "make_this_shorter is a test id",
@@ -4104,7 +4180,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-217-identifier-command",
+    "id": "en-221-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "fixGrammar() is deprecated",
@@ -4123,7 +4199,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-218-identifier-command",
+    "id": "en-222-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "search-provider is a field",
@@ -4142,7 +4218,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-219-identifier-command",
+    "id": "en-223-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "reply_with_payload is required",
@@ -4161,7 +4237,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-220-identifier-command",
+    "id": "en-224-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "draft.md is a filename",
@@ -4180,7 +4256,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-221-identifier-command",
+    "id": "en-225-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "compose.json is generated",
@@ -4199,7 +4275,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-222-identifier-command",
+    "id": "en-226-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "search.ts exports a helper",
@@ -4218,7 +4294,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-223-identifier-command",
+    "id": "en-227-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "rewrite_this.rs compiles",
@@ -4237,7 +4313,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-224-identifier-command",
+    "id": "en-228-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "translateThisToEnglish is a symbol",
@@ -4256,7 +4332,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-225-identifier-command",
+    "id": "en-229-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "format_this_as() is not a command",
@@ -4275,7 +4351,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-226-identifier-command",
+    "id": "en-230-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "turn_this_into_list is snake case",
@@ -4294,7 +4370,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-227-identifier-command",
+    "id": "en-231-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "writeMessage() is a callback",
@@ -4313,7 +4389,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-228-identifier-command",
+    "id": "en-232-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "draft-v2.txt is archived",
@@ -4332,7 +4408,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-229-identifier-command",
+    "id": "en-233-identifier-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "search?q=test is a query fragment",
@@ -4351,7 +4427,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-230-mid-sentence-command",
+    "id": "en-234-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "I need to draft the reply tomorrow",
@@ -4370,7 +4446,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-231-mid-sentence-command",
+    "id": "en-235-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "I need to draft the reply tomorrow after review",
@@ -4389,7 +4465,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-232-mid-sentence-command",
+    "id": "en-236-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "We should write a message later",
@@ -4408,7 +4484,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-233-mid-sentence-command",
+    "id": "en-237-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "We should write a message later after review",
@@ -4427,7 +4503,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-234-mid-sentence-command",
+    "id": "en-238-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "Can we compose the email after lunch",
@@ -4446,7 +4522,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-235-mid-sentence-command",
+    "id": "en-239-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "Can we compose the email after lunch after review",
@@ -4465,7 +4541,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-236-mid-sentence-command",
+    "id": "en-240-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "I might reply with more details later",
@@ -4484,7 +4560,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-237-mid-sentence-command",
+    "id": "en-241-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "I might reply with more details later after review",
@@ -4503,7 +4579,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-238-mid-sentence-command",
+    "id": "en-242-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "The next step is to rewrite this section",
@@ -4522,7 +4598,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-239-mid-sentence-command",
+    "id": "en-243-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "The next step is to rewrite this section after review",
@@ -4541,7 +4617,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-240-mid-sentence-command",
+    "id": "en-244-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "We discussed how to make this warmer",
@@ -4560,7 +4636,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-241-mid-sentence-command",
+    "id": "en-245-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "We discussed how to make this warmer after review",
@@ -4579,7 +4655,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-242-mid-sentence-command",
+    "id": "en-246-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "I plan to translate this into French",
@@ -4598,7 +4674,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-243-mid-sentence-command",
+    "id": "en-247-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "I plan to translate this into French after review",
@@ -4617,7 +4693,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-244-mid-sentence-command",
+    "id": "en-248-mid-sentence-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "Maybe search React on Google tomorrow",
@@ -4636,7 +4712,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-245-mid-sentence-command",
+    "id": "en-249-mid-sentence-command",
     "mode": "ask",
     "locale": "en",
     "utterance": "Maybe search React on Google tomorrow after review",
@@ -4655,7 +4731,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-246-mid-sentence-command",
+    "id": "en-250-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "The team will fix the grammar next week",
@@ -4674,7 +4750,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-247-mid-sentence-command",
+    "id": "en-251-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "The team will fix the grammar next week after review",
@@ -4693,7 +4769,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-248-mid-sentence-command",
+    "id": "en-252-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "I want to format this as bullets eventually",
@@ -4712,7 +4788,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-249-mid-sentence-command",
+    "id": "en-253-mid-sentence-command",
     "mode": "dictate",
     "locale": "en",
     "utterance": "I want to format this as bullets eventually after review",
@@ -4731,7 +4807,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-250-missing-payload",
+    "id": "en-254-missing-payload",
     "mode": "dictate",
     "locale": "en",
     "utterance": "draft",
@@ -4750,7 +4826,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-251-missing-payload",
+    "id": "en-255-missing-payload",
     "mode": "dictate",
     "locale": "en",
     "utterance": "write",
@@ -4769,7 +4845,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-252-missing-payload",
+    "id": "en-256-missing-payload",
     "mode": "dictate",
     "locale": "en",
     "utterance": "compose",
@@ -4788,7 +4864,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-253-missing-payload",
+    "id": "en-257-missing-payload",
     "mode": "dictate",
     "locale": "en",
     "utterance": "reply with",
@@ -4807,7 +4883,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-254-missing-payload",
+    "id": "en-258-missing-payload",
     "mode": "dictate",
     "locale": "en",
     "utterance": "draft:",
@@ -4826,7 +4902,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-255-missing-payload",
+    "id": "en-259-missing-payload",
     "mode": "dictate",
     "locale": "en",
     "utterance": "write...",
@@ -4845,7 +4921,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-256-missing-payload",
+    "id": "en-260-missing-payload",
     "mode": "dictate",
     "locale": "en",
     "utterance": "compose,",
@@ -4864,7 +4940,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-257-missing-payload",
+    "id": "en-261-missing-payload",
     "mode": "dictate",
     "locale": "en",
     "utterance": "reply with:",
@@ -4883,7 +4959,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-258-unsupported-locale",
+    "id": "en-262-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "draft a reply",
@@ -4902,7 +4978,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-259-unsupported-locale",
+    "id": "en-263-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "write a note",
@@ -4921,7 +4997,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-260-unsupported-locale",
+    "id": "en-264-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "compose an email",
@@ -4940,7 +5016,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-261-unsupported-locale",
+    "id": "en-265-unsupported-locale",
     "mode": "ask",
     "locale": "fr",
     "utterance": "search Rust on Google",
@@ -4959,7 +5035,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-262-unsupported-locale",
+    "id": "en-266-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "rewrite this",
@@ -4978,7 +5054,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-263-unsupported-locale",
+    "id": "en-267-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "translate this to French",
@@ -4997,7 +5073,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-264-unsupported-locale",
+    "id": "en-268-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "make this warmer",
@@ -5016,7 +5092,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-265-unsupported-locale",
+    "id": "en-269-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "fix the grammar",
@@ -5035,7 +5111,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-266-unsupported-locale",
+    "id": "en-270-unsupported-locale",
     "mode": "ask",
     "locale": "fr",
     "utterance": "search React on YouTube",
@@ -5054,7 +5130,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-267-unsupported-locale",
+    "id": "en-271-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "reply with yes",
@@ -5073,7 +5149,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-268-unsupported-locale",
+    "id": "en-272-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "format this as bullets",
@@ -5092,7 +5168,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-269-unsupported-locale",
+    "id": "en-273-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "turn this into a list",
@@ -5111,7 +5187,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-270-draft-disabled",
+    "id": "en-274-draft-disabled",
     "mode": "dictate",
     "locale": "en",
     "utterance": "draft a reply",
@@ -5130,7 +5206,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-271-rewrite-disabled",
+    "id": "en-275-rewrite-disabled",
     "mode": "dictate",
     "locale": "en",
     "utterance": "rewrite this",
@@ -5149,7 +5225,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-272-translate-disabled",
+    "id": "en-276-translate-disabled",
     "mode": "dictate",
     "locale": "en",
     "utterance": "translate this to French",
@@ -5168,7 +5244,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "en-273-search-disabled",
+    "id": "en-277-search-disabled",
     "mode": "ask",
     "locale": "en",
     "utterance": "search Rust on Google",

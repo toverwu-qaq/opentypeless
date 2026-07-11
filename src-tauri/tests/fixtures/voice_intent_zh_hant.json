@@ -53,7 +53,7 @@
     "expectedPlacement": "insert_at_cursor",
     "expectedProvider": null,
     "expectedPayload": null,
-    "expectedFallbackReason": "ambiguous",
+    "expectedFallbackReason": "negated",
     "destructiveBlocker": true
   },
   {
@@ -72,7 +72,7 @@
     "expectedPlacement": "insert_at_cursor",
     "expectedProvider": null,
     "expectedPayload": null,
-    "expectedFallbackReason": "ambiguous",
+    "expectedFallbackReason": "quoted_or_reported",
     "destructiveBlocker": true
   },
   {
@@ -2584,7 +2584,83 @@
     "destructiveBlocker": false
   },
   {
-    "id": "zh-hant-137-negated-command",
+    "id": "zh-hant-137-automatic-mixed-blocker",
+    "mode": "dictate",
+    "locale": "automatic",
+    "utterance": "draft 幫我寫一封郵件",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "dictate_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "ambiguous",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "zh-hant-138-automatic-mixed-blocker",
+    "mode": "dictate",
+    "locale": "automatic",
+    "utterance": "write 寫個通知",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "dictate_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "ambiguous",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "zh-hant-139-automatic-mixed-blocker",
+    "mode": "dictate",
+    "locale": "automatic",
+    "utterance": "起草 project update",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "dictate_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "ambiguous",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "zh-hant-140-automatic-mixed-blocker",
+    "mode": "dictate",
+    "locale": "automatic",
+    "utterance": "幫我写一封混合文字郵件",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "dictate_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "ambiguous",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "zh-hant-141-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不要寫一封回覆",
@@ -2603,7 +2679,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-138-negated-command",
+    "id": "zh-hant-142-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不要起草郵件",
@@ -2622,7 +2698,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-139-negated-command",
+    "id": "zh-hant-143-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不要改寫這段",
@@ -2641,7 +2717,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-140-negated-command",
+    "id": "zh-hant-144-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不要潤色這段",
@@ -2660,7 +2736,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-141-negated-command",
+    "id": "zh-hant-145-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "別寫一封回覆",
@@ -2679,7 +2755,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-142-negated-command",
+    "id": "zh-hant-146-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "別起草郵件",
@@ -2698,7 +2774,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-143-negated-command",
+    "id": "zh-hant-147-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "別改寫這段",
@@ -2717,7 +2793,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-144-negated-command",
+    "id": "zh-hant-148-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "別潤色這段",
@@ -2736,7 +2812,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-145-negated-command",
+    "id": "zh-hant-149-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不用寫一封回覆",
@@ -2755,7 +2831,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-146-negated-command",
+    "id": "zh-hant-150-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不用起草郵件",
@@ -2774,7 +2850,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-147-negated-command",
+    "id": "zh-hant-151-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不用改寫這段",
@@ -2793,7 +2869,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-148-negated-command",
+    "id": "zh-hant-152-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不用潤色這段",
@@ -2812,7 +2888,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-149-negated-command",
+    "id": "zh-hant-153-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "先別寫一封回覆",
@@ -2831,7 +2907,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-150-negated-command",
+    "id": "zh-hant-154-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "先別起草郵件",
@@ -2850,7 +2926,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-151-negated-command",
+    "id": "zh-hant-155-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "先別改寫這段",
@@ -2869,7 +2945,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-152-negated-command",
+    "id": "zh-hant-156-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "先別潤色這段",
@@ -2888,7 +2964,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-153-negated-command",
+    "id": "zh-hant-157-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "暫時不要寫一封回覆",
@@ -2907,7 +2983,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-154-negated-command",
+    "id": "zh-hant-158-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "暫時不要起草郵件",
@@ -2926,7 +3002,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-155-negated-command",
+    "id": "zh-hant-159-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "暫時不要改寫這段",
@@ -2945,7 +3021,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-156-negated-command",
+    "id": "zh-hant-160-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "暫時不要潤色這段",
@@ -2964,7 +3040,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-157-negated-command",
+    "id": "zh-hant-161-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不需要寫一封回覆",
@@ -2983,7 +3059,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-158-negated-command",
+    "id": "zh-hant-162-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不需要起草郵件",
@@ -3002,7 +3078,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-159-negated-command",
+    "id": "zh-hant-163-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不需要改寫這段",
@@ -3021,7 +3097,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-160-negated-command",
+    "id": "zh-hant-164-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不需要潤色這段",
@@ -3040,7 +3116,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-161-negated-command",
+    "id": "zh-hant-165-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不要幫我寫一封回覆",
@@ -3059,7 +3135,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-162-negated-command",
+    "id": "zh-hant-166-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不要幫我起草郵件",
@@ -3078,7 +3154,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-163-negated-command",
+    "id": "zh-hant-167-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不要幫我改寫這段",
@@ -3097,7 +3173,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-164-negated-command",
+    "id": "zh-hant-168-negated-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "不要幫我潤色這段",
@@ -3116,7 +3192,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-165-reported-command",
+    "id": "zh-hant-169-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "他說「寫一封回覆」",
@@ -3135,7 +3211,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-166-reported-command",
+    "id": "zh-hant-170-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "他說「起草郵件」",
@@ -3154,7 +3230,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-167-reported-command",
+    "id": "zh-hant-171-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "他說「改寫這段」",
@@ -3173,7 +3249,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-168-reported-command",
+    "id": "zh-hant-172-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "他說「潤色這段」",
@@ -3192,7 +3268,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-169-reported-command",
+    "id": "zh-hant-173-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "她說「寫一封回覆」",
@@ -3211,7 +3287,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-170-reported-command",
+    "id": "zh-hant-174-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "她說「起草郵件」",
@@ -3230,7 +3306,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-171-reported-command",
+    "id": "zh-hant-175-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "她說「改寫這段」",
@@ -3249,7 +3325,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-172-reported-command",
+    "id": "zh-hant-176-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "她說「潤色這段」",
@@ -3268,7 +3344,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-173-reported-command",
+    "id": "zh-hant-177-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "他們說「寫一封回覆」",
@@ -3287,7 +3363,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-174-reported-command",
+    "id": "zh-hant-178-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "他們說「起草郵件」",
@@ -3306,7 +3382,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-175-reported-command",
+    "id": "zh-hant-179-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "他們說「改寫這段」",
@@ -3325,7 +3401,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-176-reported-command",
+    "id": "zh-hant-180-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "他們說「潤色這段」",
@@ -3344,7 +3420,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-177-reported-command",
+    "id": "zh-hant-181-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "原文是「寫一封回覆」",
@@ -3363,7 +3439,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-178-reported-command",
+    "id": "zh-hant-182-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "原文是「起草郵件」",
@@ -3382,7 +3458,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-179-reported-command",
+    "id": "zh-hant-183-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "原文是「改寫這段」",
@@ -3401,7 +3477,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-180-reported-command",
+    "id": "zh-hant-184-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "原文是「潤色這段」",
@@ -3420,7 +3496,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-181-reported-command",
+    "id": "zh-hant-185-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "這句話是「寫一封回覆」",
@@ -3439,7 +3515,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-182-reported-command",
+    "id": "zh-hant-186-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "這句話是「起草郵件」",
@@ -3458,7 +3534,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-183-reported-command",
+    "id": "zh-hant-187-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "這句話是「改寫這段」",
@@ -3477,7 +3553,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-184-reported-command",
+    "id": "zh-hant-188-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "這句話是「潤色這段」",
@@ -3496,7 +3572,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-185-reported-command",
+    "id": "zh-hant-189-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "引用「寫一封回覆」",
@@ -3515,7 +3591,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-186-reported-command",
+    "id": "zh-hant-190-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "引用「起草郵件」",
@@ -3534,7 +3610,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-187-reported-command",
+    "id": "zh-hant-191-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "引用「改寫這段」",
@@ -3553,7 +3629,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-188-reported-command",
+    "id": "zh-hant-192-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "引用「潤色這段」",
@@ -3572,7 +3648,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-189-reported-command",
+    "id": "zh-hant-193-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "文件裡寫著「寫一封回覆」",
@@ -3591,7 +3667,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-190-reported-command",
+    "id": "zh-hant-194-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "文件裡寫著「起草郵件」",
@@ -3610,7 +3686,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-191-reported-command",
+    "id": "zh-hant-195-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "文件裡寫著「改寫這段」",
@@ -3629,7 +3705,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-192-reported-command",
+    "id": "zh-hant-196-reported-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "文件裡寫著「潤色這段」",
@@ -3648,7 +3724,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-193-identifier-command",
+    "id": "zh-hant-197-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "compose.yaml 是設定檔",
@@ -3667,7 +3743,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-194-identifier-command",
+    "id": "zh-hant-198-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "search(query) 是函式",
@@ -3686,7 +3762,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-195-identifier-command",
+    "id": "zh-hant-199-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "draft_email 是欄位",
@@ -3705,7 +3781,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-196-identifier-command",
+    "id": "zh-hant-200-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "rewriteThis 是方法",
@@ -3724,7 +3800,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-197-identifier-command",
+    "id": "zh-hant-201-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "write_file 不要改",
@@ -3743,7 +3819,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-198-identifier-command",
+    "id": "zh-hant-202-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "translate_selection 是列舉",
@@ -3762,7 +3838,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-199-identifier-command",
+    "id": "zh-hant-203-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "make_this_shorter 是測試名稱",
@@ -3781,7 +3857,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-200-identifier-command",
+    "id": "zh-hant-204-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "fixGrammar() 已棄用",
@@ -3800,7 +3876,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-201-identifier-command",
+    "id": "zh-hant-205-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "search-provider 是欄位",
@@ -3819,7 +3895,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-202-identifier-command",
+    "id": "zh-hant-206-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "reply_with_payload 是參數",
@@ -3838,7 +3914,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-203-identifier-command",
+    "id": "zh-hant-207-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "compose.yaml 是設定檔 v2",
@@ -3857,7 +3933,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-204-identifier-command",
+    "id": "zh-hant-208-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "search(query) 是函式 v2",
@@ -3876,7 +3952,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-205-identifier-command",
+    "id": "zh-hant-209-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "draft_email 是欄位 v2",
@@ -3895,7 +3971,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-206-identifier-command",
+    "id": "zh-hant-210-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "rewriteThis 是方法 v2",
@@ -3914,7 +3990,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-207-identifier-command",
+    "id": "zh-hant-211-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "write_file 不要改 v2",
@@ -3933,7 +4009,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-208-identifier-command",
+    "id": "zh-hant-212-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "translate_selection 是列舉 v2",
@@ -3952,7 +4028,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-209-identifier-command",
+    "id": "zh-hant-213-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "make_this_shorter 是測試名稱 v2",
@@ -3971,7 +4047,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-210-identifier-command",
+    "id": "zh-hant-214-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "fixGrammar() 已棄用 v2",
@@ -3990,7 +4066,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-211-identifier-command",
+    "id": "zh-hant-215-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "search-provider 是欄位 v2",
@@ -4009,7 +4085,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-212-identifier-command",
+    "id": "zh-hant-216-identifier-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "reply_with_payload 是參數 v2",
@@ -4028,7 +4104,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-213-mid-sentence-command",
+    "id": "zh-hant-217-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "我明天需要起草郵件",
@@ -4047,7 +4123,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-214-mid-sentence-command",
+    "id": "zh-hant-218-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "我明天需要起草郵件，等評審後",
@@ -4066,7 +4142,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-215-mid-sentence-command",
+    "id": "zh-hant-219-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "我們稍後再寫一封回覆",
@@ -4085,7 +4161,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-216-mid-sentence-command",
+    "id": "zh-hant-220-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "我們稍後再寫一封回覆，等評審後",
@@ -4104,7 +4180,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-217-mid-sentence-command",
+    "id": "zh-hant-221-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "團隊會改寫這段",
@@ -4123,7 +4199,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-218-mid-sentence-command",
+    "id": "zh-hant-222-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "團隊會改寫這段，等評審後",
@@ -4142,7 +4218,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-219-mid-sentence-command",
+    "id": "zh-hant-223-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "下週翻譯這段",
@@ -4161,7 +4237,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-220-mid-sentence-command",
+    "id": "zh-hant-224-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "下週翻譯這段，等評審後",
@@ -4180,7 +4256,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-221-mid-sentence-command",
+    "id": "zh-hant-225-mid-sentence-command",
     "mode": "ask",
     "locale": "zh-Hant",
     "utterance": "也許明天在 Google 搜尋",
@@ -4199,7 +4275,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-222-mid-sentence-command",
+    "id": "zh-hant-226-mid-sentence-command",
     "mode": "ask",
     "locale": "zh-Hant",
     "utterance": "也許明天在 Google 搜尋，等評審後",
@@ -4218,7 +4294,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-223-mid-sentence-command",
+    "id": "zh-hant-227-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "先討論如何潤色這段",
@@ -4237,7 +4313,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-224-mid-sentence-command",
+    "id": "zh-hant-228-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "先討論如何潤色這段，等評審後",
@@ -4256,7 +4332,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-225-mid-sentence-command",
+    "id": "zh-hant-229-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "之後再精簡這段",
@@ -4275,7 +4351,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-226-mid-sentence-command",
+    "id": "zh-hant-230-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "之後再精簡這段，等評審後",
@@ -4294,7 +4370,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-227-mid-sentence-command",
+    "id": "zh-hant-231-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "我想修正這段",
@@ -4313,7 +4389,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-228-mid-sentence-command",
+    "id": "zh-hant-232-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "我想修正這段，等評審後",
@@ -4332,7 +4408,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-229-mid-sentence-command",
+    "id": "zh-hant-233-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "有人說要寫個通知",
@@ -4347,11 +4423,11 @@
     "expectedPlacement": "insert_at_cursor",
     "expectedProvider": null,
     "expectedPayload": null,
-    "expectedFallbackReason": "ambiguous",
+    "expectedFallbackReason": "quoted_or_reported",
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-230-mid-sentence-command",
+    "id": "zh-hant-234-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "有人說要寫個通知，等評審後",
@@ -4366,11 +4442,11 @@
     "expectedPlacement": "insert_at_cursor",
     "expectedProvider": null,
     "expectedPayload": null,
-    "expectedFallbackReason": "ambiguous",
+    "expectedFallbackReason": "quoted_or_reported",
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-231-mid-sentence-command",
+    "id": "zh-hant-235-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "計畫把這段改成條列",
@@ -4389,7 +4465,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-232-mid-sentence-command",
+    "id": "zh-hant-236-mid-sentence-command",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "計畫把這段改成條列，等評審後",
@@ -4408,7 +4484,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-233-missing-payload",
+    "id": "zh-hant-237-missing-payload",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "寫一封",
@@ -4427,7 +4503,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-234-missing-payload",
+    "id": "zh-hant-238-missing-payload",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "起草",
@@ -4446,7 +4522,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-235-missing-payload",
+    "id": "zh-hant-239-missing-payload",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "幫我寫",
@@ -4465,7 +4541,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-236-missing-payload",
+    "id": "zh-hant-240-missing-payload",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "回覆說",
@@ -4484,7 +4560,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-237-missing-payload",
+    "id": "zh-hant-241-missing-payload",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "寫個",
@@ -4503,7 +4579,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-238-missing-payload",
+    "id": "zh-hant-242-missing-payload",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "寫一封：",
@@ -4522,7 +4598,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-239-missing-payload",
+    "id": "zh-hant-243-missing-payload",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "起草：",
@@ -4541,7 +4617,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-240-missing-payload",
+    "id": "zh-hant-244-missing-payload",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "幫我寫：",
@@ -4560,7 +4636,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-241-missing-payload",
+    "id": "zh-hant-245-missing-payload",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "回覆說：",
@@ -4579,7 +4655,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-242-missing-payload",
+    "id": "zh-hant-246-missing-payload",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "寫個：",
@@ -4598,7 +4674,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-243-unsupported-locale",
+    "id": "zh-hant-247-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "寫一封回覆",
@@ -4617,7 +4693,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-244-unsupported-locale",
+    "id": "zh-hant-248-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "起草郵件",
@@ -4636,86 +4712,10 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-245-unsupported-locale",
-    "mode": "dictate",
-    "locale": "fr",
-    "utterance": "改寫這段",
-    "hasSelection": true,
-    "flags": {
-      "draft_insert": true,
-      "rewrite_selection": true,
-      "translate_selection": true,
-      "search": true
-    },
-    "expectedKind": "ask_selection",
-    "expectedPlacement": "popup_answer",
-    "expectedProvider": null,
-    "expectedPayload": null,
-    "expectedFallbackReason": "unsupported_locale",
-    "destructiveBlocker": true
-  },
-  {
-    "id": "zh-hant-246-unsupported-locale",
-    "mode": "dictate",
-    "locale": "fr",
-    "utterance": "潤色這段",
-    "hasSelection": true,
-    "flags": {
-      "draft_insert": true,
-      "rewrite_selection": true,
-      "translate_selection": true,
-      "search": true
-    },
-    "expectedKind": "ask_selection",
-    "expectedPlacement": "popup_answer",
-    "expectedProvider": null,
-    "expectedPayload": null,
-    "expectedFallbackReason": "unsupported_locale",
-    "destructiveBlocker": true
-  },
-  {
-    "id": "zh-hant-247-unsupported-locale",
-    "mode": "dictate",
-    "locale": "fr",
-    "utterance": "把這段翻譯成英文",
-    "hasSelection": true,
-    "flags": {
-      "draft_insert": true,
-      "rewrite_selection": true,
-      "translate_selection": true,
-      "search": true
-    },
-    "expectedKind": "ask_selection",
-    "expectedPlacement": "popup_answer",
-    "expectedProvider": null,
-    "expectedPayload": null,
-    "expectedFallbackReason": "unsupported_locale",
-    "destructiveBlocker": true
-  },
-  {
-    "id": "zh-hant-248-unsupported-locale",
-    "mode": "ask",
-    "locale": "fr",
-    "utterance": "搜尋 Rust 在 Google",
-    "hasSelection": false,
-    "flags": {
-      "draft_insert": true,
-      "rewrite_selection": true,
-      "translate_selection": true,
-      "search": true
-    },
-    "expectedKind": "open_question",
-    "expectedPlacement": "popup_answer",
-    "expectedProvider": null,
-    "expectedPayload": null,
-    "expectedFallbackReason": "unsupported_locale",
-    "destructiveBlocker": true
-  },
-  {
     "id": "zh-hant-249-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
-    "utterance": "精簡這段",
+    "utterance": "改寫這段",
     "hasSelection": true,
     "flags": {
       "draft_insert": true,
@@ -4734,7 +4734,7 @@
     "id": "zh-hant-250-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
-    "utterance": "擴寫這段",
+    "utterance": "潤色這段",
     "hasSelection": true,
     "flags": {
       "draft_insert": true,
@@ -4753,7 +4753,7 @@
     "id": "zh-hant-251-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
-    "utterance": "修正這段",
+    "utterance": "把這段翻譯成英文",
     "hasSelection": true,
     "flags": {
       "draft_insert": true,
@@ -4770,6 +4770,82 @@
   },
   {
     "id": "zh-hant-252-unsupported-locale",
+    "mode": "ask",
+    "locale": "fr",
+    "utterance": "搜尋 Rust 在 Google",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "open_question",
+    "expectedPlacement": "popup_answer",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "unsupported_locale",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "zh-hant-253-unsupported-locale",
+    "mode": "dictate",
+    "locale": "fr",
+    "utterance": "精簡這段",
+    "hasSelection": true,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "ask_selection",
+    "expectedPlacement": "popup_answer",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "unsupported_locale",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "zh-hant-254-unsupported-locale",
+    "mode": "dictate",
+    "locale": "fr",
+    "utterance": "擴寫這段",
+    "hasSelection": true,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "ask_selection",
+    "expectedPlacement": "popup_answer",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "unsupported_locale",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "zh-hant-255-unsupported-locale",
+    "mode": "dictate",
+    "locale": "fr",
+    "utterance": "修正這段",
+    "hasSelection": true,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "ask_selection",
+    "expectedPlacement": "popup_answer",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": "unsupported_locale",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "zh-hant-256-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "總結這段",
@@ -4788,7 +4864,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-253-unsupported-locale",
+    "id": "zh-hant-257-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "解釋這段",
@@ -4807,7 +4883,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-254-unsupported-locale",
+    "id": "zh-hant-258-unsupported-locale",
     "mode": "dictate",
     "locale": "fr",
     "utterance": "寫個通知",
@@ -4826,7 +4902,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-255-draft-disabled",
+    "id": "zh-hant-259-draft-disabled",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "寫一封回覆",
@@ -4845,7 +4921,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-256-rewrite-disabled",
+    "id": "zh-hant-260-rewrite-disabled",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "改寫這段",
@@ -4864,7 +4940,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-257-translate-disabled",
+    "id": "zh-hant-261-translate-disabled",
     "mode": "dictate",
     "locale": "zh-Hant",
     "utterance": "把這段翻譯成英文",
@@ -4883,7 +4959,7 @@
     "destructiveBlocker": true
   },
   {
-    "id": "zh-hant-258-search-disabled",
+    "id": "zh-hant-262-search-disabled",
     "mode": "ask",
     "locale": "zh-Hant",
     "utterance": "搜尋 Rust 在 Google",
