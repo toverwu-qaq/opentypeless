@@ -307,27 +307,6 @@ fn history_provider_kind(config: &storage::AppConfig) -> storage::HistoryProvide
     storage::HistoryProviderKind::Byok
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum SelectedTextOutputPolicy {
-    PopupAnswer,
-    ReplaceSelection,
-}
-
-fn selected_text_output_policy(
-    voice_intent: &crate::voice_intent::VoiceIntent,
-) -> SelectedTextOutputPolicy {
-    match voice_intent.placement {
-        crate::voice_intent::VoiceOutputPlacement::PopupAnswer => {
-            SelectedTextOutputPolicy::PopupAnswer
-        }
-        crate::voice_intent::VoiceOutputPlacement::InsertAtCursor
-        | crate::voice_intent::VoiceOutputPlacement::ReplaceSelection => {
-            SelectedTextOutputPolicy::ReplaceSelection
-        }
-        crate::voice_intent::VoiceOutputPlacement::OpenUrl => SelectedTextOutputPolicy::PopupAnswer,
-    }
-}
-
 fn route_pipeline_voice_intent(
     mode: crate::voice_intent::VoiceMode,
     raw_text: &str,
@@ -693,6 +672,98 @@ struct PolishTextOutcome {
 struct HistoryOutputMetadata {
     status: Option<String>,
     error: Option<String>,
+}
+
+struct PipelineVoiceExecutionBackend<'a> {
+    pipeline: &'a PipelineHandle,
+    app_name: &'a str,
+    question: &'a str,
+    intent_kind: crate::voice_intent::VoiceIntentKind,
+    target_guard: &'a TargetAppGuard,
+    config: &'a storage::AppConfig,
+    already_copied: bool,
+}
+
+#[async_trait::async_trait]
+impl crate::voice_intent::executor::VoiceExecutionBackend for PipelineVoiceExecutionBackend<'_> {
+    fn target_matches(&mut self, guard: &TargetAppGuard) -> bool {
+        self.pipeline
+            .context_detector
+            .target_still_matches_now(guard)
+    }
+
+    async fn restore_target(
+        &mut self,
+        guard: &TargetAppGuard,
+    ) -> std::result::Result<bool, String> {
+        Ok(self
+            .pipeline
+            .context_detector
+            .target_still_matches_now(guard))
+    }
+
+    async fn insert_at_cursor(&mut self, text: &str) -> std::result::Result<(), String> {
+        let result = self
+            .pipeline
+            .output_text(text, self.app_name, self.target_guard, self.config)
+            .await
+            .map_err(|error| error.to_string())?;
+        if result.status == output::InsertStatus::Inserted {
+            Ok(())
+        } else if result.status == output::InsertStatus::CopiedFallback {
+            self.already_copied = true;
+            Err("output copied instead of inserted".to_string())
+        } else {
+            Err("output was not inserted".to_string())
+        }
+    }
+
+    async fn replace_selection(&mut self, text: &str) -> std::result::Result<(), String> {
+        self.insert_at_cursor(text).await
+    }
+
+    async fn popup_answer(&mut self, text: &str) -> std::result::Result<(), String> {
+        crate::commands::ask::show_answer_window_with_metadata(
+            &self.pipeline.app_handle,
+            self.question.to_string(),
+            text.to_string(),
+            self.intent_kind,
+            true,
+            false,
+        )
+    }
+
+    async fn copy_to_clipboard(&mut self, text: &str) -> std::result::Result<(), String> {
+        if self.already_copied {
+            return Ok(());
+        }
+        let mut copy_config = self.config.clone();
+        copy_config.insertion_strategy = "clipboardCopyOnly".to_string();
+        let result = self
+            .pipeline
+            .output_text(
+                text,
+                self.app_name,
+                &TargetAppGuard::default(),
+                &copy_config,
+            )
+            .await
+            .map_err(|error| error.to_string())?;
+        if result.status == output::InsertStatus::CopiedFallback {
+            self.already_copied = true;
+            Ok(())
+        } else {
+            Err("clipboard copy did not complete".to_string())
+        }
+    }
+
+    async fn open_search(
+        &mut self,
+        _provider: crate::voice_intent::SearchProvider,
+        _query: &str,
+    ) -> std::result::Result<(), String> {
+        Err("search is not available in the dictation pipeline".to_string())
+    }
 }
 
 impl PolishTextOutcome {
@@ -1693,8 +1764,6 @@ impl PipelineHandle {
             operation_id,
             voice_intent,
         } = input;
-        let selected_text_policy = selected_text_output_policy(&voice_intent);
-
         let llm_api_key = if config.llm_provider == "cloud" {
             session_token
         } else {
@@ -1793,6 +1862,7 @@ impl PipelineHandle {
             }
         });
 
+        let selected_text_for_execution = selected_text.clone();
         let req = PolishRequest {
             raw_text: raw_text.to_string(),
             context: app_ctx.profile.summary(),
@@ -1992,36 +2062,64 @@ impl PipelineHandle {
                     return PolishTextOutcome::normal(raw_text.to_string(), elapsed);
                 }
 
-                match selected_text_policy {
-                    SelectedTextOutputPolicy::PopupAnswer => {
-                        self.show_selected_text_answer_or_copy(
-                            raw_text,
-                            &response.polished_text,
-                            voice_intent.kind,
-                            &app_ctx.profile.app_label,
-                            config,
-                        )
-                        .await;
-                        return PolishTextOutcome::normal(response.polished_text, elapsed);
-                    }
-                    SelectedTextOutputPolicy::ReplaceSelection => {}
-                }
-
-                if let Err(e) = self
-                    .output_text(
-                        &response.polished_text,
-                        &app_ctx.profile.app_label,
-                        &app_ctx.target_guard,
-                        config,
-                    )
-                    .await
+                let selected_text_available = if voice_intent.placement
+                    == crate::voice_intent::VoiceOutputPlacement::ReplaceSelection
                 {
-                    tracing::error!("Output failed: {}", e);
-                    let _ = self
-                        .app_handle
-                        .emit("pipeline:error", output_user_error(&e));
+                    selected_text_for_execution
+                        .as_deref()
+                        .is_some_and(|original| {
+                            tokio::task::block_in_place(crate::selection::capture_selected_text)
+                                .is_some_and(|current| current.trim() == original.trim())
+                        })
+                } else {
+                    selected_text_has_content(selected_text_for_execution.as_deref())
+                };
+                let mut backend = PipelineVoiceExecutionBackend {
+                    pipeline: self,
+                    app_name: &app_ctx.profile.app_label,
+                    question: raw_text,
+                    intent_kind: voice_intent.kind,
+                    target_guard: &app_ctx.target_guard,
+                    config,
+                    already_copied: false,
+                };
+                let execution = crate::voice_intent::executor::execute_voice_intent(
+                    crate::voice_intent::executor::VoiceExecutionRequest {
+                        intent: &voice_intent,
+                        generated_output: &response.polished_text,
+                        target_guard: &app_ctx.target_guard,
+                        selected_text_available,
+                        restore_target_before_insert: false,
+                        flags: config.voice_routing_flags,
+                    },
+                    &mut backend,
+                )
+                .await;
+                let _ = self.app_handle.emit("pipeline:voice_execution", &execution);
+
+                match execution.status {
+                    crate::voice_intent::executor::VoiceExecutionStatus::Completed => {
+                        PolishTextOutcome::normal(response.polished_text, elapsed)
+                    }
+                    crate::voice_intent::executor::VoiceExecutionStatus::CopiedFallback => {
+                        PolishTextOutcome::with_history_status(
+                            response.polished_text,
+                            elapsed,
+                            "clipboard_fallback",
+                            format!("Voice output fallback: {:?}", execution.fallback_reason),
+                        )
+                    }
+                    crate::voice_intent::executor::VoiceExecutionStatus::PopupFallback
+                    | crate::voice_intent::executor::VoiceExecutionStatus::Prevented
+                    | crate::voice_intent::executor::VoiceExecutionStatus::Failed => {
+                        PolishTextOutcome::with_history_status(
+                            response.polished_text,
+                            elapsed,
+                            "fallback",
+                            format!("Voice output fallback: {:?}", execution.fallback_reason),
+                        )
+                    }
                 }
-                PolishTextOutcome::normal(response.polished_text, elapsed)
             }
             Err(e) => {
                 crate::error::emit_cloud_session_invalid(&self.app_handle, &e);
@@ -2069,6 +2167,14 @@ impl PipelineHandle {
                 let _ = self
                     .app_handle
                     .emit("pipeline:error", llm_polish_user_error(&e));
+                if selected_text_has_content(selected_text_for_execution.as_deref()) {
+                    return PolishTextOutcome::with_history_status(
+                        raw_text.to_string(),
+                        elapsed,
+                        "fallback",
+                        "LLM polish failed; selected text was left unchanged",
+                    );
+                }
                 if let Err(e) = self
                     .output_text(
                         raw_text,
@@ -2241,55 +2347,13 @@ impl PipelineHandle {
         }
     }
 
-    async fn show_selected_text_answer_or_copy(
-        &self,
-        question: &str,
-        answer: &str,
-        intent: crate::voice_intent::VoiceIntentKind,
-        app_name: &str,
-        config: &storage::AppConfig,
-    ) {
-        self.set_state(PipelineState::Outputting);
-        match crate::commands::ask::show_answer_window_with_metadata(
-            &self.app_handle,
-            question.to_string(),
-            answer.to_string(),
-            intent,
-            true,
-            false,
-        ) {
-            Ok(()) => {
-                let _ = self.app_handle.emit("pipeline:target_app", app_name);
-            }
-            Err(error) => {
-                tracing::warn!(
-                    "Failed to show selected-text Ask answer window, copying answer: {error}"
-                );
-                self.copy_text_to_clipboard_with_warning(
-                    answer,
-                    app_name,
-                    config,
-                    crate::error::UserError {
-                        code: "output_fallback_clipboard".to_string(),
-                        details: Some(
-                            "Selected-text answer copied to clipboard because Ask window could not open"
-                                .to_string(),
-                        ),
-                        retry_count: 0,
-                    },
-                )
-                .await;
-            }
-        }
-    }
-
     async fn output_text(
         &self,
         text: &str,
         app_name: &str,
         target_guard: &TargetAppGuard,
         config: &storage::AppConfig,
-    ) -> Result<()> {
+    ) -> Result<output::InsertResult> {
         self.set_state(PipelineState::Outputting);
 
         let target_warning =
@@ -2373,9 +2437,10 @@ impl PipelineHandle {
             output_outcome.insert_result.strategy_used,
             output_outcome.insert_result.chars_inserted
         );
+        let insert_result = output_outcome.insert_result.clone();
         let _ = self
             .app_handle
-            .emit("pipeline:insert_result", &output_outcome.insert_result);
+            .emit("pipeline:insert_result", &insert_result);
 
         if let Some(user_error) = output_outcome.warning {
             tracing::info!("Output completed with warning: {}", user_error.code);
@@ -2383,7 +2448,7 @@ impl PipelineHandle {
         }
 
         let _ = self.app_handle.emit("pipeline:target_app", app_name);
-        Ok(())
+        Ok(insert_result)
     }
 
     /// P1-2: Pre-warm HTTP connection pool by issuing a HEAD request to the STT endpoint.
@@ -2716,8 +2781,8 @@ mod tests {
             &config,
         );
         assert_eq!(
-            selected_text_output_policy(&chinese),
-            SelectedTextOutputPolicy::PopupAnswer
+            chinese.placement,
+            crate::voice_intent::VoiceOutputPlacement::PopupAnswer
         );
         config.stt_language = "en".to_string();
         let english = route_pipeline_voice_intent(
@@ -2727,8 +2792,8 @@ mod tests {
             &config,
         );
         assert_eq!(
-            selected_text_output_policy(&english),
-            SelectedTextOutputPolicy::PopupAnswer
+            english.placement,
+            crate::voice_intent::VoiceOutputPlacement::PopupAnswer
         );
     }
 
@@ -2745,8 +2810,8 @@ mod tests {
             &config,
         );
         assert_eq!(
-            selected_text_output_policy(&rewrite),
-            SelectedTextOutputPolicy::ReplaceSelection
+            rewrite.placement,
+            crate::voice_intent::VoiceOutputPlacement::ReplaceSelection
         );
         config.stt_language = "en".to_string();
         let translation = route_pipeline_voice_intent(
@@ -2756,8 +2821,8 @@ mod tests {
             &config,
         );
         assert_eq!(
-            selected_text_output_policy(&translation),
-            SelectedTextOutputPolicy::ReplaceSelection
+            translation.placement,
+            crate::voice_intent::VoiceOutputPlacement::ReplaceSelection
         );
     }
 
