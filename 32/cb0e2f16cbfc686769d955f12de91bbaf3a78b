@@ -1,0 +1,31 @@
+src-tauri/src/app_detector/mod.rs
+  s_7724aa1accb26b::t_663407fa38b573 3-4,186-218
+src-tauri/src/app_detector/types.rs
+  s_7724aa1accb26b::t_b1f06cb82b1620 1-220
+src-tauri/tests/fixtures/certified_models.json
+  s_7724aa1accb26b::t_8ffc7c9955e477 1-12
+src-tauri/tests/fixtures/context_registry.json
+  s_7724aa1accb26b::t_730210647af05e 1-33
+src-tauri/tests/fixtures/context_same_payload.json
+  s_7724aa1accb26b::t_73a1e13d0a70b3 1-17
+src-tauri/tests/fixtures/thought_aware.json
+  s_7724aa1accb26b::t_b7573444a6d28c 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "32cb0e2f16cbfc686769d955f12de91bbaf3a78b",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
