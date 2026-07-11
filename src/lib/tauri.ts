@@ -376,6 +376,14 @@ export async function removeDictionaryEntry(id: number): Promise<void> {
   return invoke('remove_dictionary_entry', { id })
 }
 
+export async function updateDictionaryEntry(
+  id: number,
+  word: string,
+  pronunciation: string | null,
+): Promise<void> {
+  return invoke('update_dictionary_entry', { id, word, pronunciation })
+}
+
 export async function getCorrectionRules(): Promise<CorrectionRule[]> {
   return invoke('get_correction_rules')
 }
@@ -390,6 +398,51 @@ export async function removeCorrectionRule(id: number): Promise<void> {
 
 export async function setCorrectionRuleEnabled(id: number, enabled: boolean): Promise<void> {
   return invoke('set_correction_rule_enabled', { id, enabled })
+}
+
+export async function updateCorrectionRule(
+  id: number,
+  pattern: string,
+  replacement: string,
+  enabled: boolean,
+): Promise<void> {
+  return invoke('update_correction_rule', { id, pattern, replacement, enabled })
+}
+
+export type DictionaryImportFormat = 'txt' | 'csv' | 'json'
+
+export interface DictionaryImportRowError {
+  row: number
+  code: string
+}
+
+export interface DictionaryImportReport {
+  accepted: number
+  skippedDuplicates: number
+  skippedInvalid: number
+  errors: DictionaryImportRowError[]
+}
+
+export async function previewDictionaryImport(
+  bytes: number[],
+  format: DictionaryImportFormat,
+): Promise<DictionaryImportReport> {
+  return invoke('preview_dictionary_import', { bytes, format })
+}
+
+export async function commitDictionaryImport(
+  bytes: number[],
+  format: DictionaryImportFormat,
+): Promise<DictionaryImportReport> {
+  return invoke('commit_dictionary_import', { bytes, format })
+}
+
+export async function exportDictionaryJson(): Promise<string> {
+  return invoke('export_dictionary_json')
+}
+
+export async function exportDictionaryCsv(): Promise<string> {
+  return invoke('export_dictionary_csv')
 }
 
 // Auto-start

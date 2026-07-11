@@ -1,19 +1,44 @@
-import { useState, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Search, Copy, Trash2 } from 'lucide-react'
+import { Search, Copy, Trash2, MoreHorizontal } from 'lucide-react'
 import { spring } from '../../lib/animations'
-import { useAppStore } from '../../stores/appStore'
-import { clearHistory } from '../../lib/tauri'
+import { useAppStore, type HistoryEntry } from '../../stores/appStore'
+import { addCorrectionRule, clearHistory, getCorrectionRules } from '../../lib/tauri'
 import { toast } from '../Toast'
 import { AppContextMeta } from './AppContextMeta'
+import { CreateCorrectionDialog } from './CreateCorrectionDialog'
 
 export function History() {
   const history = useAppStore((s) => s.history)
   const setHistory = useAppStore((s) => s.setHistory)
+  const setCorrectionRules = useAppStore((s) => s.setCorrectionRules)
   const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [copiedId, setCopiedId] = useState<number | null>(null)
+  const [menuEntryId, setMenuEntryId] = useState<number | null>(null)
+  const [correctionEntry, setCorrectionEntry] = useState<HistoryEntry | null>(null)
+  const menuTriggerEntryId = useRef<number | null>(null)
+
+  const closeEntryMenu = useCallback(() => {
+    setMenuEntryId(null)
+    const entryId = menuTriggerEntryId.current
+    window.setTimeout(() => {
+      if (entryId === null) return
+      document.querySelector<HTMLButtonElement>(`[data-history-menu-trigger="${entryId}"]`)?.focus()
+    }, 0)
+  }, [])
+
+  useEffect(() => {
+    if (menuEntryId === null) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      closeEntryMenu()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [closeEntryMenu, menuEntryId])
 
   const filtered = useMemo(
     () =>
@@ -48,6 +73,19 @@ export function History() {
     } catch (e) {
       console.error('Failed to clear history:', e)
       toast.error(t('history.failedToClear'))
+    }
+  }
+
+  const handleCreateCorrection = async (pattern: string, replacement: string) => {
+    try {
+      await addCorrectionRule(pattern, replacement)
+      setCorrectionRules(await getCorrectionRules())
+      setCorrectionEntry(null)
+      toast.success(t('history.correctionCreated'))
+    } catch (error) {
+      console.error('Failed to create correction from history:', error)
+      toast.error(t('history.failedToCreateCorrection'))
+      throw error
     }
   }
 
@@ -150,15 +188,54 @@ export function History() {
                           </p>
                         )}
                       </div>
-                      <motion.button
-                        onClick={() => handleCopy(entry.id, entry.polished_text)}
-                        whileTap={{ scaleX: 1.1, scaleY: 0.9 }}
-                        transition={spring.jelly}
-                        className="opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 p-1.5 rounded-[6px] hover:bg-bg-tertiary transition-all duration-200 bg-transparent border-none cursor-pointer text-text-tertiary hover:text-accent flex-shrink-0"
-                        aria-label={`Copy text: ${entry.polished_text.slice(0, 30)}`}
-                      >
-                        <Copy size={13} />
-                      </motion.button>
+                      <div className="flex flex-shrink-0 items-center">
+                        <motion.button
+                          onClick={() => handleCopy(entry.id, entry.polished_text)}
+                          whileTap={{ scaleX: 1.1, scaleY: 0.9 }}
+                          transition={spring.jelly}
+                          className="opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 p-1.5 rounded-[6px] hover:bg-bg-tertiary transition-all duration-200 bg-transparent border-none cursor-pointer text-text-tertiary hover:text-accent flex-shrink-0"
+                          aria-label={`Copy text: ${entry.polished_text.slice(0, 30)}`}
+                        >
+                          <Copy size={13} />
+                        </motion.button>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              menuTriggerEntryId.current = entry.id
+                              setMenuEntryId((current) => (current === entry.id ? null : entry.id))
+                            }}
+                            data-history-menu-trigger={entry.id}
+                            aria-label={t('history.moreActions')}
+                            aria-haspopup="menu"
+                            aria-expanded={menuEntryId === entry.id}
+                            className="p-1.5 rounded-[6px] hover:bg-bg-tertiary transition-all bg-transparent border-none cursor-pointer text-text-tertiary hover:text-text-primary flex-shrink-0"
+                          >
+                            <MoreHorizontal size={13} />
+                          </button>
+                          {menuEntryId === entry.id && (
+                            <>
+                              <div className="fixed inset-0 z-30" onClick={closeEntryMenu} />
+                              <div
+                                role="menu"
+                                className="absolute right-0 top-7 z-40 min-w-40 rounded-[8px] border border-border bg-bg-primary py-1 shadow-float"
+                              >
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  onClick={() => {
+                                    setMenuEntryId(null)
+                                    setCorrectionEntry(entry)
+                                  }}
+                                  className="h-8 w-full bg-transparent px-3 text-left text-[12px] text-text-primary hover:bg-bg-secondary"
+                                >
+                                  {t('history.createCorrection')}
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
                       {copiedId === entry.id && (
                         <span className="text-[11px] text-success flex-shrink-0 self-center">
                           {t('history.copied')}
@@ -187,6 +264,22 @@ export function History() {
             {t('history.clearAll')}
           </motion.button>
         </div>
+      )}
+      {correctionEntry && (
+        <CreateCorrectionDialog
+          entry={correctionEntry}
+          onCancel={() => {
+            setCorrectionEntry(null)
+            const entryId = menuTriggerEntryId.current
+            window.setTimeout(() => {
+              if (entryId === null) return
+              document
+                .querySelector<HTMLButtonElement>(`[data-history-menu-trigger="${entryId}"]`)
+                ?.focus()
+            }, 0)
+          }}
+          onSave={handleCreateCorrection}
+        />
       )}
     </div>
   )

@@ -167,8 +167,28 @@ vi.mock('../../../lib/tauri', () => ({
   fetchLlmModels: vi.fn().mockResolvedValue(['gpt-4o', 'gpt-3.5-turbo']),
   getLlmModelCapability: vi.fn().mockResolvedValue('unknown'),
   addDictionaryEntry: vi.fn().mockResolvedValue(undefined),
+  updateDictionaryEntry: vi.fn().mockResolvedValue(undefined),
   removeDictionaryEntry: vi.fn().mockResolvedValue(undefined),
   getDictionary: vi.fn().mockResolvedValue([]),
+  addCorrectionRule: vi.fn().mockResolvedValue(undefined),
+  updateCorrectionRule: vi.fn().mockResolvedValue(undefined),
+  removeCorrectionRule: vi.fn().mockResolvedValue(undefined),
+  setCorrectionRuleEnabled: vi.fn().mockResolvedValue(undefined),
+  getCorrectionRules: vi.fn().mockResolvedValue([]),
+  previewDictionaryImport: vi.fn().mockResolvedValue({
+    accepted: 0,
+    skippedDuplicates: 0,
+    skippedInvalid: 0,
+    errors: [],
+  }),
+  commitDictionaryImport: vi.fn().mockResolvedValue({
+    accepted: 0,
+    skippedDuplicates: 0,
+    skippedInvalid: 0,
+    errors: [],
+  }),
+  exportDictionaryJson: vi.fn().mockResolvedValue('{}'),
+  exportDictionaryCsv: vi.fn().mockResolvedValue(''),
   updateConfig: vi.fn().mockResolvedValue(undefined),
 }))
 
