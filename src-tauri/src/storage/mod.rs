@@ -1,3 +1,5 @@
+use crate::app_detector::registry::AppRegistry;
+use crate::app_detector::types::{ContextFamily, ContextProfile};
 use crate::credentials::{migrate_legacy_config_secrets, SystemCredentialVault};
 use anyhow::Result;
 use rusqlite::Connection;
@@ -783,8 +785,11 @@ impl ConfigManager {
 pub struct HistoryEntry {
     pub id: i64,
     pub created_at: String,
-    pub app_name: String,
-    pub app_type: String,
+    pub context_profile_id: String,
+    pub context_label: String,
+    pub context_icon_key: String,
+    pub context_family: ContextFamily,
+    pub provider_kind: HistoryProviderKind,
     pub raw_text: String,
     pub polished_text: String,
     pub language: Option<String>,
@@ -796,6 +801,32 @@ pub struct HistoryEntry {
     pub active_scene_prompt_truncated: bool,
     pub output_status: Option<String>,
     pub output_error: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum HistoryProviderKind {
+    ManagedCloud,
+    Byok,
+    Local,
+}
+
+impl HistoryProviderKind {
+    fn as_db_value(self) -> &'static str {
+        match self {
+            Self::ManagedCloud => "managed_cloud",
+            Self::Byok => "byok",
+            Self::Local => "local",
+        }
+    }
+
+    fn from_db_value(value: &str) -> Self {
+        match value {
+            "managed_cloud" => Self::ManagedCloud,
+            "byok" => Self::Byok,
+            _ => Self::Local,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -830,6 +861,11 @@ impl HistoryStore {
                 created_at TEXT NOT NULL,
                 app_name TEXT NOT NULL DEFAULT '',
                 app_type TEXT NOT NULL DEFAULT '',
+                context_profile_id TEXT NOT NULL DEFAULT 'general.native',
+                context_label TEXT NOT NULL DEFAULT 'General',
+                context_icon_key TEXT NOT NULL DEFAULT 'general',
+                context_family TEXT NOT NULL DEFAULT 'general',
+                provider_kind TEXT NOT NULL DEFAULT 'local',
                 raw_text TEXT NOT NULL DEFAULT '',
                 polished_text TEXT NOT NULL DEFAULT '',
                 language TEXT,
@@ -844,6 +880,7 @@ impl HistoryStore {
             );",
         )?;
         ensure_history_optional_columns(&conn)?;
+        migrate_legacy_history_context(&conn)?;
         Ok(Self {
             conn: Mutex::new(conn),
         })
@@ -871,6 +908,11 @@ impl HistoryStore {
                     created_at,
                     app_name,
                     app_type,
+                    context_profile_id,
+                    context_label,
+                    context_icon_key,
+                    context_family,
+                    provider_kind,
                     raw_text,
                     polished_text,
                     language,
@@ -883,11 +925,14 @@ impl HistoryStore {
                     output_status,
                     output_error
                 )
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+             VALUES (?1, '', '', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
                 rusqlite::params![
                     entry.created_at,
-                    entry.app_name,
-                    entry.app_type,
+                    entry.context_profile_id,
+                    entry.context_label,
+                    entry.context_icon_key,
+                    context_family_db_value(entry.context_family),
+                    entry.provider_kind.as_db_value(),
                     entry.raw_text,
                     entry.polished_text,
                     entry.language,
@@ -944,8 +989,11 @@ impl HistoryStore {
             "SELECT
                 id,
                 created_at,
-                app_name,
-                app_type,
+                context_profile_id,
+                context_label,
+                context_icon_key,
+                context_family,
+                provider_kind,
                 raw_text,
                 polished_text,
                 language,
@@ -963,19 +1011,22 @@ impl HistoryStore {
             Ok(HistoryEntry {
                 id: row.get(0)?,
                 created_at: row.get(1)?,
-                app_name: row.get(2)?,
-                app_type: row.get(3)?,
-                raw_text: row.get(4)?,
-                polished_text: row.get(5)?,
-                language: row.get(6)?,
-                duration_ms: row.get(7)?,
-                active_scene_id: row.get(8)?,
-                active_scene_source: row.get(9)?,
-                active_scene_name: row.get(10)?,
-                active_scene_prompt_chars: row.get(11)?,
-                active_scene_prompt_truncated: row.get(12)?,
-                output_status: row.get(13)?,
-                output_error: row.get(14)?,
+                context_profile_id: row.get(2)?,
+                context_label: row.get(3)?,
+                context_icon_key: row.get(4)?,
+                context_family: context_family_from_db(&row.get::<_, String>(5)?),
+                provider_kind: HistoryProviderKind::from_db_value(&row.get::<_, String>(6)?),
+                raw_text: row.get(7)?,
+                polished_text: row.get(8)?,
+                language: row.get(9)?,
+                duration_ms: row.get(10)?,
+                active_scene_id: row.get(11)?,
+                active_scene_source: row.get(12)?,
+                active_scene_name: row.get(13)?,
+                active_scene_prompt_chars: row.get(14)?,
+                active_scene_prompt_truncated: row.get(15)?,
+                output_status: row.get(16)?,
+                output_error: row.get(17)?,
             })
         })?;
         let mut entries = Vec::new();
@@ -1024,6 +1075,26 @@ fn ensure_history_optional_columns(conn: &Connection) -> Result<()> {
             "output_error",
             "ALTER TABLE history ADD COLUMN output_error TEXT",
         ),
+        (
+            "context_profile_id",
+            "ALTER TABLE history ADD COLUMN context_profile_id TEXT NOT NULL DEFAULT 'general.native'",
+        ),
+        (
+            "context_label",
+            "ALTER TABLE history ADD COLUMN context_label TEXT NOT NULL DEFAULT 'General'",
+        ),
+        (
+            "context_icon_key",
+            "ALTER TABLE history ADD COLUMN context_icon_key TEXT NOT NULL DEFAULT 'general'",
+        ),
+        (
+            "context_family",
+            "ALTER TABLE history ADD COLUMN context_family TEXT NOT NULL DEFAULT 'general'",
+        ),
+        (
+            "provider_kind",
+            "ALTER TABLE history ADD COLUMN provider_kind TEXT NOT NULL DEFAULT 'local'",
+        ),
     ] {
         if !columns.contains(name) {
             conn.execute(ddl, [])?;
@@ -1031,6 +1102,101 @@ fn ensure_history_optional_columns(conn: &Connection) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn migrate_legacy_history_context(conn: &Connection) -> Result<()> {
+    let registry = AppRegistry::builtin().map_err(anyhow::Error::msg)?;
+    let rows = {
+        let mut statement = conn.prepare(
+            "SELECT id, app_name, app_type FROM history WHERE app_name <> '' OR app_type <> ''",
+        )?;
+        let rows = statement
+            .query_map([], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                ))
+            })?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        rows
+    };
+    if rows.is_empty() {
+        return Ok(());
+    }
+
+    let transaction = conn.unchecked_transaction()?;
+    for (id, app_name, _app_type) in rows {
+        let profile = legacy_profile_for_name(&registry, &app_name)
+            .unwrap_or_else(ContextProfile::general_native);
+        transaction.execute(
+            "UPDATE history SET
+                context_profile_id = ?1,
+                context_label = ?2,
+                context_icon_key = ?3,
+                context_family = ?4,
+                provider_kind = 'local',
+                app_name = '',
+                app_type = ''
+             WHERE id = ?5",
+            rusqlite::params![
+                profile.id,
+                profile.app_label,
+                profile.icon_key,
+                context_family_db_value(profile.family),
+                id,
+            ],
+        )?;
+    }
+    transaction.commit()?;
+    Ok(())
+}
+
+fn legacy_profile_for_name(registry: &AppRegistry, app_name: &str) -> Option<ContextProfile> {
+    let normalized = app_name.trim().to_ascii_lowercase();
+    if normalized.is_empty() {
+        return None;
+    }
+
+    registry.definitions().iter().find_map(|definition| {
+        let matches = definition.app_label.eq_ignore_ascii_case(&normalized)
+            || definition
+                .native_identities
+                .iter()
+                .chain(definition.process_aliases.iter())
+                .any(|value| value.eq_ignore_ascii_case(&normalized));
+        matches.then(|| registry.profile(&definition.id)).flatten()
+    })
+}
+
+fn context_family_db_value(family: ContextFamily) -> &'static str {
+    match family {
+        ContextFamily::Email => "email",
+        ContextFamily::WorkChat => "work_chat",
+        ContextFamily::PersonalChat => "personal_chat",
+        ContextFamily::Document => "document",
+        ContextFamily::ProjectManagement => "project_management",
+        ContextFamily::DeveloperCollaboration => "developer_collaboration",
+        ContextFamily::PromptOrCode => "prompt_or_code",
+        ContextFamily::Support => "support",
+        ContextFamily::Social => "social",
+        ContextFamily::General => "general",
+    }
+}
+
+fn context_family_from_db(value: &str) -> ContextFamily {
+    match value {
+        "email" => ContextFamily::Email,
+        "work_chat" => ContextFamily::WorkChat,
+        "personal_chat" => ContextFamily::PersonalChat,
+        "document" => ContextFamily::Document,
+        "project_management" => ContextFamily::ProjectManagement,
+        "developer_collaboration" => ContextFamily::DeveloperCollaboration,
+        "prompt_or_code" => ContextFamily::PromptOrCode,
+        "support" => ContextFamily::Support,
+        "social" => ContextFamily::Social,
+        _ => ContextFamily::General,
+    }
 }
 
 // ─── DictionaryStore (SQLite backed) ───
@@ -1825,8 +1991,11 @@ mod tests {
         HistoryEntry {
             id,
             created_at: created_at.to_string(),
-            app_name: "Notes".to_string(),
-            app_type: "General".to_string(),
+            context_profile_id: "general.native".to_string(),
+            context_label: "General".to_string(),
+            context_icon_key: "general".to_string(),
+            context_family: ContextFamily::General,
+            provider_kind: HistoryProviderKind::Local,
             raw_text: format!("raw {id}"),
             polished_text: format!("polished {id}"),
             language: None,
@@ -2018,6 +2187,87 @@ mod tests {
         assert!(entries[0].active_scene_prompt_truncated);
         assert!(entries[0].output_status.is_none());
         assert!(entries[0].output_error.is_none());
+    }
+
+    #[tokio::test]
+    async fn history_context_migration_clears_raw_app_identity_and_uses_safe_profiles() {
+        let path = std::env::temp_dir().join(format!(
+            "opentypeless-history-test-legacy-context-{}.sqlite",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        {
+            let conn = Connection::open(&path).unwrap();
+            conn.execute_batch(
+                "CREATE TABLE history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    created_at TEXT NOT NULL,
+                    app_name TEXT NOT NULL DEFAULT '',
+                    app_type TEXT NOT NULL DEFAULT '',
+                    raw_text TEXT NOT NULL DEFAULT '',
+                    polished_text TEXT NOT NULL DEFAULT '',
+                    language TEXT,
+                    duration_ms INTEGER
+                );
+                INSERT INTO history (created_at, app_name, app_type, raw_text, polished_text)
+                VALUES
+                    ('2026-07-01T00:00:00', 'Gmail', 'Email', 'one', 'One'),
+                    ('2026-07-02T00:00:00', 'Private Project Alpha', 'Document', 'two', 'Two');",
+            )
+            .unwrap();
+        }
+
+        let store = HistoryStore::new(path.clone()).unwrap();
+        let entries = store.list(10, 0).await.unwrap();
+        assert_eq!(entries[1].context_profile_id, "email.gmail");
+        assert_eq!(entries[1].context_label, "Gmail");
+        assert_eq!(entries[1].context_icon_key, "gmail");
+        assert_eq!(entries[1].context_family, ContextFamily::Email);
+        assert_eq!(entries[1].provider_kind, HistoryProviderKind::Local);
+        assert_eq!(entries[0].context_profile_id, "general.native");
+        assert_eq!(entries[0].context_label, "General");
+
+        let conn = Connection::open(path).unwrap();
+        let raw_values: (String, String) = conn
+            .query_row(
+                "SELECT app_name, app_type FROM history WHERE id = 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(raw_values, (String::new(), String::new()));
+    }
+
+    #[tokio::test]
+    async fn history_context_migration_new_writes_store_only_safe_context_metadata() {
+        let store = temp_history_store("safe-context-write");
+        let mut entry = test_history_entry(1, "2026-07-03T00:00:00");
+        entry.context_profile_id = "dev.github".to_string();
+        entry.context_label = "GitHub".to_string();
+        entry.context_icon_key = "github".to_string();
+        entry.context_family = ContextFamily::DeveloperCollaboration;
+        entry.provider_kind = HistoryProviderKind::ManagedCloud;
+        store.add(entry).await.unwrap();
+
+        let entries = store.list(10, 0).await.unwrap();
+        assert_eq!(entries[0].context_profile_id, "dev.github");
+        assert_eq!(
+            entries[0].context_family,
+            ContextFamily::DeveloperCollaboration
+        );
+        assert_eq!(entries[0].provider_kind, HistoryProviderKind::ManagedCloud);
+
+        let conn = store.conn.lock().unwrap();
+        let raw_values: (String, String) = conn
+            .query_row(
+                "SELECT app_name, app_type FROM history WHERE id = 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(raw_values, (String::new(), String::new()));
     }
 
     #[tokio::test]

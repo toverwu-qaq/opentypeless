@@ -167,8 +167,11 @@ describe('appStore', () => {
         {
           id: 1,
           created_at: '2025-01-01',
-          app_name: 'Test',
-          app_type: 'browser',
+          context_profile_id: 'general.native',
+          context_label: 'General',
+          context_icon_key: 'general',
+          context_family: 'general',
+          provider_kind: 'local',
           raw_text: 'hello',
           polished_text: 'Hello.',
           language: 'en',

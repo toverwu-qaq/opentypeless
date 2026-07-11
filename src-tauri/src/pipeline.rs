@@ -287,6 +287,26 @@ fn selected_text_command_requires_llm(selected_text: Option<&str>) -> bool {
     selected_text_has_content(selected_text)
 }
 
+fn history_provider_kind(config: &storage::AppConfig) -> storage::HistoryProviderKind {
+    let provider = if config.polish_enabled {
+        config.llm_provider.as_str()
+    } else {
+        config.stt_provider.as_str()
+    };
+    if provider == "cloud" {
+        return storage::HistoryProviderKind::ManagedCloud;
+    }
+    if provider == "ollama"
+        || provider == "apple-speech"
+        || (provider == "custom-whisper"
+            && (config.stt_custom_base_url.contains("localhost")
+                || config.stt_custom_base_url.contains("127.0.0.1")))
+    {
+        return storage::HistoryProviderKind::Local;
+    }
+    storage::HistoryProviderKind::Byok
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SelectedTextOutputPolicy {
     PopupAnswer,
@@ -2084,8 +2104,11 @@ impl PipelineHandle {
         let entry = storage::HistoryEntry {
             id: 0, // auto-increment
             created_at: now,
-            app_name: app_ctx.profile.app_label.clone(),
-            app_type: format!("{:?}", app_ctx.profile.family),
+            context_profile_id: app_ctx.profile.id.clone(),
+            context_label: app_ctx.profile.app_label.clone(),
+            context_icon_key: app_ctx.profile.icon_key.clone(),
+            context_family: app_ctx.profile.family,
+            provider_kind: history_provider_kind(config),
             raw_text: raw_text.to_string(),
             polished_text: final_text.to_string(),
             language: None,
@@ -2811,5 +2834,28 @@ mod tests {
         assert_eq!(diagnostics.name, None);
         assert_eq!(diagnostics.prompt_chars, None);
         assert!(!diagnostics.prompt_truncated);
+    }
+
+    #[test]
+    fn history_provider_kind_uses_only_provider_classification() {
+        let mut config = storage::AppConfig::default();
+        config.polish_enabled = true;
+        config.llm_provider = "cloud".to_string();
+        assert_eq!(
+            history_provider_kind(&config),
+            storage::HistoryProviderKind::ManagedCloud
+        );
+
+        config.llm_provider = "openrouter".to_string();
+        assert_eq!(
+            history_provider_kind(&config),
+            storage::HistoryProviderKind::Byok
+        );
+
+        config.llm_provider = "ollama".to_string();
+        assert_eq!(
+            history_provider_kind(&config),
+            storage::HistoryProviderKind::Local
+        );
     }
 }

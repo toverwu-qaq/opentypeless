@@ -21,7 +21,7 @@ export function History() {
             (h) =>
               h.polished_text.includes(search) ||
               h.raw_text.includes(search) ||
-              h.app_name.includes(search),
+              h.context_label.includes(search),
           )
         : history,
     [history, search],
@@ -136,7 +136,8 @@ export function History() {
                           {entry.polished_text}
                         </p>
                         <p className="text-[11px] text-text-tertiary mt-1">
-                          {entry.created_at.split('T')[1]?.slice(0, 5) || ''} · {entry.app_name}
+                          {entry.created_at.split('T')[1]?.slice(0, 5) || ''} ·{' '}
+                          {entry.context_label}
                         </p>
                         {entry.output_status && outputStatusLabel(entry.output_status) && (
                           <p className="text-[11px] text-warning mt-1 leading-snug break-words">

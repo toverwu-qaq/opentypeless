@@ -77,8 +77,21 @@ export interface PlatformCapabilities {
 export interface HistoryEntry {
   id: number
   created_at: string
-  app_name: string
-  app_type: string
+  context_profile_id: string
+  context_label: string
+  context_icon_key: string
+  context_family:
+    | 'email'
+    | 'work_chat'
+    | 'personal_chat'
+    | 'document'
+    | 'project_management'
+    | 'developer_collaboration'
+    | 'prompt_or_code'
+    | 'support'
+    | 'social'
+    | 'general'
+  provider_kind: 'managed_cloud' | 'byok' | 'local'
   raw_text: string
   polished_text: string
   language: string | null
