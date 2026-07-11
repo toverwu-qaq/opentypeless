@@ -155,6 +155,11 @@ export interface ActiveScene {
   prompt_template: string
 }
 
+export interface FamilySceneAssignment {
+  family: ContextFamily
+  scene_id: string
+}
+
 export interface VoiceRoutingFlags {
   draft_insert: boolean
   rewrite_selection: boolean
@@ -188,6 +193,7 @@ export interface AppConfig {
   polish_chinese_script: PolishChineseScript
   custom_scenes: CustomScene[]
   active_scene: ActiveScene | null
+  family_scene_assignments: FamilySceneAssignment[]
   translate_enabled: boolean
   target_lang: string
   translation: TranslationConfig
@@ -591,6 +597,7 @@ const defaultConfig: AppConfig = {
   polish_chinese_script: 'preserve',
   custom_scenes: [],
   active_scene: null,
+  family_scene_assignments: [],
   translate_enabled: false,
   target_lang: 'en',
   translation: { targets: ['en'], active_target: 'en' },

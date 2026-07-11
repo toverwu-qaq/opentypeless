@@ -30,6 +30,10 @@ vi.mock('react-i18next', () => ({
         'settings.contextAdaptation': 'Adapt writing to the current app',
         'settings.contextAdaptationHint': 'Uses a private local app category',
         'settings.lastDictationContext': 'Last dictation context',
+        'settings.appStyleMenu': 'App writing style',
+        'settings.useDifferentWritingStyle': 'Use a different writing style',
+        'settings.manageAppMappings': 'Manage app mappings',
+        'settings.appStyleDialogTitle': 'Writing style for this app',
         'settings.polishStyle': 'Polish style',
         'settings.polishStyleMinimal': 'Minimal',
         'settings.polishStyleClean': 'Clean',
@@ -86,6 +90,7 @@ const mockAppStore = {
     polish_chinese_script: 'preserve',
     custom_scenes: [],
     active_scene: null as any,
+    family_scene_assignments: [],
     translate_enabled: false,
     selected_text_enabled: false,
     target_lang: 'en',
@@ -152,6 +157,7 @@ describe('LlmPane', () => {
       polish_chinese_script: 'preserve',
       custom_scenes: [],
       active_scene: null,
+      family_scene_assignments: [],
       translate_enabled: false,
       selected_text_enabled: false,
       target_lang: 'en',
@@ -171,6 +177,8 @@ describe('LlmPane', () => {
     vi.mocked(tauri.readCredential).mockResolvedValue(null)
     vi.mocked(tauri.setCredential).mockResolvedValue(undefined)
     vi.mocked(tauri.getLlmModelCapability).mockResolvedValue('unknown')
+    vi.mocked(tauri.getLatestMappingCandidate).mockResolvedValue(null)
+    vi.mocked(tauri.listCustomAppMappings).mockResolvedValue([])
   })
 
   afterEach(() => {
@@ -546,6 +554,75 @@ describe('LlmPane', () => {
       expect(screen.getByText('Last dictation context')).toBeInTheDocument()
       expect(screen.getByText('Slack')).toBeInTheDocument()
       expect(screen.queryByText(/window|host|confidence/i)).not.toBeInTheDocument()
+    })
+
+    it('keeps the app-style overflow hidden without a live candidate or user mappings', async () => {
+      mockAppStore.lastContext = {
+        profileId: 'chat.slack',
+        family: 'work_chat',
+        appLabel: 'Slack',
+        iconKey: 'slack',
+        overrideId: 'slack',
+      }
+
+      render(<LlmPane />)
+
+      await waitFor(() => expect(tauri.listCustomAppMappings).toHaveBeenCalled())
+      expect(screen.queryByRole('button', { name: 'App writing style' })).not.toBeInTheDocument()
+    })
+
+    it('opens one compact writing-style dialog from a live safe candidate', async () => {
+      mockAppStore.lastContext = {
+        profileId: 'general.browser',
+        family: 'general',
+        appLabel: 'Example',
+        iconKey: 'general',
+        overrideId: null,
+      }
+      vi.mocked(tauri.getLatestMappingCandidate).mockResolvedValue({
+        generation: 7,
+        matcherType: 'exact_web_host',
+        displayValue: 'docs.example.com',
+        suggestedLabel: 'docs.example.com',
+        currentFamily: 'document',
+        iconKey: 'general',
+      })
+
+      render(<LlmPane />)
+
+      fireEvent.click(await screen.findByRole('button', { name: 'App writing style' }))
+      fireEvent.click(screen.getByText('Use a different writing style'))
+
+      expect(await screen.findByRole('dialog', { name: 'Writing style for this app' })).toBeVisible()
+      expect(screen.getByText('docs.example.com')).toBeInTheDocument()
+    })
+
+    it('shows mapping management only for user-created mappings', async () => {
+      mockAppStore.lastContext = {
+        profileId: 'chat.slack',
+        family: 'work_chat',
+        appLabel: 'Slack',
+        iconKey: 'slack',
+        overrideId: 'slack',
+      }
+      vi.mocked(tauri.listCustomAppMappings).mockResolvedValue([
+        {
+          id: 'mapping-1',
+          label: 'Work Slack',
+          matcherType: 'native_bundle_id',
+          displayValue: 'Work Slack · macOS',
+          family: 'work_chat',
+          sceneId: null,
+          enabled: true,
+          iconKey: 'slack',
+        },
+      ])
+
+      render(<LlmPane />)
+
+      fireEvent.click(await screen.findByRole('button', { name: 'App writing style' }))
+      expect(screen.getByText('Manage app mappings')).toBeInTheDocument()
+      expect(screen.queryByText('Gmail')).not.toBeInTheDocument()
     })
 
     it('shows target language selector when translation is enabled', () => {

@@ -6,6 +6,8 @@ import type {
   CorrectionRule,
   PlatformCapabilities,
   TranslationConfig,
+  ContextFamily,
+  FamilySceneAssignment,
 } from '../stores/appStore'
 
 // Pipeline commands
@@ -23,6 +25,82 @@ export async function abortRecording(): Promise<void> {
 
 export async function setActiveTranslationTarget(code: string): Promise<TranslationConfig> {
   return invoke('set_active_translation_target', { code })
+}
+
+export type AppMatcherType = 'native_bundle_id' | 'native_executable' | 'exact_web_host'
+
+export interface MappingCandidateView {
+  generation: number
+  matcherType: AppMatcherType
+  displayValue: string
+  suggestedLabel: string
+  currentFamily: ContextFamily
+  iconKey: string
+}
+
+export interface CustomAppMappingView {
+  id: string
+  label: string
+  matcherType: AppMatcherType
+  displayValue: string
+  family: ContextFamily
+  sceneId: string | null
+  enabled: boolean
+  iconKey: string
+}
+
+export interface SaveCustomAppMappingInput {
+  candidateGeneration: number
+  label: string
+  family: ContextFamily
+  sceneId: string | null
+}
+
+export interface UpdateCustomAppMappingInput {
+  id: string
+  label: string
+  family: ContextFamily
+  sceneId: string | null
+  enabled: boolean
+}
+
+export async function getLatestMappingCandidate(): Promise<MappingCandidateView | null> {
+  return invoke('get_latest_mapping_candidate')
+}
+
+export async function listCustomAppMappings(): Promise<CustomAppMappingView[]> {
+  return invoke('list_custom_app_mappings')
+}
+
+export async function saveCustomAppMapping(
+  input: SaveCustomAppMappingInput,
+): Promise<CustomAppMappingView> {
+  return invoke('save_custom_app_mapping', { input })
+}
+
+export async function updateCustomAppMapping(
+  input: UpdateCustomAppMappingInput,
+): Promise<CustomAppMappingView> {
+  return invoke('update_custom_app_mapping', { input })
+}
+
+export async function setCustomAppMappingEnabled(id: string, enabled: boolean): Promise<void> {
+  return invoke('set_custom_app_mapping_enabled', { id, enabled })
+}
+
+export async function deleteCustomAppMapping(id: string): Promise<void> {
+  return invoke('delete_custom_app_mapping', { id })
+}
+
+export async function resetCustomAppMappings(): Promise<void> {
+  return invoke('reset_custom_app_mappings')
+}
+
+export async function setFamilySceneAssignment(
+  family: ContextFamily,
+  sceneId: string | null,
+): Promise<FamilySceneAssignment[]> {
+  return invoke('set_family_scene_assignment', { input: { family, sceneId } })
 }
 
 // Config commands

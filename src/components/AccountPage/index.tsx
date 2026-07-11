@@ -19,6 +19,7 @@ import { hasManagedCloudAccess, useAuthStore } from '../../stores/authStore'
 import { useAppStore } from '../../stores/appStore'
 import { API_BASE_URL } from '../../lib/constants'
 import { uploadBackup, downloadBackup, createPortalSession } from '../../lib/api'
+import { createBackupSettings } from '../../lib/backup-settings'
 import {
   EMAIL_VERIFICATION_STATE_TTL_MS,
   OAUTH_STATE_TTL_MS,
@@ -598,12 +599,7 @@ function AccountDetails() {
     setBackupLoading(true)
     setBackupMsg(null)
     try {
-      const {
-        stt_api_key: _stt_api_key,
-        stt_custom_api_key: _stt_custom_api_key,
-        llm_api_key: _llm_api_key,
-        ...safeConfig
-      } = config
+      const safeConfig = createBackupSettings(config)
       await uploadBackup({ history, dictionary, settings: safeConfig })
       setBackupMsg(t('account.toast.backupOk'))
     } catch (e) {

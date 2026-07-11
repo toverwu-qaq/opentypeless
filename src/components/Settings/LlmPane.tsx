@@ -7,17 +7,33 @@ import { LLM_PROVIDERS, LLM_DEFAULT_CONFIG } from '../../lib/constants'
 import {
   benchLlmConnection,
   fetchLlmModels,
+  getLatestMappingCandidate,
   getLlmModelCapability,
+  listCustomAppMappings,
   readCredential,
   setCredential,
   updateConfig as persistConfig,
 } from '../../lib/tauri'
-import type { LlmModelCapability } from '../../lib/tauri'
+import type {
+  CustomAppMappingView,
+  LlmModelCapability,
+  MappingCandidateView,
+} from '../../lib/tauri'
 import { FormField } from './shared/FormField'
 import { Toggle } from './shared/Toggle'
-import { CheckCircle2, XCircle, Loader2, RefreshCw, Crown, ChevronDown } from 'lucide-react'
+import {
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  RefreshCw,
+  Crown,
+  ChevronDown,
+  MoreHorizontal,
+} from 'lucide-react'
 import { AppLogo } from '../AppLogo'
 import { TranslationTargets } from './TranslationTargets'
+import { AppStyleMappingDialog } from './AppStyleMappingDialog'
+import { ManageAppMappingsDialog } from './ManageAppMappingsDialog'
 
 export function LlmPane() {
   const config = useAppStore((s) => s.config)
@@ -47,6 +63,61 @@ export function LlmPane() {
   const credentialSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [llmApiKey, setLlmApiKey] = useState(config.llm_api_key)
   const [modelCapability, setModelCapability] = useState<LlmModelCapability>('unknown')
+  const [mappingCandidate, setMappingCandidate] = useState<MappingCandidateView | null>(null)
+  const [appMappings, setAppMappings] = useState<CustomAppMappingView[]>([])
+  const [appStyleMenuOpen, setAppStyleMenuOpen] = useState(false)
+  const [appStyleDialogOpen, setAppStyleDialogOpen] = useState(false)
+  const [manageMappingsOpen, setManageMappingsOpen] = useState(false)
+  const [editingMapping, setEditingMapping] = useState<CustomAppMappingView | null>(null)
+  const appStyleMenuButtonRef = useRef<HTMLButtonElement>(null)
+
+  const refreshAppMappings = useCallback(async () => {
+    const [candidate, mappings] = await Promise.all([
+      getLatestMappingCandidate(),
+      listCustomAppMappings(),
+    ])
+    setMappingCandidate(candidate)
+    setAppMappings(mappings)
+  }, [])
+
+  useEffect(() => {
+    if (!lastContext) {
+      setMappingCandidate(null)
+      setAppMappings([])
+      return
+    }
+    let cancelled = false
+    Promise.all([getLatestMappingCandidate(), listCustomAppMappings()])
+      .then(([candidate, mappings]) => {
+        if (cancelled) return
+        setMappingCandidate(candidate)
+        setAppMappings(mappings)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setMappingCandidate(null)
+        setAppMappings([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [lastContext])
+
+  const closeAppStyleMenu = useCallback((restoreFocus = false) => {
+    setAppStyleMenuOpen(false)
+    if (restoreFocus) requestAnimationFrame(() => appStyleMenuButtonRef.current?.focus())
+  }, [])
+
+  useEffect(() => {
+    if (!appStyleMenuOpen) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      closeAppStyleMenu(true)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [appStyleMenuOpen, closeAppStyleMenu])
 
   useEffect(() => {
     let cancelled = false
@@ -355,6 +426,54 @@ export function LlmPane() {
               <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] text-text-secondary">
                 <AppLogo iconKey={lastContext.iconKey} family={lastContext.family} />
                 <span className="min-w-0 truncate">{lastContext.appLabel}</span>
+                {(mappingCandidate || appMappings.length > 0) && (
+                  <div className="relative ml-auto flex-none">
+                    <button
+                      ref={appStyleMenuButtonRef}
+                      type="button"
+                      aria-label={t('settings.appStyleMenu')}
+                      title={t('settings.appStyleMenu')}
+                      aria-expanded={appStyleMenuOpen}
+                      onClick={() => setAppStyleMenuOpen((open) => !open)}
+                      className="grid h-7 w-7 place-items-center rounded-[6px] border-none bg-transparent text-text-tertiary hover:bg-bg-hover hover:text-text-primary"
+                    >
+                      <MoreHorizontal size={15} />
+                    </button>
+                    {appStyleMenuOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-30"
+                          onClick={() => closeAppStyleMenu(true)}
+                        />
+                        <div className="absolute right-0 top-8 z-40 min-w-[210px] rounded-[8px] border border-border bg-bg-primary py-1 shadow-float">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeAppStyleMenu()
+                              setEditingMapping(null)
+                              setAppStyleDialogOpen(true)
+                            }}
+                            className="block w-full px-3 py-2 text-left text-[12px] text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+                          >
+                            {t('settings.useDifferentWritingStyle')}
+                          </button>
+                          {appMappings.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                closeAppStyleMenu()
+                                setManageMappingsOpen(true)
+                              }}
+                              className="block w-full px-3 py-2 text-left text-[12px] text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+                            >
+                              {t('settings.manageAppMappings')}
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -459,6 +578,37 @@ export function LlmPane() {
             onChange={(translation) => updateConfig({ translation })}
           />
         </FormField>
+      )}
+
+      {appStyleDialogOpen && lastContext && (
+        <AppStyleMappingDialog
+          candidate={editingMapping ? null : mappingCandidate}
+          mapping={editingMapping}
+          context={lastContext}
+          config={config}
+          onCancel={() => {
+            setAppStyleDialogOpen(false)
+            setEditingMapping(null)
+          }}
+          onSaved={async () => {
+            await refreshAppMappings()
+            setAppStyleDialogOpen(false)
+            setEditingMapping(null)
+          }}
+        />
+      )}
+
+      {manageMappingsOpen && (
+        <ManageAppMappingsDialog
+          mappings={appMappings}
+          onCancel={() => setManageMappingsOpen(false)}
+          onChanged={refreshAppMappings}
+          onEdit={(mapping) => {
+            setManageMappingsOpen(false)
+            setEditingMapping(mapping)
+            setAppStyleDialogOpen(true)
+          }}
+        />
       )}
     </div>
   )
