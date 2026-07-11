@@ -1,0 +1,45 @@
+src-tauri/src/error.rs
+  s_7724aa1accb26b::t_4ac6d11cc9c483 1,26-63,77,97,124,294-330
+src-tauri/src/llm/cloud.rs
+  s_7724aa1accb26b::t_86d74e028da068 5,190-198
+src-tauri/src/pipeline.rs
+  s_7724aa1accb26b::t_75750c80c659b6 1255-1258,1321,1961
+src-tauri/src/stt/cloud.rs
+  s_7724aa1accb26b::t_e3a953dae66d7e 3,197-198
+src/hooks/__tests__/useTauriEvents.test.tsx
+  s_7724aa1accb26b::t_7771694fd02c4c 1,8,36-39,92-109
+src/hooks/useTauriEvents.ts
+  s_7724aa1accb26b::t_26fb3070a3ac3e 10,97-101
+src/lib/__tests__/api.test.ts
+  s_7724aa1accb26b::t_ca26f115c76b3a 2,5-10,77-80,115-169
+src/lib/__tests__/cloud-session.test.ts
+  s_7724aa1accb26b::t_5c0c53bbddd4a2 1-64
+src/lib/api.ts
+  s_7724aa1accb26b::t_e95589041323fe 8,44,63-103,245
+src/lib/auth-client.ts
+  s_7724aa1accb26b::t_9d357753cce1e6 19-44
+src/lib/cloud-session.ts
+  s_7724aa1accb26b::t_7a9ae95f8b7896 1-55
+src/stores/__tests__/authStore.test.ts
+  s_7724aa1accb26b::t_fa3d70a2deec82 2,16-17,20-21,34-37,74,88-89,91-92,177,211,246,344-484
+src/stores/authStore.ts
+  s_7724aa1accb26b::t_e298b20130fe3a 2-11,31,34-35,46,84-87,109-143,153,181,186-187,189,208-209,236,239,267-268,305-399,404-405,408,484-485,497,500,510-511
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8473d312b65961b1df668dece6b97045cacf94c7",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
