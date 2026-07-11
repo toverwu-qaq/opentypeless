@@ -1,0 +1,67 @@
+docs/app-icon-sources.md
+  s_7724aa1accb26b::t_8ff84e6982c74f 1-41
+src-tauri/src/pipeline.rs
+  s_7724aa1accb26b::t_74ae9c7eef9e44 1572-1575
+src/assets/app-icons/manifest.ts
+  s_7724aa1accb26b::t_0fc669402db60f 1-69
+src/components/AppLogo.tsx
+  s_7724aa1accb26b::t_c3bf5e04484d82 1-60
+src/components/History/AppContextMeta.tsx
+  s_7724aa1accb26b::t_445d944dc1e123 1-33
+src/components/History/__tests__/AppContextMeta.test.tsx
+  s_7724aa1accb26b::t_4da76323b11f94 1-51
+src/components/History/index.tsx
+  s_7724aa1accb26b::t_c87dc650dba386 9,139-145
+src/components/Settings/LlmPane.tsx
+  s_7724aa1accb26b::t_f3bffa33f1a0c0 19,30,339-360
+src/components/Settings/__tests__/LlmPane.test.tsx
+  s_7724aa1accb26b::t_dbdf1d2733d35b 30-32,83,102,148,161,505-548
+src/components/Settings/__tests__/Settings.test.tsx
+  s_7724aa1accb26b::t_525ca79878817e 168
+src/components/Settings/shared/Toggle.tsx
+  s_7724aa1accb26b::t_e8ad422978e764 7,10,12-14,16,19,21-23
+src/hooks/__tests__/useTauriEvents.test.tsx
+  s_7724aa1accb26b::t_97f1648d15592b 48,110-137
+src/hooks/useTauriEvents.ts
+  s_7724aa1accb26b::t_82c3c7d5f6d596 6-11,37,86,142
+src/i18n/locales/de.json
+  s_7724aa1accb26b::t_2b8e1869175610 325-328,505-509
+src/i18n/locales/en.json
+  s_7724aa1accb26b::t_902da8b6565a70 323-326,505-509
+src/i18n/locales/es.json
+  s_7724aa1accb26b::t_054ae10ad6f286 325-328,505-509
+src/i18n/locales/fr.json
+  s_7724aa1accb26b::t_d086b1008f05ab 325-328,505-509
+src/i18n/locales/it.json
+  s_7724aa1accb26b::t_b175c01f3bd8ee 325-328,505-509
+src/i18n/locales/ja.json
+  s_7724aa1accb26b::t_f241e5e514644f 325-328,505-509
+src/i18n/locales/ko.json
+  s_7724aa1accb26b::t_f72cc338de6510 325-328,505-509
+src/i18n/locales/pt.json
+  s_7724aa1accb26b::t_1c91201f6942d7 325-328,505-509
+src/i18n/locales/ru.json
+  s_7724aa1accb26b::t_d23d31343ed7b9 325-328,505-509
+src/i18n/locales/zh.json
+  s_7724aa1accb26b::t_6ab96ba1290841 323-326,505-509
+src/stores/appStore.ts
+  s_7724aa1accb26b::t_0e5a27488ce86c 53-63,94,109-116,223-224,559-560
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "537183942a41260f0a29ef445a0a39ebf442014e",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
