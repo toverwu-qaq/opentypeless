@@ -74,6 +74,9 @@ export interface HotkeyConfig {
   dictation: ShortcutBinding
   ask: ShortcutBinding | null
   translate: ShortcutBinding | null
+  dictationBindings: ShortcutBinding[]
+  askBindings: ShortcutBinding[]
+  translateBindings: ShortcutBinding[]
   editSelection: ShortcutBinding | null
   switchScene: ShortcutBinding | null
   openApp: ShortcutBinding | null
@@ -437,7 +440,7 @@ function normalizePrimary(value: string): string | null {
   return null
 }
 
-function bindingFromHotkey(value: string): ShortcutBinding | null {
+export function bindingFromHotkey(value: string): ShortcutBinding | null {
   const parts = value
     .split('+')
     .map((part) => part.trim())
@@ -462,19 +465,114 @@ function bindingFromHotkey(value: string): ShortcutBinding | null {
   return { primary, modifiers }
 }
 
-function hotkeyFromBinding(binding: ShortcutBinding): string {
+export function hotkeyFromBinding(binding: ShortcutBinding): string {
   return [...binding.modifiers, binding.primary].join('+')
 }
 
-function hotkeyConfigFromLegacy(config: AppConfig): HotkeyConfig {
+const MAX_HOTKEY_BINDINGS_PER_ROLE = 3
+
+function normalizeBinding(binding: ShortcutBinding | null | undefined): ShortcutBinding | null {
+  if (!binding) return null
+  return bindingFromHotkey(hotkeyFromBinding(binding))
+}
+
+function hotkeyBindingIdentity(binding: ShortcutBinding): string {
+  const modifiers = binding.modifiers.map((modifier) => {
+    if (modifier === 'Option') return 'Alt'
+    if (modifier === 'Command') return 'Super'
+    return modifier
+  })
+  return [...modifiers, binding.primary].join('+')
+}
+
+function normalizeBindingList(bindings: ShortcutBinding[] | null | undefined): ShortcutBinding[] {
+  const normalized: ShortcutBinding[] = []
+  const seen = new Set<string>()
+  for (const binding of Array.isArray(bindings) ? bindings : []) {
+    const next = normalizeBinding(binding)
+    if (!next) continue
+    const identity = hotkeyBindingIdentity(next)
+    if (seen.has(identity)) continue
+    seen.add(identity)
+    normalized.push(next)
+    if (normalized.length === MAX_HOTKEY_BINDINGS_PER_ROLE) break
+  }
+  return normalized
+}
+
+function normalizeHotkeyConfig(config: AppConfig, hotkeysValue: HotkeyConfig): HotkeyConfig {
+  const hotkeys = hotkeysValue as HotkeyConfig & {
+    dictationBindings?: ShortcutBinding[]
+    askBindings?: ShortcutBinding[]
+    translateBindings?: ShortcutBinding[]
+  }
+  const scalarDictation = normalizeBinding(hotkeys.dictation)
+  const dictationBindings = normalizeBindingList(
+    hotkeys.dictationBindings?.length
+      ? hotkeys.dictationBindings
+      : scalarDictation
+        ? [scalarDictation]
+        : [],
+  )
+  if (dictationBindings.length === 0) {
+    dictationBindings.push(bindingFromHotkey(defaultDictationHotkey())!)
+  }
+
+  const hasAskList = Array.isArray(hotkeys.askBindings)
+  const askBindings = normalizeBindingList(
+    hasAskList ? hotkeys.askBindings : hotkeys.ask ? [hotkeys.ask] : [],
+  )
+  const hasTranslateList = Array.isArray(hotkeys.translateBindings)
+  const translateBindings = normalizeBindingList(
+    hasTranslateList
+      ? hotkeys.translateBindings
+      : hotkeys.translate
+        ? [hotkeys.translate]
+        : [],
+  )
+
   return {
-    dictation: bindingFromHotkey(config.hotkey) ?? bindingFromHotkey(defaultDictationHotkey())!,
-    ask: config.ask_hotkey.trim()
-      ? (bindingFromHotkey(config.ask_hotkey) ?? bindingFromHotkey(defaultAskHotkey()))
-      : null,
-    translate:
-      config.hotkeys?.translate ??
-      (defaultTranslateHotkey() ? bindingFromHotkey(defaultTranslateHotkey()!) : null),
+    dictation: dictationBindings[0],
+    ask: askBindings[0] ?? null,
+    translate: translateBindings[0] ?? null,
+    dictationBindings,
+    askBindings,
+    translateBindings,
+    editSelection: normalizeBinding(hotkeys.editSelection),
+    switchScene: normalizeBinding(hotkeys.switchScene),
+    openApp: normalizeBinding(hotkeys.openApp),
+    dictationMode:
+      hotkeys.dictationMode === 'toggle'
+        ? 'toggle'
+        : hotkeys.dictationMode === 'hold'
+          ? 'hold'
+          : config.hotkey_mode === 'toggle'
+            ? 'toggle'
+            : defaultDictationHotkeyMode(),
+  }
+}
+
+function hotkeyConfigFromLegacy(config: AppConfig): HotkeyConfig {
+  const dictation = bindingFromHotkey(config.hotkey) ?? bindingFromHotkey(defaultDictationHotkey())!
+  const ask = config.ask_hotkey.trim()
+    ? (bindingFromHotkey(config.ask_hotkey) ?? bindingFromHotkey(defaultAskHotkey()))
+    : null
+  const existingTranslate = config.hotkeys?.translate ??
+    (defaultTranslateHotkey() ? bindingFromHotkey(defaultTranslateHotkey()!) : null)
+  const translateBindings = normalizeBindingList(
+    config.hotkeys?.translateBindings?.length
+      ? config.hotkeys.translateBindings
+      : existingTranslate
+        ? [existingTranslate]
+        : [],
+  )
+  return normalizeHotkeyConfig(config, {
+    dictation,
+    ask,
+    translate: translateBindings[0] ?? null,
+    dictationBindings: [dictation],
+    askBindings: ask ? [ask] : [],
+    translateBindings,
     editSelection: config.hotkeys?.editSelection ?? null,
     switchScene: config.hotkeys?.switchScene ?? null,
     openApp: config.hotkeys?.openApp ?? null,
@@ -484,7 +582,7 @@ function hotkeyConfigFromLegacy(config: AppConfig): HotkeyConfig {
         : config.hotkey_mode === 'hold'
           ? 'hold'
           : defaultDictationHotkeyMode(),
-  }
+  })
 }
 
 function syncLegacyHotkeysToTyped(config: AppConfig): AppConfig {
@@ -492,7 +590,9 @@ function syncLegacyHotkeysToTyped(config: AppConfig): AppConfig {
 }
 
 function syncTypedHotkeysToLegacy(config: AppConfig): AppConfig {
-  const hotkeys = config.hotkeys ?? hotkeyConfigFromLegacy(config)
+  const hotkeys = config.hotkeys
+    ? normalizeHotkeyConfig(config, config.hotkeys)
+    : hotkeyConfigFromLegacy(config)
   return {
     ...config,
     hotkey: hotkeyFromBinding(hotkeys.dictation),
@@ -564,7 +664,34 @@ function syncTranslationConfig(previous: AppConfig, partial: Partial<AppConfig>)
 
 function syncHotkeyConfig(previous: AppConfig, partial: Partial<AppConfig>): AppConfig {
   const merged = syncTranslationConfig(previous, partial)
-  if (partial.hotkeys) return syncTypedHotkeysToLegacy(merged)
+  if (partial.hotkeys) {
+    const hotkeys = { ...partial.hotkeys }
+    const listsChanged =
+      JSON.stringify(hotkeys.dictationBindings) !==
+        JSON.stringify(previous.hotkeys.dictationBindings) ||
+      JSON.stringify(hotkeys.askBindings) !== JSON.stringify(previous.hotkeys.askBindings) ||
+      JSON.stringify(hotkeys.translateBindings) !==
+        JSON.stringify(previous.hotkeys.translateBindings)
+    if (!listsChanged) {
+      if (JSON.stringify(hotkeys.dictation) !== JSON.stringify(previous.hotkeys.dictation)) {
+        hotkeys.dictationBindings = [
+          hotkeys.dictation,
+          ...(hotkeys.dictationBindings ?? []).slice(1),
+        ]
+      }
+      if (JSON.stringify(hotkeys.ask) !== JSON.stringify(previous.hotkeys.ask)) {
+        hotkeys.askBindings = hotkeys.ask
+          ? [hotkeys.ask, ...(hotkeys.askBindings ?? []).slice(1)]
+          : []
+      }
+      if (JSON.stringify(hotkeys.translate) !== JSON.stringify(previous.hotkeys.translate)) {
+        hotkeys.translateBindings = hotkeys.translate
+          ? [hotkeys.translate, ...(hotkeys.translateBindings ?? []).slice(1)]
+          : []
+      }
+    }
+    return syncTypedHotkeysToLegacy({ ...merged, hotkeys })
+  }
   if ('hotkey' in partial || 'ask_hotkey' in partial || 'hotkey_mode' in partial) {
     return syncLegacyHotkeysToTyped(merged)
   }
@@ -608,6 +735,11 @@ const defaultConfig: AppConfig = {
     dictation: bindingFromHotkey(defaultDictationHotkey())!,
     ask: bindingFromHotkey(defaultAskHotkey()),
     translate: defaultTranslateHotkey() ? bindingFromHotkey(defaultTranslateHotkey()!) : null,
+    dictationBindings: [bindingFromHotkey(defaultDictationHotkey())!],
+    askBindings: [bindingFromHotkey(defaultAskHotkey())!],
+    translateBindings: defaultTranslateHotkey()
+      ? [bindingFromHotkey(defaultTranslateHotkey()!)!]
+      : [],
     editSelection: null,
     switchScene: null,
     openApp: null,

@@ -194,6 +194,11 @@ export interface HotkeyStatusError {
 
 export interface HotkeyRoleStatus {
   role: HotkeyRole | string
+  index: number
+  display: string
+  backend: HotkeyAdapter
+  valid: boolean
+  conflictWith: { role: HotkeyRole | string; index: number } | null
   adapter: HotkeyAdapter
   state: HotkeyInstallState
   message: string | null

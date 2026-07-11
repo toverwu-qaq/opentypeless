@@ -116,6 +116,11 @@ vi.mock('../../../lib/tauri', () => ({
     roles: [
       {
         role: 'dictation',
+        index: 0,
+        display: 'Ctrl+/',
+        backend: 'tauriGlobalShortcut',
+        valid: true,
+        conflictWith: null,
         adapter: 'tauriGlobalShortcut',
         state: 'installed',
         message: null,
@@ -123,6 +128,11 @@ vi.mock('../../../lib/tauri', () => ({
       },
       {
         role: 'ask',
+        index: 0,
+        display: 'Ctrl+.',
+        backend: 'tauriGlobalShortcut',
+        valid: true,
+        conflictWith: null,
         adapter: 'tauriGlobalShortcut',
         state: 'installed',
         message: null,
@@ -244,6 +254,11 @@ function mockHotkeyStatus(overrides: Partial<HotkeyStatus> = {}): HotkeyStatus {
     roles: [
       {
         role: 'dictation',
+        index: 0,
+        display: 'Ctrl+/',
+        backend: 'tauriGlobalShortcut',
+        valid: true,
+        conflictWith: null,
         adapter: 'tauriGlobalShortcut',
         state: 'installed',
         message: null,
@@ -251,6 +266,11 @@ function mockHotkeyStatus(overrides: Partial<HotkeyStatus> = {}): HotkeyStatus {
       },
       {
         role: 'ask',
+        index: 0,
+        display: 'Ctrl+.',
+        backend: 'tauriGlobalShortcut',
+        valid: true,
+        conflictWith: null,
         adapter: 'tauriGlobalShortcut',
         state: 'installed',
         message: null,
@@ -312,6 +332,8 @@ describe('Settings tab 切换', () => {
     expect(screen.getByText('settings.hotkey')).toBeDefined()
     expect(screen.getByText('settings.dictationHotkey')).toBeDefined()
     expect(screen.getByText('settings.askHotkey')).toBeDefined()
+    expect(screen.getByText('settings.translateHotkey')).toBeDefined()
+    expect(screen.getAllByRole('button', { name: 'settings.shortcutAdd' })).toHaveLength(3)
     expect(screen.queryByText('settings.askAnything')).toBeNull()
     expect(screen.queryByText('settings.askAnythingDesc')).toBeNull()
     expect(screen.getByLabelText('settings.tryAsk')).toBeDefined()

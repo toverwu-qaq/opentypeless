@@ -120,6 +120,28 @@ export function createBackupSettings(config: AppConfig): BackupSettings {
           dictation: safeBinding(config.hotkeys.dictation)!,
           ask: safeBinding(config.hotkeys.ask),
           translate: safeBinding(config.hotkeys.translate),
+          dictationBindings: (Array.isArray(config.hotkeys.dictationBindings)
+            ? config.hotkeys.dictationBindings
+            : [config.hotkeys.dictation]
+          )
+            .map((binding) => safeBinding(binding))
+            .filter((binding): binding is ShortcutBinding => Boolean(binding)),
+          askBindings: (Array.isArray(config.hotkeys.askBindings)
+            ? config.hotkeys.askBindings
+            : config.hotkeys.ask
+              ? [config.hotkeys.ask]
+              : []
+          )
+            .map((binding) => safeBinding(binding))
+            .filter((binding): binding is ShortcutBinding => Boolean(binding)),
+          translateBindings: (Array.isArray(config.hotkeys.translateBindings)
+            ? config.hotkeys.translateBindings
+            : config.hotkeys.translate
+              ? [config.hotkeys.translate]
+              : []
+          )
+            .map((binding) => safeBinding(binding))
+            .filter((binding): binding is ShortcutBinding => Boolean(binding)),
           editSelection: safeBinding(config.hotkeys.editSelection),
           switchScene: safeBinding(config.hotkeys.switchScene),
           openApp: safeBinding(config.hotkeys.openApp),

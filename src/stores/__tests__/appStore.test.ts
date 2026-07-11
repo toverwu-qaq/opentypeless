@@ -69,6 +69,11 @@ describe('appStore', () => {
             ? { primary: 'Space', modifiers: ['RightAlt'] }
             : { primary: '.', modifiers: ['Ctrl'] },
       )
+      expect(config.hotkeys.dictationBindings).toEqual([config.hotkeys.dictation])
+      expect(config.hotkeys.askBindings).toEqual([config.hotkeys.ask])
+      expect(config.hotkeys.translateBindings).toEqual(
+        config.hotkeys.translate ? [config.hotkeys.translate] : [],
+      )
       expect(config.hotkeys.dictationMode).toBe(isMac || isWindows ? 'toggle' : 'hold')
       expect(config.output_mode).toBe('keyboard')
       expect(config.insertion_strategy).toBe('auto')
@@ -156,6 +161,54 @@ describe('appStore', () => {
       const { config } = getState()
       expect(config.ask_hotkey).toBe('')
       expect(config.hotkeys.ask).toBeNull()
+    })
+
+    it('normalizes ordered hotkey binding lists and mirrors index zero', () => {
+      getState().updateConfig({
+        hotkeys: {
+          ...getState().config.hotkeys,
+          dictationBindings: [
+            { primary: 'D', modifiers: ['Shift', 'control'] },
+            { primary: 'D', modifiers: ['Ctrl', 'Shift'] },
+            { primary: 'F8', modifiers: [] },
+            { primary: 'F9', modifiers: [] },
+            { primary: 'F10', modifiers: [] },
+          ],
+          askBindings: [],
+          translateBindings: [
+            { primary: 'T', modifiers: ['Ctrl', 'Shift'] },
+            { primary: 'F7', modifiers: [] },
+          ],
+        },
+      })
+
+      const { config } = getState()
+      expect(config.hotkeys.dictationBindings).toEqual([
+        { primary: 'D', modifiers: ['Ctrl', 'Shift'] },
+        { primary: 'F8', modifiers: [] },
+        { primary: 'F9', modifiers: [] },
+      ])
+      expect(config.hotkeys.dictation).toEqual(config.hotkeys.dictationBindings[0])
+      expect(config.hotkey).toBe('Ctrl+Shift+D')
+      expect(config.hotkeys.askBindings).toEqual([])
+      expect(config.hotkeys.ask).toBeNull()
+      expect(config.ask_hotkey).toBe('')
+      expect(config.hotkeys.translate).toEqual(config.hotkeys.translateBindings[0])
+    })
+
+    it('wraps legacy hotkeys into binding lists', () => {
+      getState().updateConfig({
+        hotkey: 'Ctrl+Shift+;',
+        ask_hotkey: '',
+        hotkey_mode: 'toggle',
+      })
+
+      const { hotkeys } = getState().config
+      expect(hotkeys.dictationBindings).toEqual([
+        { primary: ';', modifiers: ['Ctrl', 'Shift'] },
+      ])
+      expect(hotkeys.askBindings).toEqual([])
+      expect(hotkeys.dictationMode).toBe('toggle')
     })
 
     it('keeps ordered translation targets and the legacy target mirror in sync', () => {
