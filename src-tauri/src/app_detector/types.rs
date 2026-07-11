@@ -103,6 +103,33 @@ pub struct TargetAppGuard {
     pub native_identity: Option<String>,
 }
 
+impl TargetAppGuard {
+    pub fn is_empty(&self) -> bool {
+        self.process_id.is_none() && self.native_identity.is_none()
+    }
+
+    pub fn matches(&self, current: &Self) -> bool {
+        if self.is_empty() {
+            return true;
+        }
+        if let Some(expected_pid) = self.process_id {
+            if current.process_id != Some(expected_pid) {
+                return false;
+            }
+        }
+        if let Some(expected_identity) = self.native_identity.as_deref() {
+            if !current
+                .native_identity
+                .as_deref()
+                .is_some_and(|value| value.eq_ignore_ascii_case(expected_identity))
+            {
+                return false;
+            }
+        }
+        true
+    }
+}
+
 impl From<&ContextSignals> for TargetAppGuard {
     fn from(signals: &ContextSignals) -> Self {
         Self {
@@ -110,6 +137,12 @@ impl From<&ContextSignals> for TargetAppGuard {
             native_identity: signals.native_identity.clone(),
         }
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct RecordingContext {
+    pub profile: ContextProfile,
+    pub target_guard: TargetAppGuard,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

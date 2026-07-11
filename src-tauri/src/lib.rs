@@ -569,8 +569,13 @@ pub fn run() {
                 .build()
                 .expect("Failed to create HTTP client");
 
-            let pipeline_handle =
-                pipeline::PipelineHandle::new(app_handle.clone(), shared_client.clone());
+            let context_detector = app_detector::ContextDetectorHandle::start_default()
+                .map_err(|error| anyhow::anyhow!("Failed to init app context detector: {error}"))?;
+            let pipeline_handle = pipeline::PipelineHandle::new(
+                app_handle.clone(),
+                shared_client.clone(),
+                context_detector.clone(),
+            );
 
             // Load initial config to get hotkey
             let mut initial_config =
@@ -580,6 +585,7 @@ pub fn run() {
             app.manage(history_store);
             app.manage(dictionary_store);
             app.manage(shared_client);
+            app.manage(context_detector);
             app.manage(pipeline_handle);
             app.manage(commands::ask::AskDictationState::default());
             app.manage(HotkeyModeCache(Arc::new(Mutex::new(

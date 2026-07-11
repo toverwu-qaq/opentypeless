@@ -144,6 +144,7 @@ export interface AppConfig {
   llm_model: string
   llm_base_url: string
   polish_enabled: boolean
+  context_adaptation_enabled: boolean
   polish_style: PolishStyle
   polish_custom_prompt: string
   polish_chinese_script: PolishChineseScript
@@ -473,6 +474,7 @@ const defaultConfig: AppConfig = {
   llm_model: 'google/gemini-2.5-flash',
   llm_base_url: 'https://openrouter.ai/api/v1',
   polish_enabled: true,
+  context_adaptation_enabled: true,
   polish_style: 'clean',
   polish_custom_prompt: '',
   polish_chinese_script: 'preserve',

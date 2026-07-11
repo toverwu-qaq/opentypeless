@@ -6,6 +6,7 @@ use tauri::Manager;
 use tokio::sync::{mpsc, Notify};
 
 use crate::app_detector;
+use crate::app_detector::types::{ContextFamily, RecordingContext, TargetAppGuard};
 use crate::audio::{AudioCaptureHandle, AudioConfig};
 use crate::credentials::{
     resolve_llm_config_secret, resolve_stt_config_secret, SystemCredentialVault,
@@ -286,6 +287,20 @@ fn selected_text_command_requires_llm(selected_text: Option<&str>) -> bool {
     selected_text_has_content(selected_text)
 }
 
+fn legacy_app_type_for_family(family: ContextFamily) -> llm::AppType {
+    match family {
+        ContextFamily::Email => llm::AppType::Email,
+        ContextFamily::WorkChat | ContextFamily::PersonalChat | ContextFamily::Support => {
+            llm::AppType::Chat
+        }
+        ContextFamily::Document => llm::AppType::Document,
+        ContextFamily::DeveloperCollaboration | ContextFamily::PromptOrCode => llm::AppType::Code,
+        ContextFamily::ProjectManagement | ContextFamily::Social | ContextFamily::General => {
+            llm::AppType::General
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SelectedTextOutputPolicy {
     PopupAnswer,
@@ -412,12 +427,6 @@ impl StreamingInsertReport {
     }
 }
 
-fn streaming_target_app_still_trusted(expected_app_name: &str, current_app_name: &str) -> bool {
-    let expected = expected_app_name.trim();
-    let current = current_app_name.trim();
-    expected.is_empty() || current.is_empty() || expected == current
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum StreamingRecoveryAction {
     AlreadyComplete,
@@ -493,17 +502,21 @@ impl StreamingInsertWorker {
 fn spawn_streaming_insert_worker(
     app_handle: tauri::AppHandle,
     abort_flag: Arc<AtomicBool>,
+    context_detector: app_detector::ContextDetectorHandle,
     strategy: output::InsertionStrategy,
     windows_sendinput_options: output::windows_sendinput::WindowsSendInputOptions,
-    expected_target_app_name: String,
+    expected_target_guard: TargetAppGuard,
+    expected_target_label: String,
 ) -> StreamingInsertWorker {
     let (sender, receiver) = mpsc::unbounded_channel();
     let handle = tokio::spawn(run_streaming_insert_worker(
         app_handle,
         abort_flag,
+        context_detector,
         strategy,
         windows_sendinput_options,
-        expected_target_app_name,
+        expected_target_guard,
+        expected_target_label,
         receiver,
     ));
     StreamingInsertWorker { sender, handle }
@@ -512,9 +525,11 @@ fn spawn_streaming_insert_worker(
 async fn run_streaming_insert_worker(
     app_handle: tauri::AppHandle,
     abort_flag: Arc<AtomicBool>,
+    context_detector: app_detector::ContextDetectorHandle,
     strategy: output::InsertionStrategy,
     windows_sendinput_options: output::windows_sendinput::WindowsSendInputOptions,
-    expected_target_app_name: String,
+    expected_target_guard: TargetAppGuard,
+    expected_target_label: String,
     mut receiver: mpsc::UnboundedReceiver<String>,
 ) -> StreamingInsertReport {
     let mut report = StreamingInsertReport::new(strategy);
@@ -527,13 +542,12 @@ async fn run_streaming_insert_worker(
             continue;
         }
 
-        let current_app = app_detector::detect_current_app();
-        if !streaming_target_app_still_trusted(&expected_target_app_name, &current_app.app_name) {
+        if !context_detector.target_still_matches(&expected_target_guard) {
             report.failed = true;
             report.target_lost = true;
             report.error_message = Some(format!(
-                "Target app changed from '{}' to '{}'",
-                expected_target_app_name, current_app.app_name
+                "Target app changed while streaming output for '{}'",
+                expected_target_label
             ));
             break;
         }
@@ -613,6 +627,7 @@ fn apply_pipeline_start_options(
 
 pub struct PipelineHandle {
     app_handle: tauri::AppHandle,
+    context_detector: app_detector::ContextDetectorHandle,
     state: Arc<AtomicU8>,
     audio_handle: Arc<Mutex<Option<AudioCaptureHandle>>>,
     audio_volume: Arc<Mutex<f32>>,
@@ -622,7 +637,7 @@ pub struct PipelineHandle {
     active_stt_session_id: Arc<AtomicU64>,
     abort_flag: Arc<AtomicBool>,
     preloaded_config: Arc<Mutex<Option<storage::AppConfig>>>,
-    preloaded_app_ctx: Arc<Mutex<Option<app_detector::AppContext>>>,
+    preloaded_app_ctx: Arc<Mutex<Option<RecordingContext>>>,
     preloaded_dictionary: Arc<Mutex<Option<Vec<String>>>>,
     preloaded_correction_rules: Arc<Mutex<Option<Vec<llm::CorrectionRule>>>>,
     preloaded_selected_text: Arc<Mutex<Option<String>>>,
@@ -639,7 +654,7 @@ pub struct PipelineHandle {
 struct PolishTextInput<'a> {
     raw_text: &'a str,
     config: &'a storage::AppConfig,
-    app_ctx: &'a app_detector::AppContext,
+    app_ctx: &'a RecordingContext,
     dictionary_words: Vec<String>,
     correction_rules: Vec<llm::CorrectionRule>,
     selected_text: Option<String>,
@@ -686,9 +701,14 @@ impl PolishTextOutcome {
 }
 
 impl PipelineHandle {
-    pub fn new(app_handle: tauri::AppHandle, shared_client: reqwest::Client) -> Self {
+    pub fn new(
+        app_handle: tauri::AppHandle,
+        shared_client: reqwest::Client,
+        context_detector: app_detector::ContextDetectorHandle,
+    ) -> Self {
         Self {
             app_handle,
+            context_detector,
             state: Arc::new(AtomicU8::new(PipelineState::Idle.as_u8())),
             audio_handle: Arc::new(Mutex::new(None)),
             audio_volume: Arc::new(Mutex::new(0.0)),
@@ -849,7 +869,10 @@ impl PipelineHandle {
         *self
             .preloaded_app_ctx
             .lock()
-            .unwrap_or_else(|e| e.into_inner()) = Some(app_detector::detect_current_app());
+            .unwrap_or_else(|e| e.into_inner()) = Some(
+            self.context_detector
+                .snapshot_for_recording_enabled(config_data.context_adaptation_enabled),
+        );
         let dictionary_store = self.app_handle.state::<storage::DictionaryStore>();
         let dict_words = dictionary_store.words().await;
         let correction_rules = dictionary_store
@@ -1426,7 +1449,10 @@ impl PipelineHandle {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .take()
-            .unwrap_or_else(app_detector::detect_current_app);
+            .unwrap_or_else(|| {
+                self.context_detector
+                    .snapshot_for_recording_enabled(config.context_adaptation_enabled)
+            });
         let dictionary_words = self
             .preloaded_dictionary
             .lock()
@@ -1663,7 +1689,15 @@ impl PipelineHandle {
             }
 
             // No polishing — output raw text directly
-            if let Err(e) = self.output_text(raw_text, &app_ctx.app_name, config).await {
+            if let Err(e) = self
+                .output_text(
+                    raw_text,
+                    &app_ctx.profile.app_label,
+                    &app_ctx.target_guard,
+                    config,
+                )
+                .await
+            {
                 tracing::error!("Output failed: {}", e);
                 let _ = self
                     .app_handle
@@ -1690,6 +1724,7 @@ impl PipelineHandle {
             spawn_streaming_insert_worker(
                 self.app_handle.clone(),
                 self.abort_flag.clone(),
+                self.context_detector.clone(),
                 strategy,
                 output::windows_sendinput::WindowsSendInputOptions {
                     newline_mode:
@@ -1697,7 +1732,8 @@ impl PipelineHandle {
                             &config.windows_sendinput_newline_mode,
                         ),
                 },
-                app_ctx.app_name.clone(),
+                app_ctx.target_guard.clone(),
+                app_ctx.profile.app_label.clone(),
             )
         });
         let streaming_sender = streaming_worker
@@ -1716,7 +1752,7 @@ impl PipelineHandle {
 
         let req = PolishRequest {
             raw_text: raw_text.to_string(),
-            app_type: app_ctx.app_type,
+            app_type: legacy_app_type_for_family(app_ctx.profile.family),
             dictionary: dictionary_words,
             correction_rules,
             polish_style: config.polish_style.clone(),
@@ -1753,7 +1789,10 @@ impl PipelineHandle {
                             !report.failed && !report.target_lost,
                         ) {
                             StreamingRecoveryAction::AlreadyComplete => {
-                                self.emit_streaming_insert_result(report, &app_ctx.app_name);
+                                self.emit_streaming_insert_result(
+                                    report,
+                                    &app_ctx.profile.app_label,
+                                );
                             }
                             StreamingRecoveryAction::InsertSuffix { suffix } => {
                                 let mut recovered_report = report.clone();
@@ -1783,7 +1822,7 @@ impl PipelineHandle {
                                                 recovered_report.attempted_chunks.saturating_add(1);
                                             self.emit_streaming_insert_result(
                                                 &recovered_report,
-                                                &app_ctx.app_name,
+                                                &app_ctx.profile.app_label,
                                             );
                                         }
                                         Ok(insert_result) => {
@@ -1797,12 +1836,12 @@ impl PipelineHandle {
                                                 Some(("clipboard_fallback", reason.clone()));
                                             self.emit_streaming_insert_result(
                                                 &recovered_report,
-                                                &app_ctx.app_name,
+                                                &app_ctx.profile.app_label,
                                             );
                                             self.copy_streaming_recovery_to_clipboard(
                                                 &response.polished_text,
                                                 reason,
-                                                &app_ctx.app_name,
+                                                &app_ctx.profile.app_label,
                                                 config,
                                             )
                                             .await;
@@ -1814,12 +1853,12 @@ impl PipelineHandle {
                                                 Some(("clipboard_fallback", error.clone()));
                                             self.emit_streaming_insert_result(
                                                 &recovered_report,
-                                                &app_ctx.app_name,
+                                                &app_ctx.profile.app_label,
                                             );
                                             self.copy_streaming_recovery_to_clipboard(
                                                 &response.polished_text,
                                                 error,
-                                                &app_ctx.app_name,
+                                                &app_ctx.profile.app_label,
                                                 config,
                                             )
                                             .await;
@@ -1828,7 +1867,7 @@ impl PipelineHandle {
                                 } else {
                                     self.emit_streaming_insert_result(
                                         &recovered_report,
-                                        &app_ctx.app_name,
+                                        &app_ctx.profile.app_label,
                                     );
                                 }
                             }
@@ -1840,12 +1879,12 @@ impl PipelineHandle {
                                     Some(("clipboard_fallback", reason.clone()));
                                 self.emit_streaming_insert_result(
                                     &partial_report,
-                                    &app_ctx.app_name,
+                                    &app_ctx.profile.app_label,
                                 );
                                 self.copy_streaming_recovery_to_clipboard(
                                     &response.polished_text,
                                     reason,
-                                    &app_ctx.app_name,
+                                    &app_ctx.profile.app_label,
                                     config,
                                 )
                                 .await;
@@ -1857,12 +1896,12 @@ impl PipelineHandle {
                                 streaming_history_status = Some(("partial", reason.clone()));
                                 self.emit_streaming_insert_result(
                                     &partial_report,
-                                    &app_ctx.app_name,
+                                    &app_ctx.profile.app_label,
                                 );
                                 self.copy_streaming_recovery_to_clipboard(
                                     &partial_report.inserted_text,
                                     reason,
-                                    &app_ctx.app_name,
+                                    &app_ctx.profile.app_label,
                                     config,
                                 )
                                 .await;
@@ -1886,7 +1925,7 @@ impl PipelineHandle {
                         self.copy_streaming_recovery_to_clipboard(
                             &response.polished_text,
                             reason,
-                            &app_ctx.app_name,
+                            &app_ctx.profile.app_label,
                             config,
                         )
                         .await;
@@ -1915,7 +1954,7 @@ impl PipelineHandle {
                         self.show_selected_text_answer_or_copy(
                             raw_text,
                             &response.polished_text,
-                            &app_ctx.app_name,
+                            &app_ctx.profile.app_label,
                             config,
                         )
                         .await;
@@ -1924,7 +1963,7 @@ impl PipelineHandle {
                     SelectedTextOutputPolicy::CopyToClipboard => {
                         self.copy_text_to_clipboard_with_warning(
                             &response.polished_text,
-                            &app_ctx.app_name,
+                            &app_ctx.profile.app_label,
                             config,
                             crate::error::UserError {
                                 code: "output_fallback_clipboard".to_string(),
@@ -1947,7 +1986,12 @@ impl PipelineHandle {
                 }
 
                 if let Err(e) = self
-                    .output_text(&response.polished_text, &app_ctx.app_name, config)
+                    .output_text(
+                        &response.polished_text,
+                        &app_ctx.profile.app_label,
+                        &app_ctx.target_guard,
+                        config,
+                    )
                     .await
                 {
                     tracing::error!("Output failed: {}", e);
@@ -1969,14 +2013,17 @@ impl PipelineHandle {
                         let mut partial_report = report.clone();
                         partial_report.failed = true;
                         partial_report.error_message = Some(format!("LLM polish failed: {}", e));
-                        self.emit_streaming_insert_result(&partial_report, &app_ctx.app_name);
+                        self.emit_streaming_insert_result(
+                            &partial_report,
+                            &app_ctx.profile.app_label,
+                        );
                         if let StreamingRecoveryAction::CopyPartialToClipboard { reason } =
                             streaming_recovery_action(&partial_report, None, false, false)
                         {
                             self.copy_streaming_recovery_to_clipboard(
                                 &partial_report.inserted_text,
                                 reason,
-                                &app_ctx.app_name,
+                                &app_ctx.profile.app_label,
                                 config,
                             )
                             .await;
@@ -2000,7 +2047,15 @@ impl PipelineHandle {
                 let _ = self
                     .app_handle
                     .emit("pipeline:error", llm_polish_user_error(&e));
-                if let Err(e) = self.output_text(raw_text, &app_ctx.app_name, config).await {
+                if let Err(e) = self
+                    .output_text(
+                        raw_text,
+                        &app_ctx.profile.app_label,
+                        &app_ctx.target_guard,
+                        config,
+                    )
+                    .await
+                {
                     tracing::error!("Output failed: {}", e);
                     let _ = self
                         .app_handle
@@ -2028,7 +2083,7 @@ impl PipelineHandle {
         &self,
         raw_text: &str,
         final_text: &str,
-        app_ctx: &app_detector::AppContext,
+        app_ctx: &RecordingContext,
         duration_ms: Option<i64>,
         config: &storage::AppConfig,
         output: HistoryOutputMetadata,
@@ -2044,8 +2099,8 @@ impl PipelineHandle {
         let entry = storage::HistoryEntry {
             id: 0, // auto-increment
             created_at: now,
-            app_name: app_ctx.app_name.clone(),
-            app_type: format!("{:?}", app_ctx.app_type),
+            app_name: app_ctx.profile.app_label.clone(),
+            app_type: format!("{:?}", app_ctx.profile.family),
             raw_text: raw_text.to_string(),
             polished_text: final_text.to_string(),
             language: None,
@@ -2206,12 +2261,27 @@ impl PipelineHandle {
         &self,
         text: &str,
         app_name: &str,
+        target_guard: &TargetAppGuard,
         config: &storage::AppConfig,
     ) -> Result<()> {
         self.set_state(PipelineState::Outputting);
 
-        let requested_strategy =
-            output::InsertionStrategy::from_config_value(&config.insertion_strategy);
+        let target_warning =
+            (!self.context_detector.target_still_matches_now(target_guard)).then(|| {
+                crate::error::UserError {
+                    code: "output_target_changed".to_string(),
+                    details: Some(
+                        "The target app changed before output; the full text was copied instead."
+                            .to_string(),
+                    ),
+                    retry_count: 0,
+                }
+            });
+        let requested_strategy = if target_warning.is_some() {
+            output::InsertionStrategy::ClipboardCopyOnly
+        } else {
+            output::InsertionStrategy::from_config_value(&config.insertion_strategy)
+        };
         let (strategy, accessibility_warning) =
             effective_strategy_for_accessibility(requested_strategy, is_accessibility_trusted());
 
@@ -2266,7 +2336,7 @@ impl PipelineHandle {
             Err(e) => anyhow::bail!("{}", e),
         };
 
-        if let Some(user_error) = accessibility_warning {
+        if let Some(user_error) = target_warning.or(accessibility_warning) {
             output_outcome.insert_result = output_outcome.insert_result.with_warning(&user_error);
             output_outcome.warning.get_or_insert(user_error);
         }
@@ -2539,11 +2609,16 @@ mod tests {
     }
 
     #[test]
-    fn streaming_target_check_allows_unknown_names_but_blocks_app_changes() {
-        assert!(streaming_target_app_still_trusted("Notes", "Notes"));
-        assert!(streaming_target_app_still_trusted("", "Notes"));
-        assert!(streaming_target_app_still_trusted("Notes", ""));
-        assert!(!streaming_target_app_still_trusted("Notes", "Safari"));
+    fn streaming_target_guard_blocks_process_changes() {
+        let expected = TargetAppGuard {
+            process_id: Some(42),
+            native_identity: Some("com.example.notes".to_string()),
+        };
+        assert!(expected.matches(&expected));
+        assert!(!expected.matches(&TargetAppGuard {
+            process_id: Some(99),
+            native_identity: Some("com.example.browser".to_string()),
+        }));
     }
 
     #[test]

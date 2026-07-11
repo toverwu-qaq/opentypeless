@@ -393,7 +393,10 @@ mod tests {
                 assert_eq!(registry.classify(&browser(host)).id, definition.id);
                 assert_ne!(
                     registry
-                        .classify(&browser(&format!("evil-{}.example", host.replace('.', "-"))))
+                        .classify(&browser(&format!(
+                            "evil-{}.example",
+                            host.replace('.', "-")
+                        )))
                         .id,
                     definition.id
                 );
