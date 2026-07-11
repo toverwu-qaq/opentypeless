@@ -1,0 +1,77 @@
+src-tauri/src/commands/mod.rs
+  s_7724aa1accb26b::t_b6a368807cc6ae 9
+src-tauri/src/commands/translation.rs
+  s_7724aa1accb26b::t_20b6e57e900dcb 1-40
+src-tauri/src/lib.rs
+  s_7724aa1accb26b::t_8de6d7dc41a71e 851
+src-tauri/src/pipeline.rs
+  s_7724aa1accb26b::t_cb807b57cb3bbf 623-655,685,894,902-911,937-954,1061,1065-1069,1381-1386,1388,1599-1604,1661,1665-1668,2033,2985-2988,3004-3018
+src-tauri/src/storage/mod.rs
+  s_7724aa1accb26b::t_db35adf90db0a2 163-234,260,310,417-418,481-486,488-492,1542-1584
+src/components/Capsule/CapsuleRecording.tsx
+  s_7724aa1accb26b::t_c1b47f7ffc5ee7 7,35
+src/components/Capsule/TranslateTargetChip.tsx
+  s_7724aa1accb26b::t_f37c2264fbb9b0 1-122
+src/components/Capsule/__tests__/CapsuleFlow.test.tsx
+  s_7724aa1accb26b::t_de97a3a676d949 2,6,36-39,61-62,129-197
+src/components/Capsule/index.tsx
+  s_7724aa1accb26b::t_0a8fd62124f5e9 1,17,54-55,114,124-132,183
+src/components/Settings/LlmPane.tsx
+  s_7724aa1accb26b::t_c72ce15a9ae60c 6,20,457-460
+src/components/Settings/TranslationTargets.tsx
+  s_7724aa1accb26b::t_475f80c0c8526b 1-135
+src/components/Settings/__tests__/LlmPane.test.tsx
+  s_7724aa1accb26b::t_0dcb6db4f112f8 92,158
+src/components/Settings/__tests__/TranslationTargets.test.tsx
+  s_7724aa1accb26b::t_56beafa3874f58 1-88
+src/hooks/__tests__/useTauriEvents.test.tsx
+  s_7724aa1accb26b::t_c6a31adb0fbbcf 48-52,142-159
+src/hooks/useCapsuleResize.ts
+  s_7724aa1accb26b::t_723f756df1a794 12,21,27-32,45,47,75,84-90,96,173,178-184
+src/hooks/useTauriEvents.ts
+  s_7724aa1accb26b::t_8711bbb0ddafd4 11,36,86,143
+src/i18n/locales/de.json
+  s_7724aa1accb26b::t_06a8380c20cc3b 206-207,344-349
+src/i18n/locales/en.json
+  s_7724aa1accb26b::t_4c8ee6da168907 206-207,345-350
+src/i18n/locales/es.json
+  s_7724aa1accb26b::t_106d4049f0d317 206-207,344-349
+src/i18n/locales/fr.json
+  s_7724aa1accb26b::t_9d6594e91bb120 206-207,344-349
+src/i18n/locales/it.json
+  s_7724aa1accb26b::t_7750d3e125b777 206-207,344-349
+src/i18n/locales/ja.json
+  s_7724aa1accb26b::t_a110efce0bbf82 206-207,344-349
+src/i18n/locales/ko.json
+  s_7724aa1accb26b::t_2aaff85bbfb5af 206-207,344-349
+src/i18n/locales/pt.json
+  s_7724aa1accb26b::t_73677caccd36c3 206-207,344-349
+src/i18n/locales/ru.json
+  s_7724aa1accb26b::t_d1508c757c5169 206-207,344-349
+src/i18n/locales/zh.json
+  s_7724aa1accb26b::t_8f69936dc5a07e 206-207,345-350
+src/lib/tauri.ts
+  s_7724aa1accb26b::t_5a004343e955a2 8,24-27
+src/stores/__tests__/appStore.test.ts
+  s_7724aa1accb26b::t_4ab7195fa16f3e 82-83,160-179
+src/stores/appStore.ts
+  s_7724aa1accb26b::t_2f784f00cd98a0 2,14-15,165-169,193,223-224,306-307,499-512,514-560,596,631-632,706-707
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6996d41f4099984db74d055614f720c19dead5b9",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
