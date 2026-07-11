@@ -18,6 +18,7 @@ const SCENE_DESCRIPTION_MAX_CHARS: usize = 240;
 pub(crate) const SCENE_PROMPT_MAX_CHARS: usize = 4000;
 pub const DEFAULT_HISTORY_MAX_ENTRIES: u32 = 5000;
 pub const MAX_HISTORY_RETENTION_DAYS: u32 = 3650;
+pub const MAX_HOTKEY_BINDINGS_PER_ROLE: usize = 3;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(default)]
@@ -117,6 +118,12 @@ pub struct HotkeyConfig {
     pub dictation: ShortcutBinding,
     pub ask: Option<ShortcutBinding>,
     pub translate: Option<ShortcutBinding>,
+    #[serde(default)]
+    pub dictation_bindings: Vec<ShortcutBinding>,
+    #[serde(default)]
+    pub ask_bindings: Vec<ShortcutBinding>,
+    #[serde(default)]
+    pub translate_bindings: Vec<ShortcutBinding>,
     pub edit_selection: Option<ShortcutBinding>,
     pub switch_scene: Option<ShortcutBinding>,
     pub open_app: Option<ShortcutBinding>,
@@ -131,6 +138,7 @@ impl Default for HotkeyConfig {
             default_dictation_hotkey_mode(),
         );
         config.translate = default_translate_hotkey().and_then(ShortcutBinding::from_hotkey);
+        config.translate_bindings = config.translate.clone().into_iter().collect();
         config
     }
 }
@@ -148,6 +156,9 @@ impl HotkeyConfig {
         let dictation_mode = normalize_hotkey_mode(dictation_mode).to_string();
 
         Self {
+            dictation_bindings: vec![dictation.clone()],
+            ask_bindings: ask.clone().into_iter().collect(),
+            translate_bindings: Vec::new(),
             dictation,
             ask,
             translate: None,
@@ -159,22 +170,81 @@ impl HotkeyConfig {
     }
 
     pub fn normalize(&mut self) {
-        if !self.dictation.normalize() {
-            self.dictation = ShortcutBinding::from_hotkey(default_dictation_hotkey()).unwrap();
+        let had_dictation_list = !self.dictation_bindings.is_empty();
+        let had_ask_list = !self.ask_bindings.is_empty();
+        let had_translate_list = !self.translate_bindings.is_empty();
+
+        normalize_binding_list(&mut self.dictation_bindings);
+        normalize_binding_list(&mut self.ask_bindings);
+        normalize_binding_list(&mut self.translate_bindings);
+
+        if !had_dictation_list {
+            if self.dictation.normalize() {
+                self.dictation_bindings.push(self.dictation.clone());
+            }
+        }
+        if self.dictation_bindings.is_empty() {
+            self.dictation_bindings =
+                vec![ShortcutBinding::from_hotkey(default_dictation_hotkey())
+                    .expect("default dictation hotkey must be valid")];
         }
 
-        if let Some(ask) = self.ask.as_mut() {
-            if !ask.normalize() {
-                self.ask = ShortcutBinding::from_hotkey(default_ask_hotkey());
+        if !had_ask_list {
+            if let Some(mut ask) = self.ask.clone() {
+                if ask.normalize() {
+                    self.ask_bindings.push(ask);
+                }
+            }
+        }
+        if !had_translate_list {
+            if let Some(mut translate) = self.translate.clone() {
+                if translate.normalize() {
+                    self.translate_bindings.push(translate);
+                }
             }
         }
 
-        normalize_optional_binding(&mut self.translate);
+        self.dictation = self.dictation_bindings[0].clone();
+        self.ask = self.ask_bindings.first().cloned();
+        self.translate = self.translate_bindings.first().cloned();
         normalize_optional_binding(&mut self.edit_selection);
         normalize_optional_binding(&mut self.switch_scene);
         normalize_optional_binding(&mut self.open_app);
         self.dictation_mode = normalize_hotkey_mode(&self.dictation_mode).to_string();
     }
+}
+
+fn normalize_binding_list(bindings: &mut Vec<ShortcutBinding>) {
+    let mut seen = HashSet::new();
+    let mut normalized = Vec::new();
+    for mut binding in bindings.drain(..) {
+        if !binding.normalize() {
+            continue;
+        }
+        let identity = shortcut_binding_identity(&binding);
+        if !seen.insert(identity) {
+            continue;
+        }
+        normalized.push(binding);
+        if normalized.len() == MAX_HOTKEY_BINDINGS_PER_ROLE {
+            break;
+        }
+    }
+    *bindings = normalized;
+}
+
+fn shortcut_binding_identity(binding: &ShortcutBinding) -> String {
+    let mut parts: Vec<&str> = binding
+        .modifiers
+        .iter()
+        .map(|modifier| match modifier.as_str() {
+            "Option" | "Alt" => "Alt",
+            "Command" | "Super" => "Super",
+            value => value,
+        })
+        .collect();
+    parts.push(&binding.primary);
+    parts.join("+")
 }
 
 pub const SUPPORTED_TRANSLATION_LANGUAGES: &[&str] = &[
@@ -398,16 +468,8 @@ impl AppConfig {
     }
 
     fn normalize_hotkey_settings(&mut self) {
-        self.hotkey_mode = normalize_hotkey_mode(&self.hotkey_mode).to_string();
-        let translate = self.hotkeys.translate.clone();
-        let edit_selection = self.hotkeys.edit_selection.clone();
-        let switch_scene = self.hotkeys.switch_scene.clone();
-        let open_app = self.hotkeys.open_app.clone();
-        self.hotkeys = HotkeyConfig::from_legacy(&self.hotkey, &self.ask_hotkey, &self.hotkey_mode);
-        self.hotkeys.translate = translate;
-        self.hotkeys.edit_selection = edit_selection;
-        self.hotkeys.switch_scene = switch_scene;
-        self.hotkeys.open_app = open_app;
+        self.hotkeys.dictation_mode =
+            normalize_hotkey_mode(&self.hotkeys.dictation_mode).to_string();
         self.sync_legacy_hotkey_fields_from_typed();
     }
 
@@ -510,9 +572,6 @@ impl AppConfig {
         } else if !has_legacy_target {
             config.target_lang = config.translation.active_target.clone();
         }
-        if has_hotkeys {
-            config.sync_legacy_hotkey_fields_from_typed();
-        }
         if !has_capsule_auto_hide {
             config.capsule_auto_hide = false;
         }
@@ -522,6 +581,10 @@ impl AppConfig {
         }
         if !has_hotkeys {
             config.migrate_legacy_platform_hotkeys();
+            config.hotkeys =
+                HotkeyConfig::from_legacy(&config.hotkey, &config.ask_hotkey, &config.hotkey_mode);
+        } else {
+            config.sync_legacy_hotkey_fields_from_typed();
         }
         config.normalize_values();
         Ok(config)
@@ -2055,6 +2118,174 @@ mod tests {
                 primary: "O".to_string(),
                 modifiers: vec!["Ctrl".to_string(), "Shift".to_string()],
             })
+        );
+    }
+
+    #[test]
+    fn hotkey_binding_lists_migrate_legacy_scalars_and_mirror_primaries() {
+        let config = AppConfig::from_stored_value(serde_json::json!({
+            "hotkey": "Ctrl+Shift+;",
+            "ask_hotkey": "Ctrl+Alt+.",
+            "hotkey_mode": "toggle"
+        }))
+        .unwrap();
+
+        assert_eq!(
+            config.hotkeys.dictation_bindings,
+            vec![config.hotkeys.dictation.clone()]
+        );
+        assert_eq!(
+            config.hotkeys.ask_bindings,
+            vec![config.hotkeys.ask.clone().unwrap()]
+        );
+        assert!(config.hotkeys.translate_bindings.is_empty());
+        assert_eq!(config.hotkey, "Ctrl+Shift+;");
+        assert_eq!(config.ask_hotkey, "Ctrl+Alt+.");
+    }
+
+    #[test]
+    fn hotkey_binding_lists_normalize_dedupe_clamp_and_preserve_order() {
+        let config = AppConfig::from_stored_value(serde_json::json!({
+            "hotkey": "Ctrl+/",
+            "ask_hotkey": "Ctrl+.",
+            "hotkeys": {
+                "dictation": { "primary": "/", "modifiers": ["Ctrl"] },
+                "ask": { "primary": ".", "modifiers": ["Ctrl"] },
+                "translate": null,
+                "dictationBindings": [
+                    { "primary": ";", "modifiers": ["shift", "control"] },
+                    { "primary": ";", "modifiers": ["Ctrl", "Shift"] },
+                    { "primary": "D", "modifiers": ["Alt"] },
+                    { "primary": "F8", "modifiers": [] },
+                    { "primary": "F9", "modifiers": [] }
+                ],
+                "askBindings": [
+                    { "primary": "A", "modifiers": ["Option"] },
+                    { "primary": "A", "modifiers": ["Alt"] }
+                ],
+                "translateBindings": [],
+                "editSelection": null,
+                "switchScene": null,
+                "openApp": null,
+                "dictationMode": "hold"
+            }
+        }))
+        .unwrap();
+
+        assert_eq!(config.hotkeys.dictation_bindings.len(), 3);
+        assert_eq!(
+            config.hotkeys.dictation_bindings[0]
+                .to_hotkey_string()
+                .as_deref(),
+            Some("Ctrl+Shift+;")
+        );
+        assert_eq!(
+            config.hotkeys.dictation_bindings[1]
+                .to_hotkey_string()
+                .as_deref(),
+            Some("Alt+D")
+        );
+        assert_eq!(
+            config.hotkeys.dictation_bindings[2]
+                .to_hotkey_string()
+                .as_deref(),
+            Some("F8")
+        );
+        assert_eq!(config.hotkey, "Ctrl+Shift+;");
+        assert_eq!(config.hotkeys.ask_bindings.len(), 1);
+        assert_eq!(config.ask_hotkey, "Option+A");
+        assert_eq!(
+            config.hotkeys.dictation,
+            config.hotkeys.dictation_bindings[0]
+        );
+        assert_eq!(
+            config.hotkeys.ask.as_ref(),
+            config.hotkeys.ask_bindings.first()
+        );
+    }
+
+    #[test]
+    fn hotkey_binding_lists_drop_corruption_and_keep_dictation_nonempty() {
+        let config = AppConfig::from_stored_value(serde_json::json!({
+            "hotkey": "Ctrl+/",
+            "ask_hotkey": "Ctrl+.",
+            "hotkeys": {
+                "dictation": { "primary": "/", "modifiers": ["Ctrl"] },
+                "ask": { "primary": ".", "modifiers": ["Ctrl"] },
+                "translate": null,
+                "dictationBindings": [
+                    { "primary": "", "modifiers": ["Ctrl"] }
+                ],
+                "askBindings": [
+                    { "primary": ".", "modifiers": ["Ctrl", "Ctrl"] }
+                ],
+                "translateBindings": [
+                    { "primary": "T", "modifiers": ["shift", "control"] }
+                ],
+                "editSelection": null,
+                "switchScene": null,
+                "openApp": null,
+                "dictationMode": "hold"
+            }
+        }))
+        .unwrap();
+
+        assert_eq!(config.hotkeys.dictation_bindings.len(), 1);
+        assert_eq!(
+            config.hotkeys.dictation_bindings[0]
+                .to_hotkey_string()
+                .as_deref(),
+            Some(default_dictation_hotkey())
+        );
+        assert!(config.hotkeys.ask_bindings.is_empty());
+        assert_eq!(config.ask_hotkey, "");
+        assert_eq!(
+            config.hotkeys.translate_bindings[0]
+                .to_hotkey_string()
+                .as_deref(),
+            Some("Ctrl+Shift+T")
+        );
+    }
+
+    #[test]
+    fn hotkey_binding_lists_survive_restart_and_export_legacy_primary_fields() {
+        let mut original = AppConfig::default();
+        original.hotkeys.dictation_bindings = vec![
+            ShortcutBinding::from_hotkey("Ctrl+Shift+D").unwrap(),
+            ShortcutBinding::from_hotkey("F8").unwrap(),
+        ];
+        original.hotkeys.ask_bindings = Vec::new();
+        original.hotkeys.ask = None;
+        original.hotkeys.translate_bindings = vec![
+            ShortcutBinding::from_hotkey("Ctrl+Shift+T").unwrap(),
+            ShortcutBinding::from_hotkey("F9").unwrap(),
+        ];
+        original.normalize_values();
+
+        let stored = serde_json::to_value(&original).unwrap();
+        assert_eq!(stored["hotkey"], "Ctrl+Shift+D");
+        assert_eq!(stored["ask_hotkey"], "");
+        assert_eq!(stored["hotkeys"]["dictation"]["primary"], "D");
+        assert_eq!(
+            stored["hotkeys"]["dictationBindings"]
+                .as_array()
+                .unwrap()
+                .len(),
+            2
+        );
+
+        let restarted = AppConfig::from_stored_value(stored).unwrap();
+        assert_eq!(
+            restarted.hotkeys.dictation_bindings,
+            original.hotkeys.dictation_bindings
+        );
+        assert_eq!(
+            restarted.hotkeys.ask_bindings,
+            original.hotkeys.ask_bindings
+        );
+        assert_eq!(
+            restarted.hotkeys.translate_bindings,
+            original.hotkeys.translate_bindings
         );
     }
 
