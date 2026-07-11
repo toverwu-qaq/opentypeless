@@ -15,6 +15,7 @@ use crate::{api_base_url, with_desktop_client_version, SessionTokenStore};
 use serde_json::json;
 use std::sync::{Arc, Mutex};
 use tauri::{Emitter, Manager};
+use tauri_plugin_opener::OpenerExt;
 use tokio::sync::Notify;
 
 pub const ASK_MAX_QUESTION_CHARS: usize = 500;
@@ -201,13 +202,13 @@ impl AskDictationResultMetadata {
         }
     }
 
-    fn opened_search(provider: SearchProvider, url: String) -> Self {
+    fn opened_search(provider: SearchProvider) -> Self {
         Self {
             output: AskResultOutput::OpenedSearch,
             used_selected_text: false,
             selected_text_truncated: false,
             search_provider: Some(provider.display_name().to_string()),
-            search_url: Some(url),
+            search_url: None,
         }
     }
 
@@ -428,36 +429,48 @@ fn validate_ask_answer(answer: &str) -> Result<String, String> {
     Ok(trimmed)
 }
 
-fn build_search_url(provider: SearchProvider, query: &str) -> String {
-    let encoded: String = url::form_urlencoded::byte_serialize(query.as_bytes()).collect();
-    match provider {
-        SearchProvider::Google => format!("https://www.google.com/search?q={encoded}"),
-        SearchProvider::YouTube => {
-            format!("https://www.youtube.com/results?search_query={encoded}")
-        }
-        SearchProvider::Amazon => format!("https://www.amazon.com/s?k={encoded}"),
-        SearchProvider::GitHub => format!("https://github.com/search?q={encoded}"),
-    }
+struct AskSearchExecutionBackend<'a> {
+    app: &'a tauri::AppHandle,
 }
 
-fn open_search_url(url: &str) -> Result<(), String> {
-    #[cfg(target_os = "macos")]
-    let status = std::process::Command::new("/usr/bin/open")
-        .arg(url)
-        .status();
+#[async_trait::async_trait]
+impl crate::voice_intent::executor::VoiceExecutionBackend for AskSearchExecutionBackend<'_> {
+    fn target_matches(&mut self, _guard: &crate::app_detector::types::TargetAppGuard) -> bool {
+        false
+    }
 
-    #[cfg(target_os = "windows")]
-    let status = std::process::Command::new("rundll32")
-        .args(["url.dll,FileProtocolHandler", url])
-        .status();
+    async fn restore_target(
+        &mut self,
+        _guard: &crate::app_detector::types::TargetAppGuard,
+    ) -> Result<bool, String> {
+        Err("search never restores an application target".to_string())
+    }
 
-    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
-    let status = std::process::Command::new("xdg-open").arg(url).status();
+    async fn insert_at_cursor(&mut self, _text: &str) -> Result<(), String> {
+        Err("search never inserts text".to_string())
+    }
 
-    match status {
-        Ok(status) if status.success() => Ok(()),
-        Ok(status) => Err(format!("Failed to open search URL: exit status {status}")),
-        Err(error) => Err(format!("Failed to open search URL: {error}")),
+    async fn replace_selection(&mut self, _text: &str) -> Result<(), String> {
+        Err("search never replaces text".to_string())
+    }
+
+    async fn popup_answer(&mut self, _text: &str) -> Result<(), String> {
+        Err("search never opens an answer popup".to_string())
+    }
+
+    async fn copy_to_clipboard(&mut self, _text: &str) -> Result<(), String> {
+        Err("search never copies generated text".to_string())
+    }
+
+    async fn open_search(
+        &mut self,
+        url: &crate::voice_intent::search::SearchUrl,
+    ) -> Result<(), String> {
+        url.validate().map_err(|error| error.to_string())?;
+        self.app
+            .opener()
+            .open_url(url.as_str(), None::<&str>)
+            .map_err(|error| error.to_string())
     }
 }
 
@@ -1235,17 +1248,30 @@ pub async fn stop_ask_dictation(
             let provider = voice_intent
                 .search_provider
                 .ok_or_else(|| "Search route is missing a provider".to_string())?;
-            let query = voice_intent
-                .payload
-                .as_deref()
-                .ok_or_else(|| "Search route is missing a query".to_string())?;
-            let url = build_search_url(provider, query);
-            open_search_url(&url)?;
+            let target_guard = crate::app_detector::types::TargetAppGuard::default();
+            let mut backend = AskSearchExecutionBackend { app: &app };
+            let execution = crate::voice_intent::executor::execute_voice_intent(
+                crate::voice_intent::executor::VoiceExecutionRequest {
+                    intent: &voice_intent,
+                    generated_output: "",
+                    target_guard: &target_guard,
+                    selected_text_available: false,
+                    restore_target_before_insert: false,
+                    flags: config.voice_routing_flags,
+                },
+                &mut backend,
+            )
+            .await;
+            if execution.status
+                != crate::voice_intent::executor::VoiceExecutionStatus::Completed
+            {
+                return Err("Search could not be opened safely".to_string());
+            }
             return Ok(AskDictationResult::new(
                 question,
                 format!("Opened {} search.", provider.display_name()),
                 voice_intent.kind,
-                AskDictationResultMetadata::opened_search(provider, url),
+                AskDictationResultMetadata::opened_search(provider),
             ));
         }
 
@@ -1540,7 +1566,12 @@ mod tests {
         assert_eq!(google.search_provider, Some(SearchProvider::Google));
         assert_eq!(google.payload.as_deref(), Some("rust tauri hotkeys"));
         assert_eq!(
-            build_search_url(SearchProvider::Google, google.payload.as_deref().unwrap()),
+            crate::voice_intent::search::SearchUrl::new(
+                SearchProvider::Google,
+                google.payload.as_deref().unwrap()
+            )
+            .unwrap()
+            .as_str(),
             "https://www.google.com/search?q=rust+tauri+hotkeys"
         );
 

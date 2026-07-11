@@ -2,6 +2,7 @@ pub mod executor;
 pub mod grammar;
 mod guards;
 mod normalize;
+pub mod search;
 pub mod types;
 
 pub use types::*;

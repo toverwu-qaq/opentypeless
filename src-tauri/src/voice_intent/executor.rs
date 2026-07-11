@@ -3,9 +3,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::app_detector::types::TargetAppGuard;
 
-use super::{
-    SearchProvider, VoiceIntent, VoiceIntentKind, VoiceOutputPlacement, VoiceRoutingFlags,
-};
+use super::search::SearchUrl;
+use super::{VoiceIntent, VoiceIntentKind, VoiceOutputPlacement, VoiceRoutingFlags};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -54,7 +53,7 @@ pub trait VoiceExecutionBackend: Send {
     async fn replace_selection(&mut self, text: &str) -> Result<(), String>;
     async fn popup_answer(&mut self, text: &str) -> Result<(), String>;
     async fn copy_to_clipboard(&mut self, text: &str) -> Result<(), String>;
-    async fn open_search(&mut self, provider: SearchProvider, query: &str) -> Result<(), String>;
+    async fn open_search(&mut self, url: &SearchUrl) -> Result<(), String>;
 }
 
 pub async fn execute_voice_intent(
@@ -212,7 +211,18 @@ async fn execute_search(
             Some(VoiceExecutionFallbackReason::EmptyOutput),
         );
     };
-    match backend.open_search(provider, query).await {
+    let search_url = match SearchUrl::new(provider, query) {
+        Ok(url) => url,
+        Err(_) => {
+            return result(
+                request.intent,
+                None,
+                VoiceExecutionStatus::Prevented,
+                Some(VoiceExecutionFallbackReason::OutputFailed),
+            )
+        }
+    };
+    match backend.open_search(&search_url).await {
         Ok(()) => result(
             request.intent,
             Some(VoiceOutputPlacement::OpenUrl),
@@ -308,6 +318,7 @@ mod tests {
         target_matches: bool,
         restore_succeeds: bool,
         popup_fails: bool,
+        opened_url: Option<String>,
     }
 
     #[async_trait]
@@ -346,12 +357,9 @@ mod tests {
             Ok(())
         }
 
-        async fn open_search(
-            &mut self,
-            _provider: SearchProvider,
-            _query: &str,
-        ) -> Result<(), String> {
+        async fn open_search(&mut self, url: &SearchUrl) -> Result<(), String> {
             self.actions.push("open_search");
+            self.opened_url = Some(url.as_str().to_string());
             Ok(())
         }
     }
@@ -434,6 +442,12 @@ mod tests {
 
             assert_eq!(result.status, VoiceExecutionStatus::Completed);
             assert!(backend.actions.contains(&expected_action), "{kind:?}");
+            if kind == VoiceIntentKind::Search {
+                assert_eq!(
+                    backend.opened_url.as_deref(),
+                    Some("https://www.google.com/search?q=rust")
+                );
+            }
         }
     }
 

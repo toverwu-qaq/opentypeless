@@ -783,8 +783,7 @@ impl crate::voice_intent::executor::VoiceExecutionBackend for PipelineVoiceExecu
 
     async fn open_search(
         &mut self,
-        _provider: crate::voice_intent::SearchProvider,
-        _query: &str,
+        _url: &crate::voice_intent::search::SearchUrl,
     ) -> std::result::Result<(), String> {
         Err("search is not available in the dictation pipeline".to_string())
     }
