@@ -226,7 +226,7 @@ export function LlmPane() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <FormField label={t('settings.provider')}>
         <select
           value={config.llm_provider}
@@ -251,23 +251,21 @@ export function LlmPane() {
             </option>
           ))}
         </select>
+        {isCloud && (
+          <div className="mt-2 flex items-center gap-1.5 text-[11px]">
+            <Crown size={12} className="flex-none text-accent" />
+            <span className={hasCloudAccess ? 'text-success' : 'text-text-tertiary'}>
+              {!user
+                ? t('settings.llmSignInHint')
+                : hasCloudAccess
+                  ? t('settings.llmProActive')
+                  : t('settings.llmUpgradeHint')}
+            </span>
+          </div>
+        )}
       </FormField>
 
-      {isCloud ? (
-        <div className="border border-border rounded-[10px] px-3 py-3 space-y-2">
-          <div className="flex items-center gap-2 text-[13px]">
-            <Crown size={14} className="text-accent" />
-            <span className="text-text-primary font-medium">{t('settings.cloudLlmPro')}</span>
-          </div>
-          {!user ? (
-            <p className="text-[12px] text-text-secondary">{t('settings.llmSignInHint')}</p>
-          ) : !hasCloudAccess ? (
-            <p className="text-[12px] text-text-secondary">{t('settings.llmUpgradeHint')}</p>
-          ) : (
-            <p className="text-[12px] text-green-500">{t('settings.llmProActive')}</p>
-          )}
-        </div>
-      ) : (
+      {!isCloud && (
         <>
           <FormField label={t('settings.apiKey')}>
             <div className="flex gap-2">
@@ -385,9 +383,6 @@ export function LlmPane() {
             onChange={(checked) => updateConfig({ context_adaptation_enabled: checked })}
             label={t('settings.contextAdaptation')}
           />
-          <p className="mt-1 ml-[52px] text-[11px] leading-relaxed text-text-tertiary">
-            {t('settings.contextAdaptationHint')}
-          </p>
           <ContextAdaptationApps
             disabled={!config.polish_enabled || !config.context_adaptation_enabled}
           />
@@ -466,16 +461,6 @@ export function LlmPane() {
             </div>
           )}
         </div>
-        <div>
-          <Toggle
-            checked={config.selected_text_enabled}
-            onChange={(checked) => updateConfig({ selected_text_enabled: checked })}
-            label={t('settings.selectedTextContext')}
-          />
-          <p className="mt-1 ml-[52px] text-[11px] leading-relaxed text-text-tertiary">
-            {t('settings.selectedTextContextDesc')}
-          </p>
-        </div>
       </div>
 
       {config.active_scene && (
@@ -494,43 +479,50 @@ export function LlmPane() {
       )}
 
       {config.polish_enabled && (
-        <div className="space-y-3">
-          <FormField label={t('settings.polishStyle')}>
-            <select
-              value={config.polish_style}
-              onChange={(e) => updateConfig({ polish_style: e.target.value as PolishStyle })}
-              className="w-full px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
-            >
-              <option value="minimal">{t('settings.polishStyleMinimal')}</option>
-              <option value="clean">{t('settings.polishStyleClean')}</option>
-              <option value="structured">{t('settings.polishStyleStructured')}</option>
-              <option value="professional">{t('settings.polishStyleProfessional')}</option>
-            </select>
-          </FormField>
-
-          <button
-            type="button"
-            onClick={() => setPolishAdvancedOpen((open) => !open)}
-            className="w-full px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] cursor-pointer hover:border-border-focus transition-colors flex items-center justify-between text-left"
+        <FormField label={t('settings.polishStyle')}>
+          <select
+            value={config.polish_style}
+            onChange={(e) => updateConfig({ polish_style: e.target.value as PolishStyle })}
+            className="w-full px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
           >
-            <span>
-              <span className="block text-[13px] font-medium text-text-primary">
-                {t('settings.advancedPolishSettings')}
-              </span>
-              <span className="block text-[11px] text-text-tertiary mt-0.5">
-                {t('settings.advancedPolishSettingsDesc')}
-              </span>
-            </span>
-            <ChevronDown
-              size={16}
-              className={`text-text-tertiary transition-transform ${
-                polishAdvancedOpen ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
+            <option value="minimal">{t('settings.polishStyleMinimal')}</option>
+            <option value="clean">{t('settings.polishStyleClean')}</option>
+            <option value="structured">{t('settings.polishStyleStructured')}</option>
+            <option value="professional">{t('settings.polishStyleProfessional')}</option>
+          </select>
+        </FormField>
+      )}
 
-          {polishAdvancedOpen && (
-            <div className="space-y-3">
+      <div>
+        <button
+          type="button"
+          aria-expanded={polishAdvancedOpen}
+          onClick={() => setPolishAdvancedOpen((open) => !open)}
+          className="flex w-full items-center justify-between rounded-[10px] border border-border bg-bg-secondary/40 px-3 py-2 text-left text-[13px] font-medium text-text-primary transition-colors hover:border-border-focus"
+        >
+          <span>{t('settings.advancedPolishSettings')}</span>
+          <ChevronDown
+            size={14}
+            className={`text-text-tertiary transition-transform ${
+              polishAdvancedOpen ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+
+        {polishAdvancedOpen && (
+          <div className="mt-3 space-y-3">
+            <div>
+              <Toggle
+                checked={config.selected_text_enabled}
+                onChange={(checked) => updateConfig({ selected_text_enabled: checked })}
+                label={t('settings.selectedTextContext')}
+              />
+              <p className="mt-1 ml-[52px] text-[11px] leading-relaxed text-text-tertiary">
+                {t('settings.selectedTextContextDesc')}
+              </p>
+            </div>
+
+            {config.polish_enabled && (
               <FormField label={t('settings.customPolishInstructions')}>
                 <textarea
                   value={config.polish_custom_prompt}
@@ -544,10 +536,10 @@ export function LlmPane() {
                   {t('settings.customPolishInstructionsCount', { count: polishPromptLength })}
                 </p>
               </FormField>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
 
       {appStyleDialogOpen && lastContext && (
         <AppStyleMappingDialog

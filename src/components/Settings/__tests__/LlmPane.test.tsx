@@ -239,6 +239,7 @@ describe('LlmPane', () => {
       mockAppStore.config.llm_provider = 'cloud'
       render(<LlmPane />)
       expect(screen.getByText('Sign in to use cloud LLM')).toBeInTheDocument()
+      expect(screen.queryByText('Cloud LLM (Pro)')).not.toBeInTheDocument()
     })
 
     it('shows upgrade hint when user is signed in but not pro', () => {
@@ -404,13 +405,27 @@ describe('LlmPane', () => {
       render(<LlmPane />)
 
       expect(screen.getByText('Advanced polish settings')).toBeInTheDocument()
+      expect(screen.queryByText('Optional writing rules')).not.toBeInTheDocument()
       expect(screen.queryByText('Chinese output')).not.toBeInTheDocument()
       expect(screen.queryByText('Custom polish instructions')).not.toBeInTheDocument()
+      expect(screen.queryByText('Use selected text as context')).not.toBeInTheDocument()
 
       fireEvent.click(screen.getByRole('button', { name: /advanced polish settings/i }))
 
       expect(screen.getByText('Custom polish instructions')).toBeInTheDocument()
+      expect(screen.getByText('Use selected text as context')).toBeInTheDocument()
+      expect(screen.getByText('Use selected text for context')).toBeInTheDocument()
       expect(screen.queryByText('Chinese output')).not.toBeInTheDocument()
+    })
+
+    it('keeps selected-text controls reachable when cleanup is disabled', () => {
+      mockAppStore.config.polish_enabled = false
+      render(<LlmPane />)
+
+      fireEvent.click(screen.getByRole('button', { name: /advanced polish settings/i }))
+
+      expect(screen.getByText('Use selected text as context')).toBeInTheDocument()
+      expect(screen.queryByText('Custom polish instructions')).not.toBeInTheDocument()
     })
 
     it('updates custom polish instructions from advanced settings', () => {
@@ -466,7 +481,9 @@ describe('LlmPane', () => {
       vi.mocked(tauri.getLlmModelCapability).mockResolvedValueOnce('certified')
       render(<LlmPane />)
 
-      expect(screen.queryByText('Optimized context and thought-aware support')).not.toBeInTheDocument()
+      expect(
+        screen.queryByText('Optimized context and thought-aware support'),
+      ).not.toBeInTheDocument()
       expect(
         screen.queryByText('Context and thought-aware support is best effort'),
       ).not.toBeInTheDocument()
@@ -477,7 +494,9 @@ describe('LlmPane', () => {
     it('keeps model editing available without a best-effort banner', () => {
       render(<LlmPane />)
 
-      expect(screen.queryByText('Context and thought-aware support is best effort')).not.toBeInTheDocument()
+      expect(
+        screen.queryByText('Context and thought-aware support is best effort'),
+      ).not.toBeInTheDocument()
       expect(screen.getByPlaceholderText('e.g. gpt-4o-mini')).not.toBeDisabled()
     })
 
@@ -569,13 +588,14 @@ describe('LlmPane', () => {
       )
     })
 
-    it('keeps only the explanations that clarify non-obvious behavior', () => {
+    it('keeps helper copy and advanced toggles out of the default flow', () => {
       render(<LlmPane />)
 
       expect(screen.queryByText('Cleans up dictation before output')).not.toBeInTheDocument()
       expect(screen.queryByText('Translate each dictation result')).not.toBeInTheDocument()
-      expect(screen.getByText('Uses a private local app category')).toBeInTheDocument()
-      expect(screen.getByText('Use selected text for context')).toBeInTheDocument()
+      expect(screen.queryByText('Uses a private local app category')).not.toBeInTheDocument()
+      expect(screen.queryByText('Use selected text as context')).not.toBeInTheDocument()
+      expect(screen.queryByText('Use selected text for context')).not.toBeInTheDocument()
     })
 
     it('hides last context until an operation snapshot exists', () => {
