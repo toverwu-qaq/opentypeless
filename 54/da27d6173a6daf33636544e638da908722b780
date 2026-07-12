@@ -1,0 +1,23 @@
+src/components/AccountPage/PasswordDialog.tsx
+  s_7724aa1accb26b::t_80b2926f2e6661 7-15,37,63-85,117
+src/components/AccountPage/__tests__/AccountPage.password.test.tsx
+  s_7724aa1accb26b::t_3345fb30d77a1e 122-142
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "54da27d6173a6daf33636544e638da908722b780",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
