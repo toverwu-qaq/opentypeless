@@ -1,0 +1,23 @@
+src/components/Settings/__tests__/DictionaryPane.test.tsx
+  s_7724aa1accb26b::t_a1ecbe833bb3fb 13,95,98-104,108-132,141,175,200
+src/components/Settings/__tests__/SceneAssignmentsDialog.test.tsx
+  s_7724aa1accb26b::t_9abfe6d57e8a5d 1-156
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3eafb60924a5501a7f7483ba485ba0997c0179b3",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
