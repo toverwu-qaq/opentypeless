@@ -4,6 +4,15 @@ import { useTranslation } from 'react-i18next'
 import type { CredentialCapability } from '../../stores/authStore'
 import { PasswordField } from './PasswordField'
 
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',')
+
 interface PasswordDialogProps {
   credentialCapability: Exclude<CredentialCapability, 'unknown'>
   loading: boolean
@@ -25,6 +34,7 @@ export function PasswordDialog({
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
   const currentPasswordRef = useRef<HTMLInputElement>(null)
   const newPasswordRef = useRef<HTMLInputElement>(null)
   const actionLabel =
@@ -50,9 +60,29 @@ export function PasswordDialog({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || busy) return
-      event.preventDefault()
-      onCancel()
+      if (event.key === 'Escape') {
+        if (busy) return
+        event.preventDefault()
+        onCancel()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+      const form = formRef.current
+      if (!form) return
+      const focusable = Array.from(form.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+      if (event.shiftKey && (active === first || !form.contains(active))) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (active === last || !form.contains(active))) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -84,6 +114,7 @@ export function PasswordDialog({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/25 px-5">
       <div className="fixed inset-0" onClick={busy ? undefined : onCancel} />
       <form
+        ref={formRef}
         role="dialog"
         aria-modal="true"
         aria-label={actionLabel}

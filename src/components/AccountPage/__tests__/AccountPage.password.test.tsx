@@ -119,6 +119,27 @@ describe('AccountPage password controls', () => {
     expect(screen.queryByRole('button', { name: 'Change password' })).not.toBeInTheDocument()
   })
 
+  it('keeps Tab and Shift+Tab focus inside the password dialog', () => {
+    signedIn('present')
+    render(<AccountPage />)
+
+    const backgroundSignOut = screen.getByRole('button', { name: 'Sign Out' })
+    fireEvent.click(screen.getByRole('button', { name: 'Change password' }))
+    const dialog = screen.getByRole('dialog', { name: 'Change password' })
+    const firstField = within(dialog).getByLabelText('Current password')
+    const cancel = within(dialog).getByRole('button', { name: 'Cancel' })
+
+    cancel.focus()
+    fireEvent.keyDown(cancel, { key: 'Tab' })
+    expect(firstField).toHaveFocus()
+    expect(backgroundSignOut).not.toHaveFocus()
+
+    firstField.focus()
+    fireEvent.keyDown(firstField, { key: 'Tab', shiftKey: true })
+    expect(cancel).toHaveFocus()
+    expect(backgroundSignOut).not.toHaveFocus()
+  })
+
   it('renders neither password action while capability is unknown', () => {
     signedIn('unknown')
     render(<AccountPage />)
