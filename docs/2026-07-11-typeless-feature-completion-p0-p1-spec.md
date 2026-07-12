@@ -2,7 +2,7 @@
 
 Date: 2026-07-11
 
-Status: Implemented product and engineering specification, revision 2.0
+Status: Implemented product and engineering specification, revision 2.1
 
 Canonical scope: OpenTypeless desktop plus the TalkMore cloud/account service
 
@@ -11,7 +11,7 @@ Baselines:
 - `opentypeless` at `origin/main@1e5df0a`
 - `talkmore` at `origin/main@dd7d023`
 
-This document supersedes the earlier context-intelligence draft and fixture document. It is the product, implementation, and release source of truth for the P0/P1 work described below. Revision 1.1 incorporated the product review decisions on release slicing, detector latency, model capability, intent safety, password-reset redirects, cross-runtime session invalidation, restrained desktop UI, and measurable release fixtures. Revision 1.2 added a scalable built-in app registry, broader global and China-market app coverage, and explicit local custom app mappings without adding an app-management dashboard. Revision 2.0 records the implementation completed on `codex/typeless-p0-p1`, resolves the OAuth-only password flow against the final server contract, and adds exact user-visible outcomes, data boundaries, automated evidence, rollout controls, and remaining deployment validation.
+This document supersedes the earlier context-intelligence draft and fixture document. It is the product, implementation, and release source of truth for the P0/P1 work described below. Revision 1.1 incorporated the product review decisions on release slicing, detector latency, model capability, intent safety, password-reset redirects, cross-runtime session invalidation, restrained desktop UI, and measurable release fixtures. Revision 1.2 added a scalable built-in app registry, broader global and China-market app coverage, and explicit local custom app mappings without adding an app-management dashboard. Revision 2.0 records the implementation completed on `codex/typeless-p0-p1`, resolves the OAuth-only password flow against the final server contract, and adds exact user-visible outcomes, data boundaries, automated evidence, rollout controls, and remaining deployment validation. Revision 2.1 moves password mutation into an existing-style modal and adds a compact representative-app logo row beside context adaptation after packaged-desktop review.
 
 ## 1. Executive Summary
 
@@ -1105,6 +1105,8 @@ P0 adds two compact rows to AI Polish settings using existing controls:
 1. `Adapt writing to current app` toggle.
 2. `Last dictation context` read-only row with a 14px logo/glyph and short mapped label.
 
+The adaptation row also shows one restrained, noninteractive logo line for Gmail, Slack, Lark, WeChat, Google Docs, Notion, GitHub, and Cursor, followed by `+63`. Each 16px local logo has an accessible app name and tooltip. The line communicates representative coverage only; it is not a gallery, selector, or link, and it dims with the disabled toggle.
+
 The row displays the snapshot actually used by the most recent dictation, not the app currently showing Settings. Hide the row when no snapshot exists. Do not add a live app monitor, timestamp, confidence value, domain, or explanatory card.
 
 Scenes receives no additional P0 row. In P1, the `Last dictation context` row may expose one overflow action, `Use a different writing style...`, when an in-memory mapping candidate exists. The action opens a small existing-style menu for short label confirmation, semantic family, and optional scene assignment.
@@ -1142,7 +1144,9 @@ Extend the existing account information area with one Password row:
 - OAuth-only account -> `Set password`
 - linked account -> `Change password`
 
-The action opens a compact inline form or small dialog with current, new, and confirm fields as appropriate. It must not add a Security dashboard.
+The action opens a centered existing-style modal, never an inline expanding form. The account page remains one compact `Security` row with one text action. The modal is at most 380px wide with a 10px radius, existing border/backdrop/shadow tokens, a 14px title, current/new/confirm fields as appropriate, and compact footer actions. It must not add a Security dashboard.
+
+The modal focuses the first field, closes on Escape or backdrop click while idle, restores focus to the trigger, keeps validation and server errors inside the dialog, and cannot close while a password mutation is in progress.
 
 After success:
 
@@ -1695,11 +1699,12 @@ Resolved:
 21. Scale built-in app coverage through one typed local registry with shared family policies and at most one structured override per app.
 22. Separate release-blocking reference profiles from verified extended family mappings so long-tail coverage does not create an unbounded P0 gate.
 23. Let users explicitly map a long-tail app or exact host to a family/scene in P1 without storing titles, paths, or page content and without adding an app-management dashboard.
+24. Keep the Account security row collapsed and open password mutation only in an existing-style modal.
+25. Show representative app coverage as eight small local logos plus `+63`, without making the logos interactive or adding an app gallery.
 
 Non-blocking implementation choices:
 
 - exact OS icon extraction implementation per platform
-- inline form versus existing-size dialog for Change password
 
 These choices must satisfy Section 13 and do not change product scope.
 
@@ -1928,13 +1933,13 @@ No route, navigation destination, dashboard, app gallery, or large card was adde
 | --- | --- |
 | Capsule | Idle state and active height remain unchanged; Translate adds a stable compact language chip and existing-style target menu. |
 | History | Existing metadata line adds a small local logo/glyph and mapped context label; provider hides first at narrow width; correction creation uses an explicit small dialog. |
-| AI Polish | Adds the existing-style context-adaptation toggle, last-dictation context row, and concise model capability status. |
+| AI Polish | Adds the existing-style context-adaptation toggle, an eight-logo representative coverage line with `+63`, last-dictation context row, and concise model capability status. |
 | Scenes/context | Last-context overflow opens a compact mapping form; only user-created mappings appear in one flat management dialog. |
 | Dictionary | Adds one search field, compact Import/Export icon actions, inline maintenance, preview dialog, and unchanged flat-list density. |
 | Translation settings | Replaces one selector with an ordered compact target list using icon actions. |
 | General shortcuts | Reuses existing rows and capture controls; secondary bindings are inline and capped at three. |
 | Account signed out | Adds `Forgot password?` and swaps the same 340px form container to request/success/back states. |
-| Account signed in | Adds one Password row with an inline Change/Set form; no Security page. |
+| Account signed in | Adds one Password row whose Change/Set action opens a compact 380px modal; no inline form or Security page. |
 
 Reference app logos are local nominative identifiers only. Unknown and extended profiles fall back to the existing Lucide family glyphs. No logo is loaded remotely, and no app logo displaces recording, processing, timer, waveform, or cancel state in the active capsule.
 
