@@ -1,0 +1,61 @@
+src/i18n/locales/ko.json
+  s_7724aa1accb26b::t_935012e27fc860 340
+src/lib/__tests__/desktop-auth-callback.test.ts
+  s_7724aa1accb26b::t_4861f65a041081 2,10
+src/i18n/locales/zh.json
+  s_7724aa1accb26b::t_113860d6a065f0 338
+src/components/AccountPage/PasswordDialog.tsx
+  s_7724aa1accb26b::t_854d6a3df30c18 1-164
+src/components/Settings/__tests__/LlmPane.test.tsx
+  s_7724aa1accb26b::t_5901b9545cddcf 2,32,540-560,618-620
+vitest.config.ts
+  s_7724aa1accb26b::t_9a5bfc206b43b0 9
+src/components/AccountPage/PasswordField.tsx
+  s_7724aa1accb26b::t_2a9411650ef04e 1-63
+src/i18n/locales/fr.json
+  s_7724aa1accb26b::t_e0f26dfd7e6e8a 340
+docs/2026-07-11-typeless-feature-completion-p0-p1-spec.md
+  s_7724aa1accb26b::t_a17137bfe2da1c 1776
+src/i18n/locales/pt.json
+  s_7724aa1accb26b::t_2d344befde1e70 340
+src/i18n/locales/ja.json
+  s_7724aa1accb26b::t_cc1285372172b4 340
+src/i18n/locales/es.json
+  s_7724aa1accb26b::t_5d4f6d6abc7d9f 340
+src/i18n/locales/ru.json
+  s_7724aa1accb26b::t_c4acd170d2927b 340
+src/i18n/locales/de.json
+  s_7724aa1accb26b::t_74e83ce2f75ff7 340
+src/i18n/locales/it.json
+  s_7724aa1accb26b::t_33bc69b181d3ca 340
+src/i18n/locales/en.json
+  s_7724aa1accb26b::t_2648e3249b0ef2 338
+src/components/Settings/LlmPane.tsx
+  s_7724aa1accb26b::t_b6a41545efb0bd 34,422
+docs/superpowers/plans/2026-07-12-desktop-account-context-ui-refinement.md
+  s_7724aa1accb26b::t_3731cd873e587d 31,33,46,52,57,66,70,87,100,106,110,112,114,131,135,146,148,150,152,154,158,167,171-172
+src/components/AccountPage/__tests__/AccountPage.password.test.tsx
+  s_7724aa1accb26b::t_928eba9b44c2d6 1,76,80-87,90-98,101-103,105-108,115-118
+src/components/AccountPage/index.tsx
+  s_7724aa1accb26b::t_3ff8db7c8031c6 1,27-28,570,636-639,680-684,687,689-692,700-709
+src/components/Settings/ContextAdaptationApps.tsx
+  s_7724aa1accb26b::t_e07c3b9bda3c4a 1-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "4fa931d43dd92a1ab66c151c4aabf9a8dea8ef31",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
