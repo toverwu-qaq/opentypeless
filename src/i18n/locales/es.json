@@ -256,6 +256,8 @@
     "translateHotkey": "Translate shortcut",
     "shortcutAdd": "Add shortcut",
     "shortcutRemove": "Remove shortcut",
+    "shortcutManage": "Gestionar atajo",
+    "shortcutMakePrimary": "Establecer como principal",
     "shortcutMoveUp": "Move shortcut up",
     "shortcutMoveDown": "Move shortcut down",
     "shortcutPrimary": "Primary",

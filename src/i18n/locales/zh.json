@@ -257,6 +257,8 @@
     "translateHotkey": "翻译快捷键",
     "shortcutAdd": "添加快捷键",
     "shortcutRemove": "移除快捷键",
+    "shortcutManage": "管理快捷键",
+    "shortcutMakePrimary": "设为主快捷键",
     "shortcutMoveUp": "上移快捷键",
     "shortcutMoveDown": "下移快捷键",
     "shortcutPrimary": "主快捷键",

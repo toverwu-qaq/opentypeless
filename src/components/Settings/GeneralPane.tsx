@@ -4,9 +4,6 @@ import { ChevronDown, MessageCircle } from 'lucide-react'
 import { isMacPlatform, useAppStore } from '../../stores/appStore'
 import type { AppConfig, HotkeyMode, OutputMode, ShortcutBinding } from '../../stores/appStore'
 import {
-  checkAccessibilityPermission,
-  requestAccessibilityPermission,
-  waitForAccessibilityPermission,
   getPlatformCapabilities,
   getHotkeyStatus,
   startAskFlow,
@@ -16,18 +13,6 @@ import { SegmentedControl } from './shared/SegmentedControl'
 import { Toggle } from './shared/Toggle'
 import { ShortcutBindingList } from './ShortcutBindingList'
 
-function isFnDictationHotkey(config: AppConfig) {
-  return (
-    config.hotkey.trim().toLowerCase() === 'fn' ||
-    (config.hotkeys.dictation.primary.trim().toLowerCase() === 'fn' &&
-      config.hotkeys.dictation.modifiers.length === 0)
-  )
-}
-
-function needsMacAccessibility(config: AppConfig) {
-  return config.output_mode === 'keyboard' || isFnDictationHotkey(config)
-}
-
 export function GeneralPane() {
   const config = useAppStore((s) => s.config)
   const updateConfig = useAppStore((s) => s.updateConfig)
@@ -36,8 +21,6 @@ export function GeneralPane() {
   const hotkeyRegistrationError = useAppStore((s) => s.hotkeyRegistrationError)
   const { t } = useTranslation()
   const isMac = isMacPlatform()
-  const macAccessibilityNeeded = isMac && needsMacAccessibility(config)
-  const [a11yTrusted, setA11yTrusted] = useState<boolean | null>(null)
   const [hotkeyStatus, setHotkeyStatus] = useState<HotkeyStatus | null>(null)
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
@@ -49,15 +32,6 @@ export function GeneralPane() {
         console.error('Failed to load platform capabilities:', err)
       })
   }, [platformCapabilities, setPlatformCapabilities])
-
-  useEffect(() => {
-    if (macAccessibilityNeeded) {
-      checkAccessibilityPermission().then(setA11yTrusted)
-      const onFocus = () => checkAccessibilityPermission().then(setA11yTrusted)
-      window.addEventListener('focus', onFocus)
-      return () => window.removeEventListener('focus', onFocus)
-    }
-  }, [macAccessibilityNeeded])
 
   useEffect(() => {
     let cancelled = false
@@ -72,12 +46,6 @@ export function GeneralPane() {
       cancelled = true
     }
   }, [config.hotkeys, hotkeyRegistrationError])
-
-  const handleGrantPermission = useCallback(async () => {
-    await requestAccessibilityPermission()
-    const trusted = await waitForAccessibilityPermission()
-    setA11yTrusted(trusted)
-  }, [])
 
   const handleOpenAsk = useCallback(() => {
     startAskFlow().catch((err) => {
@@ -235,26 +203,6 @@ export function GeneralPane() {
             </p>
           )}
       </Section>
-
-      {macAccessibilityNeeded && a11yTrusted === false && (
-        <Section title={t('settings.accessibilityPermission')}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-amber-500" />
-              <span className="text-[13px] text-text-primary">
-                {t('settings.accessibilityRequired')}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleGrantPermission}
-              className="rounded-full border-none bg-accent px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-accent-hover"
-            >
-              {t('settings.grantPermission')}
-            </button>
-          </div>
-        </Section>
-      )}
 
       <div>
         <button

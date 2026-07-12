@@ -376,7 +376,7 @@ describe('Settings tab 切换', () => {
     })
   })
 
-  it('General pane hides granted macOS Accessibility from the default surface', async () => {
+  it('General pane leaves macOS Accessibility to the global permission banner', () => {
     const originalPlatform = window.navigator.platform
     Object.defineProperty(window.navigator, 'platform', {
       value: 'MacIntel',
@@ -384,70 +384,15 @@ describe('Settings tab 切换', () => {
     })
     const mockCheckAccessibilityPermission = vi.mocked(checkAccessibilityPermission)
     mockCheckAccessibilityPermission.mockClear()
-    mockCheckAccessibilityPermission.mockResolvedValueOnce(true)
+    mockCheckAccessibilityPermission.mockResolvedValueOnce(false)
 
     try {
       renderSettings()
 
-      await waitFor(() => {
-        expect(mockCheckAccessibilityPermission).toHaveBeenCalled()
-      })
       expect(screen.queryByText('settings.accessibilityPermission')).toBeNull()
-      expect(screen.queryByText('settings.accessibilityGranted')).toBeNull()
-    } finally {
-      Object.defineProperty(window.navigator, 'platform', {
-        value: originalPlatform,
-        configurable: true,
-      })
-    }
-  })
-
-  it('General pane still shows macOS Accessibility when permission is missing', async () => {
-    const originalPlatform = window.navigator.platform
-    Object.defineProperty(window.navigator, 'platform', {
-      value: 'MacIntel',
-      configurable: true,
-    })
-    const mockCheckAccessibilityPermission = vi.mocked(checkAccessibilityPermission)
-    mockCheckAccessibilityPermission.mockClear()
-    mockCheckAccessibilityPermission.mockResolvedValueOnce(false)
-
-    try {
-      renderSettings()
-
-      expect(await screen.findByText('settings.accessibilityPermission')).toBeDefined()
-      expect(screen.getByText('settings.accessibilityRequired')).toBeDefined()
-      expect(screen.getByText('settings.grantPermission')).toBeDefined()
-    } finally {
-      Object.defineProperty(window.navigator, 'platform', {
-        value: originalPlatform,
-        configurable: true,
-      })
-    }
-  })
-
-  it('General pane shows macOS Accessibility for Fn hotkey even with clipboard output', async () => {
-    const originalPlatform = window.navigator.platform
-    Object.defineProperty(window.navigator, 'platform', {
-      value: 'MacIntel',
-      configurable: true,
-    })
-    const mockCheckAccessibilityPermission = vi.mocked(checkAccessibilityPermission)
-    mockCheckAccessibilityPermission.mockClear()
-    mockCheckAccessibilityPermission.mockResolvedValueOnce(false)
-    useAppStore.getState().updateConfig({
-      hotkey: 'Fn',
-      hotkey_mode: 'toggle',
-      output_mode: 'clipboard',
-      insertion_strategy: 'clipboardPaste',
-    })
-    seedSavedConfig()
-
-    try {
-      renderSettings()
-
-      expect(await screen.findByText('settings.accessibilityPermission')).toBeDefined()
-      expect(screen.getByText('settings.accessibilityRequired')).toBeDefined()
+      expect(screen.queryByText('settings.accessibilityRequired')).toBeNull()
+      expect(screen.queryByText('settings.grantPermission')).toBeNull()
+      expect(mockCheckAccessibilityPermission).not.toHaveBeenCalled()
     } finally {
       Object.defineProperty(window.navigator, 'platform', {
         value: originalPlatform,

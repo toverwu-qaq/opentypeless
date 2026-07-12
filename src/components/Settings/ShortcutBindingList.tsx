@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Plus, X } from 'lucide-react'
 import {
   bindingFromHotkey,
   hotkeyFromBinding,
@@ -48,6 +48,8 @@ interface HotkeyRecorderProps {
   validateHotkey?: (hotkey: string) => string | null
   specialOptions?: Array<{ value: string; label: string }>
   disabled?: boolean
+  autoStart?: boolean
+  onCancel?: () => void
 }
 
 export function HotkeyRecorder({
@@ -56,6 +58,8 @@ export function HotkeyRecorder({
   validateHotkey,
   specialOptions,
   disabled = false,
+  autoStart = false,
+  onCancel,
 }: HotkeyRecorderProps) {
   const { t } = useTranslation()
   const isMac = isMacPlatform()
@@ -64,13 +68,17 @@ export function HotkeyRecorder({
   const [modifierHint, setModifierHint] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const autoConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const autoStarted = useRef(false)
+
+  const clearTimer = useCallback(() => {
+    if (!autoConfirmTimer.current) return
+    clearTimeout(autoConfirmTimer.current)
+    autoConfirmTimer.current = null
+  }, [])
 
   const confirmHotkey = useCallback(
     (hotkey: string) => {
-      if (autoConfirmTimer.current) {
-        clearTimeout(autoConfirmTimer.current)
-        autoConfirmTimer.current = null
-      }
+      clearTimer()
       setRecording(false)
       setModifierHint(null)
       setPending(null)
@@ -84,8 +92,33 @@ export function HotkeyRecorder({
       onSaved(hotkey)
       resumeHotkey().catch((resumeError) => setError(String(resumeError)))
     },
-    [onSaved, validateHotkey],
+    [clearTimer, onSaved, validateHotkey],
   )
+
+  const cancelRecording = useCallback(() => {
+    clearTimer()
+    setRecording(false)
+    setPending(null)
+    setModifierHint(null)
+    setError(null)
+    resumeHotkey().catch(() => {})
+    onCancel?.()
+  }, [clearTimer, onCancel])
+
+  const startRecording = useCallback(() => {
+    if (disabled) return
+    pauseHotkey().catch(() => {})
+    setRecording(true)
+    setPending(null)
+    setModifierHint(null)
+    setError(null)
+  }, [disabled])
+
+  useEffect(() => {
+    if (!autoStart || autoStarted.current) return
+    autoStarted.current = true
+    startRecording()
+  }, [autoStart, startRecording])
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -145,42 +178,48 @@ export function HotkeyRecorder({
     return () => {
       window.removeEventListener('keydown', handleKeyDown, true)
       window.removeEventListener('keyup', clearModifierHint, true)
-      if (autoConfirmTimer.current) clearTimeout(autoConfirmTimer.current)
+      clearTimer()
     }
-  }, [handleKeyDown, recording])
+  }, [clearTimer, handleKeyDown, recording])
 
   const handleClick = () => {
     if (disabled) return
     if (recording && pending) {
       confirmHotkey(pending)
     } else if (recording) {
-      setRecording(false)
-      setPending(null)
-      setModifierHint(null)
-      if (autoConfirmTimer.current) clearTimeout(autoConfirmTimer.current)
-      resumeHotkey().catch(() => {})
+      cancelRecording()
     } else {
-      pauseHotkey().catch(() => {})
-      setRecording(true)
-      setPending(null)
-      setError(null)
+      startRecording()
     }
   }
 
   return (
     <div className="min-w-0">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={disabled}
-        className={`h-9 w-full rounded-[8px] border px-3 text-left font-mono text-[12px] transition-colors disabled:opacity-40 ${
-          recording
-            ? 'border-text-secondary bg-bg-tertiary text-text-primary ring-2 ring-text-secondary/20'
-            : 'border-transparent bg-bg-secondary text-text-primary hover:border-border'
-        }`}
-      >
-        {recording ? pending || modifierHint || t('settings.pressKeyCombination') : value}
-      </button>
+      <div className="flex min-w-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={handleClick}
+          disabled={disabled}
+          className={`h-9 min-w-0 flex-1 rounded-[8px] border px-3 text-left font-mono text-[12px] transition-colors disabled:opacity-40 ${
+            recording
+              ? 'border-text-secondary bg-bg-tertiary text-text-primary ring-2 ring-text-secondary/20'
+              : 'border-transparent bg-bg-secondary text-text-primary hover:border-border'
+          }`}
+        >
+          {recording ? pending || modifierHint || t('settings.pressKeyCombination') : value}
+        </button>
+        {recording && onCancel && (
+          <button
+            type="button"
+            onClick={cancelRecording}
+            aria-label={t('common.cancel')}
+            title={t('common.cancel')}
+            className="grid h-9 w-8 flex-none place-items-center rounded-[6px] border-none bg-transparent text-text-tertiary hover:bg-bg-hover hover:text-text-primary"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
       {recording && pending && (
         <p className="mt-1 text-[11px] text-text-tertiary">{t('settings.clickToConfirm')}</p>
       )}
@@ -237,11 +276,33 @@ export function ShortcutBindingList({
 }: ShortcutBindingListProps) {
   const { t } = useTranslation()
   const [adding, setAdding] = useState(false)
+  const [menuIndex, setMenuIndex] = useState<number | null>(null)
+  const menuButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
   const atLimit = bindings.length >= MAX_BINDINGS
 
   useEffect(() => {
     if (atLimit) setAdding(false)
   }, [atLimit])
+
+  const closeMenu = useCallback((restoreFocus = false) => {
+    setMenuIndex((current) => {
+      if (restoreFocus && current !== null) {
+        requestAnimationFrame(() => menuButtonRefs.current[current]?.focus())
+      }
+      return null
+    })
+  }, [])
+
+  useEffect(() => {
+    if (menuIndex === null) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      closeMenu(true)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [closeMenu, menuIndex])
 
   const validate = (hotkey: string, editingIndex: number | null) => {
     const candidate = bindingFromHotkey(hotkey)
@@ -260,12 +321,9 @@ export function ShortcutBindingList({
     onChange(bindings.map((current, currentIndex) => (currentIndex === index ? binding : current)))
   }
 
-  const move = (index: number, offset: -1 | 1) => {
-    const target = index + offset
-    if (target < 0 || target >= bindings.length) return
-    const next = [...bindings]
-    ;[next[index], next[target]] = [next[target], next[index]]
-    onChange(next)
+  const makePrimary = (index: number) => {
+    if (index <= 0 || index >= bindings.length) return
+    onChange([bindings[index], ...bindings.filter((_, currentIndex) => currentIndex !== index)])
   }
 
   return (
@@ -296,74 +354,77 @@ export function ShortcutBindingList({
                 validateHotkey={(hotkey) => validate(hotkey, index)}
                 onSaved={(hotkey) => saveAt(index, hotkey)}
               />
-              <p
-                aria-hidden={index !== 0}
-                className={`mt-0.5 h-3 text-[10px] text-text-tertiary ${
-                  index === 0 ? '' : 'invisible'
-                }`}
-              >
-                {t('settings.shortcutPrimary')}
-              </p>
+              {bindings.length > 1 && index === 0 && (
+                <p className="mt-0.5 text-[10px] text-text-tertiary">
+                  {t('settings.shortcutPrimary')}
+                </p>
+              )}
             </div>
-            <button
-              type="button"
-              aria-label={t('settings.shortcutMoveUp')}
-              title={t('settings.shortcutMoveUp')}
-              disabled={disabled || index === 0}
-              onClick={() => move(index, -1)}
-              className="grid h-9 w-7 flex-none place-items-center rounded-[6px] border-none bg-transparent text-text-tertiary hover:bg-bg-hover hover:text-text-primary disabled:opacity-25"
-            >
-              <ArrowUp size={13} />
-            </button>
-            <button
-              type="button"
-              aria-label={t('settings.shortcutMoveDown')}
-              title={t('settings.shortcutMoveDown')}
-              disabled={disabled || index === bindings.length - 1}
-              onClick={() => move(index, 1)}
-              className="grid h-9 w-7 flex-none place-items-center rounded-[6px] border-none bg-transparent text-text-tertiary hover:bg-bg-hover hover:text-text-primary disabled:opacity-25"
-            >
-              <ArrowDown size={13} />
-            </button>
-            <button
-              type="button"
-              aria-label={t('settings.shortcutRemove')}
-              title={t('settings.shortcutRemove')}
-              disabled={disabled || (required && bindings.length === 1)}
-              onClick={() => onChange(bindings.filter((_, currentIndex) => currentIndex !== index))}
-              className="grid h-9 w-7 flex-none place-items-center rounded-[6px] border-none bg-transparent text-text-tertiary hover:bg-bg-hover hover:text-error disabled:opacity-25"
-            >
-              <Trash2 size={13} />
-            </button>
+            {(bindings.length > 1 || !required) && (
+              <div className="relative flex-none">
+                <button
+                  ref={(element) => {
+                    menuButtonRefs.current[index] = element
+                  }}
+                  type="button"
+                  aria-label={t('settings.shortcutManage')}
+                  title={t('settings.shortcutManage')}
+                  aria-expanded={menuIndex === index}
+                  onClick={() => setMenuIndex((current) => (current === index ? null : index))}
+                  disabled={disabled}
+                  className="grid h-9 w-8 place-items-center rounded-[6px] border-none bg-transparent text-text-tertiary hover:bg-bg-hover hover:text-text-primary disabled:opacity-35"
+                >
+                  <MoreHorizontal size={14} />
+                </button>
+                {menuIndex === index && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => closeMenu(true)} />
+                    <div className="absolute right-0 top-9 z-40 min-w-[150px] rounded-[8px] border border-border bg-bg-primary py-1 shadow-float">
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            closeMenu()
+                            makePrimary(index)
+                          }}
+                          className="block w-full px-3 py-2 text-left text-[12px] text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+                        >
+                          {t('settings.shortcutMakePrimary')}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeMenu()
+                          onChange(bindings.filter((_, currentIndex) => currentIndex !== index))
+                        }}
+                        className="block w-full px-3 py-2 text-left text-[12px] text-text-secondary hover:bg-bg-hover hover:text-error"
+                      >
+                        {t('settings.shortcutRemove')}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         ))}
 
         {adding && !atLimit && (
-          <div className="flex min-w-0 items-start gap-1">
-            <div className="min-w-0 flex-1">
-              <HotkeyRecorder
-                value="—"
-                disabled={disabled}
-                specialOptions={specialOptions}
-                validateHotkey={(hotkey) => validate(hotkey, null)}
-                onSaved={(hotkey) => {
-                  const binding = bindingFromHotkey(hotkey)
-                  if (!binding) return
-                  setAdding(false)
-                  onChange([...bindings, binding])
-                }}
-              />
-            </div>
-            <button
-              type="button"
-              aria-label={t('settings.shortcutRemove')}
-              title={t('settings.shortcutRemove')}
-              onClick={() => setAdding(false)}
-              className="grid h-9 w-7 flex-none place-items-center rounded-[6px] border-none bg-transparent text-text-tertiary hover:bg-bg-hover hover:text-error"
-            >
-              <Trash2 size={13} />
-            </button>
-          </div>
+          <HotkeyRecorder
+            value=""
+            disabled={disabled}
+            autoStart
+            onCancel={() => setAdding(false)}
+            specialOptions={specialOptions}
+            validateHotkey={(hotkey) => validate(hotkey, null)}
+            onSaved={(hotkey) => {
+              const binding = bindingFromHotkey(hotkey)
+              if (!binding) return
+              setAdding(false)
+              onChange([...bindings, binding])
+            }}
+          />
         )}
       </div>
 
