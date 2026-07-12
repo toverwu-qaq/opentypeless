@@ -32,6 +32,7 @@ import {
 } from '../../lib/tauri'
 import { toast } from '../Toast'
 import { DictionaryImportDialog } from './DictionaryImportDialog'
+import { SegmentedControl } from './shared/SegmentedControl'
 
 const MAX_IMPORT_BYTES = 1024 * 1024
 
@@ -75,6 +76,7 @@ export function DictionaryPane() {
   const correctionRules = useAppStore((state) => state.correctionRules)
   const setCorrectionRules = useAppStore((state) => state.setCorrectionRules)
   const { t } = useTranslation()
+  const [activeSection, setActiveSection] = useState<'words' | 'corrections'>('words')
   const [word, setWord] = useState('')
   const [pronunciation, setPronunciation] = useState('')
   const [pattern, setPattern] = useState('')
@@ -346,249 +348,267 @@ export function DictionaryPane() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-        <input
-          value={word}
-          onChange={(event) => setWord(event.target.value)}
-          placeholder={t('dictionary.word')}
-          className="min-w-0 rounded-[8px] border border-border bg-bg-secondary px-3 py-2.5 text-[13px] text-text-primary outline-none focus:border-border-focus"
+      <div className="max-w-[240px]">
+        <SegmentedControl
+          options={[
+            { value: 'words', label: t('dictionary.words') },
+            { value: 'corrections', label: t('dictionary.corrections') },
+          ]}
+          value={activeSection}
+          onChange={(value) => setActiveSection(value as 'words' | 'corrections')}
         />
-        <input
-          value={pronunciation}
-          onChange={(event) => setPronunciation(event.target.value)}
-          placeholder={t('dictionary.pronunciationOptional')}
-          className="min-w-0 rounded-[8px] border border-border bg-bg-secondary px-3 py-2.5 text-[13px] text-text-primary outline-none focus:border-border-focus"
-        />
-        <button
-          type="button"
-          onClick={() => void handleAdd()}
-          disabled={!word.trim()}
-          className="flex items-center justify-center gap-1.5 rounded-[8px] border-none bg-accent px-4 py-2.5 text-[13px] text-white hover:bg-accent-hover disabled:opacity-40"
-        >
-          <Plus size={14} />
-          {t('dictionary.add')}
-        </button>
       </div>
 
-      <div className="overflow-hidden rounded-[8px] border border-border">
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_64px] gap-2 bg-bg-secondary px-3 py-2.5 text-[11px] font-medium uppercase text-text-secondary">
-          <span>{t('dictionary.word')}</span>
-          <span>{t('dictionary.pronunciation')}</span>
-          <span />
-        </div>
-        {filteredDictionary.length === 0 ? (
-          <div className="px-3 py-8 text-center text-[13px] text-text-tertiary">
-            {t('dictionary.noEntries')}
+      {activeSection === 'words' && (
+        <>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <input
+              value={word}
+              onChange={(event) => setWord(event.target.value)}
+              placeholder={t('dictionary.word')}
+              className="min-w-0 rounded-[8px] border border-border bg-bg-secondary px-3 py-2.5 text-[13px] text-text-primary outline-none focus:border-border-focus"
+            />
+            <input
+              value={pronunciation}
+              onChange={(event) => setPronunciation(event.target.value)}
+              placeholder={t('dictionary.pronunciationOptional')}
+              className="min-w-0 rounded-[8px] border border-border bg-bg-secondary px-3 py-2.5 text-[13px] text-text-primary outline-none focus:border-border-focus"
+            />
+            <button
+              type="button"
+              onClick={() => void handleAdd()}
+              disabled={!word.trim()}
+              className="flex items-center justify-center gap-1.5 rounded-[8px] border-none bg-accent px-4 py-2.5 text-[13px] text-white hover:bg-accent-hover disabled:opacity-40"
+            >
+              <Plus size={14} />
+              {t('dictionary.add')}
+            </button>
           </div>
-        ) : (
-          filteredDictionary.map((entry) =>
-            editing?.kind === 'dictionary' && editing.id === entry.id ? (
-              <div
-                key={entry.id}
-                className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_64px] items-center gap-2 border-t border-border px-3 py-2"
-              >
-                <input
-                  aria-label={t('dictionary.word')}
-                  value={editing.word}
-                  onChange={(event) => setEditing({ ...editing, word: event.target.value })}
-                  className="min-w-0 rounded-[6px] border border-border bg-bg-secondary px-2 py-1.5 text-[12px] text-text-primary outline-none focus:border-border-focus"
-                />
-                <input
-                  aria-label={t('dictionary.pronunciation')}
-                  value={editing.pronunciation}
-                  onChange={(event) =>
-                    setEditing({ ...editing, pronunciation: event.target.value })
-                  }
-                  className="min-w-0 rounded-[6px] border border-border bg-bg-secondary px-2 py-1.5 text-[12px] text-text-primary outline-none focus:border-border-focus"
-                />
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => void saveEdit()}
-                    aria-label={t('dictionary.saveEdit')}
-                    title={t('dictionary.saveEdit')}
-                    className="p-1.5 text-success"
-                  >
-                    <Check size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditing(null)}
-                    aria-label={t('dictionary.cancelEdit')}
-                    title={t('dictionary.cancelEdit')}
-                    className="p-1.5 text-text-tertiary hover:text-text-primary"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
+
+          <div className="overflow-hidden rounded-[8px] border border-border">
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_64px] gap-2 bg-bg-secondary px-3 py-2.5 text-[11px] font-medium uppercase text-text-secondary">
+              <span>{t('dictionary.word')}</span>
+              <span>{t('dictionary.pronunciation')}</span>
+              <span />
+            </div>
+            {filteredDictionary.length === 0 ? (
+              <div className="px-3 py-8 text-center text-[13px] text-text-tertiary">
+                {t('dictionary.noEntries')}
               </div>
             ) : (
-              <div
-                key={entry.id}
-                className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_64px] gap-2 border-t border-border px-3 py-2.5 text-[13px] hover:bg-bg-secondary/50"
-              >
-                <span className="min-w-0 truncate text-text-primary">{entry.word}</span>
-                <span className="min-w-0 truncate text-text-secondary">
-                  {entry.pronunciation || '-'}
-                </span>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditing({
-                        kind: 'dictionary',
-                        id: entry.id,
-                        word: entry.word,
-                        pronunciation: entry.pronunciation ?? '',
-                      })
-                    }
-                    aria-label={`${t('dictionary.editEntry')} ${entry.word}`}
-                    title={t('dictionary.editEntry')}
-                    className="p-1.5 text-text-tertiary hover:text-text-primary"
+              filteredDictionary.map((entry) =>
+                editing?.kind === 'dictionary' && editing.id === entry.id ? (
+                  <div
+                    key={entry.id}
+                    className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_64px] items-center gap-2 border-t border-border px-3 py-2"
                   >
-                    <Pencil size={13} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleRemove(entry.id)}
-                    aria-label={t('dictionary.removeEntry')}
-                    title={t('dictionary.removeEntry')}
-                    className="p-1.5 text-text-tertiary hover:text-error"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-            ),
-          )
-        )}
-      </div>
-
-      <div className="space-y-3">
-        <h3 className="text-[13px] font-medium text-text-primary">{t('dictionary.corrections')}</h3>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-          <input
-            value={pattern}
-            onChange={(event) => setPattern(event.target.value)}
-            placeholder={t('dictionary.wrongPhrase')}
-            className="min-w-0 rounded-[8px] border border-border bg-bg-secondary px-3 py-2.5 text-[13px] text-text-primary outline-none focus:border-border-focus"
-          />
-          <input
-            value={replacement}
-            onChange={(event) => setReplacement(event.target.value)}
-            placeholder={t('dictionary.correctPhrase')}
-            className="min-w-0 rounded-[8px] border border-border bg-bg-secondary px-3 py-2.5 text-[13px] text-text-primary outline-none focus:border-border-focus"
-          />
-          <button
-            type="button"
-            onClick={() => void handleAddCorrection()}
-            disabled={!pattern.trim() || !replacement.trim()}
-            aria-label={t('dictionary.addCorrection')}
-            className="flex items-center justify-center gap-1.5 rounded-[8px] border-none bg-accent px-4 py-2.5 text-[13px] text-white hover:bg-accent-hover disabled:opacity-40"
-          >
-            <Plus size={14} />
-            {t('dictionary.add')}
-          </button>
-        </div>
-
-        <div className="overflow-hidden rounded-[8px] border border-border">
-          {filteredCorrections.length === 0 ? (
-            <div className="px-3 py-8 text-center text-[13px] text-text-tertiary">
-              {t('dictionary.noCorrections')}
-            </div>
-          ) : (
-            filteredCorrections.map((rule) =>
-              editing?.kind === 'correction' && editing.id === rule.id ? (
-                <div
-                  key={rule.id}
-                  className="grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_64px] items-center gap-2 border-t first:border-t-0 border-border px-3 py-2"
-                >
-                  <input type="checkbox" checked={editing.enabled} readOnly className="h-4 w-4" />
-                  <input
-                    aria-label={t('dictionary.wrongPhrase')}
-                    value={editing.pattern}
-                    onChange={(event) => setEditing({ ...editing, pattern: event.target.value })}
-                    className="min-w-0 rounded-[6px] border border-border bg-bg-secondary px-2 py-1.5 text-[12px] text-text-primary outline-none focus:border-border-focus"
-                  />
-                  <input
-                    aria-label={t('dictionary.correctPhrase')}
-                    value={editing.replacement}
-                    onChange={(event) =>
-                      setEditing({ ...editing, replacement: event.target.value })
-                    }
-                    className="min-w-0 rounded-[6px] border border-border bg-bg-secondary px-2 py-1.5 text-[12px] text-text-primary outline-none focus:border-border-focus"
-                  />
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => void saveEdit()}
-                      aria-label={t('dictionary.saveEdit')}
-                      title={t('dictionary.saveEdit')}
-                      className="p-1.5 text-success"
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditing(null)}
-                      aria-label={t('dictionary.cancelEdit')}
-                      title={t('dictionary.cancelEdit')}
-                      className="p-1.5 text-text-tertiary hover:text-text-primary"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  key={rule.id}
-                  className="grid grid-cols-[auto_minmax(0,1fr)_64px] items-center gap-3 border-t first:border-t-0 border-border px-3 py-2.5 text-[13px] hover:bg-bg-secondary/50"
-                >
-                  <input
-                    type="checkbox"
-                    checked={rule.enabled}
-                    onChange={(event) => void handleToggleCorrection(rule.id, event.target.checked)}
-                    aria-label={t('dictionary.toggleCorrection')}
-                    className="h-4 w-4 accent-accent"
-                  />
-                  <div className="min-w-0">
-                    <p className="truncate text-text-primary">{rule.pattern}</p>
-                    <p className="truncate text-[12px] text-text-secondary">{rule.replacement}</p>
-                  </div>
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditing({
-                          kind: 'correction',
-                          id: rule.id,
-                          pattern: rule.pattern,
-                          replacement: rule.replacement,
-                          enabled: rule.enabled,
-                        })
+                    <input
+                      aria-label={t('dictionary.word')}
+                      value={editing.word}
+                      onChange={(event) => setEditing({ ...editing, word: event.target.value })}
+                      className="min-w-0 rounded-[6px] border border-border bg-bg-secondary px-2 py-1.5 text-[12px] text-text-primary outline-none focus:border-border-focus"
+                    />
+                    <input
+                      aria-label={t('dictionary.pronunciation')}
+                      value={editing.pronunciation}
+                      onChange={(event) =>
+                        setEditing({ ...editing, pronunciation: event.target.value })
                       }
-                      aria-label={`${t('dictionary.editCorrection')} ${rule.pattern}`}
-                      title={t('dictionary.editCorrection')}
-                      className="p-1.5 text-text-tertiary hover:text-text-primary"
-                    >
-                      <Pencil size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleRemoveCorrection(rule.id)}
-                      aria-label={t('dictionary.removeCorrection')}
-                      title={t('dictionary.removeCorrection')}
-                      className="p-1.5 text-text-tertiary hover:text-error"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                      className="min-w-0 rounded-[6px] border border-border bg-bg-secondary px-2 py-1.5 text-[12px] text-text-primary outline-none focus:border-border-focus"
+                    />
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => void saveEdit()}
+                        aria-label={t('dictionary.saveEdit')}
+                        title={t('dictionary.saveEdit')}
+                        className="p-1.5 text-success"
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditing(null)}
+                        aria-label={t('dictionary.cancelEdit')}
+                        title={t('dictionary.cancelEdit')}
+                        className="p-1.5 text-text-tertiary hover:text-text-primary"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ),
-            )
-          )}
+                ) : (
+                  <div
+                    key={entry.id}
+                    className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_64px] gap-2 border-t border-border px-3 py-2.5 text-[13px] hover:bg-bg-secondary/50"
+                  >
+                    <span className="min-w-0 truncate text-text-primary">{entry.word}</span>
+                    <span className="min-w-0 truncate text-text-secondary">
+                      {entry.pronunciation || '-'}
+                    </span>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditing({
+                            kind: 'dictionary',
+                            id: entry.id,
+                            word: entry.word,
+                            pronunciation: entry.pronunciation ?? '',
+                          })
+                        }
+                        aria-label={`${t('dictionary.editEntry')} ${entry.word}`}
+                        title={t('dictionary.editEntry')}
+                        className="p-1.5 text-text-tertiary hover:text-text-primary"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleRemove(entry.id)}
+                        aria-label={t('dictionary.removeEntry')}
+                        title={t('dictionary.removeEntry')}
+                        className="p-1.5 text-text-tertiary hover:text-error"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ),
+              )
+            )}
+          </div>
+        </>
+      )}
+
+      {activeSection === 'corrections' && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <input
+              value={pattern}
+              onChange={(event) => setPattern(event.target.value)}
+              placeholder={t('dictionary.wrongPhrase')}
+              className="min-w-0 rounded-[8px] border border-border bg-bg-secondary px-3 py-2.5 text-[13px] text-text-primary outline-none focus:border-border-focus"
+            />
+            <input
+              value={replacement}
+              onChange={(event) => setReplacement(event.target.value)}
+              placeholder={t('dictionary.correctPhrase')}
+              className="min-w-0 rounded-[8px] border border-border bg-bg-secondary px-3 py-2.5 text-[13px] text-text-primary outline-none focus:border-border-focus"
+            />
+            <button
+              type="button"
+              onClick={() => void handleAddCorrection()}
+              disabled={!pattern.trim() || !replacement.trim()}
+              aria-label={t('dictionary.addCorrection')}
+              className="flex items-center justify-center gap-1.5 rounded-[8px] border-none bg-accent px-4 py-2.5 text-[13px] text-white hover:bg-accent-hover disabled:opacity-40"
+            >
+              <Plus size={14} />
+              {t('dictionary.add')}
+            </button>
+          </div>
+
+          <div className="overflow-hidden rounded-[8px] border border-border">
+            {filteredCorrections.length === 0 ? (
+              <div className="px-3 py-8 text-center text-[13px] text-text-tertiary">
+                {t('dictionary.noCorrections')}
+              </div>
+            ) : (
+              filteredCorrections.map((rule) =>
+                editing?.kind === 'correction' && editing.id === rule.id ? (
+                  <div
+                    key={rule.id}
+                    className="grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_64px] items-center gap-2 border-t first:border-t-0 border-border px-3 py-2"
+                  >
+                    <input type="checkbox" checked={editing.enabled} readOnly className="h-4 w-4" />
+                    <input
+                      aria-label={t('dictionary.wrongPhrase')}
+                      value={editing.pattern}
+                      onChange={(event) => setEditing({ ...editing, pattern: event.target.value })}
+                      className="min-w-0 rounded-[6px] border border-border bg-bg-secondary px-2 py-1.5 text-[12px] text-text-primary outline-none focus:border-border-focus"
+                    />
+                    <input
+                      aria-label={t('dictionary.correctPhrase')}
+                      value={editing.replacement}
+                      onChange={(event) =>
+                        setEditing({ ...editing, replacement: event.target.value })
+                      }
+                      className="min-w-0 rounded-[6px] border border-border bg-bg-secondary px-2 py-1.5 text-[12px] text-text-primary outline-none focus:border-border-focus"
+                    />
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => void saveEdit()}
+                        aria-label={t('dictionary.saveEdit')}
+                        title={t('dictionary.saveEdit')}
+                        className="p-1.5 text-success"
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditing(null)}
+                        aria-label={t('dictionary.cancelEdit')}
+                        title={t('dictionary.cancelEdit')}
+                        className="p-1.5 text-text-tertiary hover:text-text-primary"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    key={rule.id}
+                    className="grid grid-cols-[auto_minmax(0,1fr)_64px] items-center gap-3 border-t first:border-t-0 border-border px-3 py-2.5 text-[13px] hover:bg-bg-secondary/50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={rule.enabled}
+                      onChange={(event) =>
+                        void handleToggleCorrection(rule.id, event.target.checked)
+                      }
+                      aria-label={t('dictionary.toggleCorrection')}
+                      className="h-4 w-4 accent-accent"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-text-primary">{rule.pattern}</p>
+                      <p className="truncate text-[12px] text-text-secondary">{rule.replacement}</p>
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditing({
+                            kind: 'correction',
+                            id: rule.id,
+                            pattern: rule.pattern,
+                            replacement: rule.replacement,
+                            enabled: rule.enabled,
+                          })
+                        }
+                        aria-label={`${t('dictionary.editCorrection')} ${rule.pattern}`}
+                        title={t('dictionary.editCorrection')}
+                        className="p-1.5 text-text-tertiary hover:text-text-primary"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleRemoveCorrection(rule.id)}
+                        aria-label={t('dictionary.removeCorrection')}
+                        title={t('dictionary.removeCorrection')}
+                        className="p-1.5 text-text-tertiary hover:text-error"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ),
+              )
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {pendingImport && (
         <DictionaryImportDialog

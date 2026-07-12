@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, MessageCircle } from 'lucide-react'
 import { isMacPlatform, useAppStore } from '../../stores/appStore'
-import type { AppConfig, HotkeyMode, OutputMode, ShortcutBinding } from '../../stores/appStore'
+import type { HotkeyMode, OutputMode, ShortcutBinding } from '../../stores/appStore'
 import {
   getPlatformCapabilities,
   getHotkeyStatus,

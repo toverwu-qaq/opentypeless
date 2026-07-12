@@ -1,15 +1,33 @@
-import { useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Copy, Check, Plus, Trash2, Pencil, X, Download, Upload } from 'lucide-react'
+import {
+  AppWindow,
+  Check,
+  ChevronDown,
+  Copy,
+  Download,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react'
 import {
   useAppStore,
   type ActiveScene,
   type AppConfig,
+  type ContextFamily,
   type CustomScene,
 } from '../../stores/appStore'
-import { updateConfig as persistConfig } from '../../lib/tauri'
+import {
+  listCustomAppMappings,
+  updateConfig as persistConfig,
+  type CustomAppMappingView,
+} from '../../lib/tauri'
 import { BUILTIN_SCENES, type BuiltInScene } from '../../lib/scenes/builtinScenes'
 import { importCustomScenesJson, serializeCustomScenes } from '../../lib/scenes/sceneImportExport'
+import { AppLogo } from '../AppLogo'
+import { SceneAssignmentsDialog } from './SceneAssignmentsDialog'
 
 interface EditorState {
   mode: 'create' | 'edit'
@@ -74,13 +92,43 @@ export function ScenesPane() {
   const config = useAppStore((s) => s.config)
   const setConfig = useAppStore((s) => s.setConfig)
   const setSavedConfig = useAppStore((s) => s.setSavedConfig)
+  const applyPersistedConfigPatch = useAppStore((s) => s.applyPersistedConfigPatch)
 
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [mergeMsg, setMergeMsg] = useState<string | null>(null)
   const [mergeOk, setMergeOk] = useState(false)
   const [editor, setEditor] = useState<EditorState | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [appMappings, setAppMappings] = useState<CustomAppMappingView[]>([])
+  const [assignmentScene, setAssignmentScene] = useState<{
+    id: string
+    name: string
+  } | null>(null)
   const importInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    listCustomAppMappings()
+      .then((mappings) => {
+        if (!cancelled) setAppMappings(mappings)
+      })
+      .catch(() => {
+        if (!cancelled) setAppMappings([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handleAssignmentsSaved = async (assignments: AppConfig['family_scene_assignments']) => {
+    applyPersistedConfigPatch({ family_scene_assignments: assignments })
+    setAssignmentScene(null)
+    try {
+      setAppMappings(await listCustomAppMappings())
+    } catch {
+      // Keep the last device-only mapping snapshot if refresh fails.
+    }
+  }
 
   const saveNextConfig = async (nextConfig: AppConfig) => {
     const previousConfig = useAppStore.getState().config
@@ -383,6 +431,13 @@ export function ScenesPane() {
                 onEdit={() => handleStartEdit(scene)}
                 onDuplicate={() => handleDuplicateCustom(scene)}
                 onDelete={() => handleDeleteCustom(scene)}
+                assignedFamilies={config.family_scene_assignments
+                  .filter((assignment) => assignment.scene_id === scene.id)
+                  .map((assignment) => assignment.family)}
+                assignedMappings={appMappings.filter(
+                  (mapping) => mapping.enabled && mapping.sceneId === scene.id,
+                )}
+                onAssign={() => setAssignmentScene({ id: scene.id, name: scene.name })}
               />
             ))}
           </div>
@@ -406,6 +461,13 @@ export function ScenesPane() {
               onActivate={() => handleActivateBuiltIn(scene)}
               onCopy={() => handleCopyPrompt(scene.id, scene.promptTemplate)}
               onDuplicate={() => handleDuplicateBuiltIn(scene)}
+              assignedFamilies={config.family_scene_assignments
+                .filter((assignment) => assignment.scene_id === scene.id)
+                .map((assignment) => assignment.family)}
+              assignedMappings={appMappings.filter(
+                (mapping) => mapping.enabled && mapping.sceneId === scene.id,
+              )}
+              onAssign={() => setAssignmentScene({ id: scene.id, name: t(scene.nameKey) })}
             />
           ))}
         </div>
@@ -415,6 +477,17 @@ export function ScenesPane() {
         <p className={`text-[12px] ${!mergeOk ? 'text-red-500' : 'text-green-500'}`}>{mergeMsg}</p>
       )}
       {saveError && <p className="text-[12px] text-red-500">{saveError}</p>}
+
+      {assignmentScene && (
+        <SceneAssignmentsDialog
+          sceneId={assignmentScene.id}
+          sceneName={assignmentScene.name}
+          assignments={config.family_scene_assignments}
+          appMappings={appMappings}
+          onCancel={() => setAssignmentScene(null)}
+          onSaved={handleAssignmentsSaved}
+        />
+      )}
     </div>
   )
 }
@@ -503,6 +576,9 @@ function LocalSceneCard({
   onEdit,
   onDuplicate,
   onDelete,
+  assignedFamilies,
+  assignedMappings,
+  onAssign,
 }: {
   id: string
   name: string
@@ -515,13 +591,19 @@ function LocalSceneCard({
   onEdit?: () => void
   onDuplicate: () => void
   onDelete?: () => void
+  assignedFamilies: ContextFamily[]
+  assignedMappings: CustomAppMappingView[]
+  onAssign: () => void
 }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
+  const hasAssignments = assignedFamilies.length > 0 || assignedMappings.length > 0
 
   return (
     <div className="border border-border rounded-[8px] overflow-hidden">
       <button
+        type="button"
+        aria-expanded={expanded}
         onClick={() => setExpanded((value) => !value)}
         className="w-full flex items-center justify-between gap-3 px-3 py-2.5 bg-transparent border-none text-left cursor-pointer hover:bg-bg-secondary/50 transition-colors"
       >
@@ -539,8 +621,37 @@ function LocalSceneCard({
               {description}
             </span>
           )}
+          {hasAssignments && (
+            <span className="mt-1 flex min-w-0 items-center gap-2 text-[11px] text-text-tertiary">
+              {assignedFamilies.length > 0 && (
+                <span className="min-w-0 truncate">
+                  {assignedFamilies.map((family) => t(`contextFamilies.${family}`)).join(', ')}
+                </span>
+              )}
+              {assignedMappings.length > 0 && (
+                <span className="flex flex-none items-center gap-1.5">
+                  <span className="flex items-center gap-1">
+                    {assignedMappings.slice(0, 3).map((mapping) => (
+                      <span
+                        key={mapping.id}
+                        role="img"
+                        aria-label={mapping.label}
+                        title={mapping.label}
+                      >
+                        <AppLogo iconKey={mapping.iconKey} family={mapping.family} />
+                      </span>
+                    ))}
+                  </span>
+                  <span>{t('scenes.exactAppsCount', { count: assignedMappings.length })}</span>
+                </span>
+              )}
+            </span>
+          )}
         </span>
-        <span className="text-[11px] text-text-tertiary">{expanded ? '−' : '+'}</span>
+        <ChevronDown
+          size={14}
+          className={`flex-none text-text-tertiary transition-transform ${expanded ? 'rotate-180' : ''}`}
+        />
       </button>
       {expanded && (
         <div className="border-t border-border px-3 py-3 space-y-3">
@@ -556,6 +667,13 @@ function LocalSceneCard({
                 {t('scenes.activate')}
               </button>
             )}
+            <button
+              onClick={onAssign}
+              className="flex items-center gap-1 text-[12px] text-accent bg-transparent border-none cursor-pointer hover:opacity-80"
+            >
+              <AppWindow size={12} />
+              {t('scenes.assignAppTypes')}
+            </button>
             <button
               onClick={onCopy}
               aria-label={`Copy prompt for ${name}`}

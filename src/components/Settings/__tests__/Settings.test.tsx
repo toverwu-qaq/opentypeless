@@ -199,6 +199,8 @@ vi.mock('../../../lib/tauri', () => ({
   }),
   exportDictionaryJson: vi.fn().mockResolvedValue('{}'),
   exportDictionaryCsv: vi.fn().mockResolvedValue(''),
+  listCustomAppMappings: vi.fn().mockResolvedValue([]),
+  setFamilySceneAssignment: vi.fn().mockResolvedValue([]),
   updateConfig: vi.fn().mockResolvedValue(undefined),
 }))
 
@@ -237,6 +239,8 @@ import {
   checkAccessibilityPermission,
   getConfig,
   getHotkeyRegistrationError,
+  listCustomAppMappings,
+  setFamilySceneAssignment,
   setAutoStart,
   startAskFlow,
   updateConfig,
@@ -690,6 +694,64 @@ describe('Settings Scenes local custom scenes', () => {
     resetStore()
     seedSavedConfig()
     vi.mocked(updateConfig).mockClear()
+    vi.mocked(listCustomAppMappings).mockReset().mockResolvedValue([])
+    vi.mocked(setFamilySceneAssignment).mockReset().mockResolvedValue([])
+  })
+
+  it('shows compact family and exact-app usage on scene cards', async () => {
+    useAppStore.getState().setConfig({
+      ...useAppStore.getState().config,
+      family_scene_assignments: [{ family: 'email', scene_id: 'builtin_clean_dictation' }],
+    })
+    seedSavedConfig()
+    vi.mocked(listCustomAppMappings).mockResolvedValue([
+      {
+        id: 'mapping-slack',
+        label: 'Work Slack',
+        matcherType: 'native_bundle_id',
+        displayValue: 'com.tinyspeck.slackmacgap',
+        family: 'work_chat',
+        sceneId: 'builtin_clean_dictation',
+        enabled: true,
+        iconKey: 'slack',
+      },
+    ])
+
+    renderSettings()
+    clickSidebarItem('settings.scenes')
+
+    await waitFor(() => expect(listCustomAppMappings).toHaveBeenCalledTimes(1))
+    expect(screen.getByText('contextFamilies.email')).toBeInTheDocument()
+    expect(screen.getByLabelText('Work Slack')).toBeInTheDocument()
+    expect(screen.getByText('scenes.exactAppsCount')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('scenes.builtin.cleanDictation.name'))
+    fireEvent.click(screen.getByRole('button', { name: 'scenes.assignAppTypes' }))
+    expect(screen.getByRole('dialog', { name: 'scenes.assignAppTypes' })).toBeInTheDocument()
+  })
+
+  it('persists scene family assignments without leaving settings dirty', async () => {
+    const persistedAssignments = [
+      { family: 'work_chat' as const, scene_id: 'builtin_clean_dictation' },
+    ]
+    vi.mocked(setFamilySceneAssignment).mockResolvedValue(persistedAssignments)
+
+    renderSettings()
+    clickSidebarItem('settings.scenes')
+    await waitFor(() => expect(listCustomAppMappings).toHaveBeenCalledTimes(1))
+    fireEvent.click(screen.getByText('scenes.builtin.cleanDictation.name'))
+    fireEvent.click(screen.getByRole('button', { name: 'scenes.assignAppTypes' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'contextFamilies.work_chat' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(setFamilySceneAssignment).toHaveBeenCalledWith('work_chat', 'builtin_clean_dictation')
+      expect(useAppStore.getState().config.family_scene_assignments).toEqual(persistedAssignments)
+      expect(useAppStore.getState().savedConfig?.family_scene_assignments).toEqual(
+        persistedAssignments,
+      )
+    })
+    expect(screen.queryByText('settings.unsavedChanges')).toBeNull()
   })
 
   it('creates and activates a local scene without leaving settings dirty', async () => {

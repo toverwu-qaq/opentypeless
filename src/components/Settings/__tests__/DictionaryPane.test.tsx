@@ -10,6 +10,7 @@ vi.mock('react-i18next', () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
         'dictionary.word': 'Word',
+        'dictionary.words': 'Words',
         'dictionary.pronunciation': 'Pronunciation',
         'dictionary.pronunciationOptional': 'Pronunciation optional',
         'dictionary.add': 'Add',
@@ -91,13 +92,44 @@ describe('DictionaryPane', () => {
     cleanup()
   })
 
-  it('renders a small corrections area below dictionary words', () => {
+  it('shows words and corrections as separate compact sections', () => {
     render(<DictionaryPane />)
 
-    expect(screen.getByText('Corrections')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Words' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Corrections' })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Pronunciation optional')).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Wrong phrase')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Corrections' }))
+
     expect(screen.getByPlaceholderText('Wrong phrase')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Correct phrase')).toBeInTheDocument()
     expect(screen.getByText('No corrections yet')).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Pronunciation optional')).toBeNull()
+  })
+
+  it('preserves unfinished drafts when switching sections', () => {
+    render(<DictionaryPane />)
+
+    fireEvent.change(screen.getByPlaceholderText('Word'), { target: { value: 'TalkMore' } })
+    fireEvent.change(screen.getByPlaceholderText('Pronunciation optional'), {
+      target: { value: 'talk more' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Corrections' }))
+    fireEvent.change(screen.getByPlaceholderText('Wrong phrase'), {
+      target: { value: 'talk more app' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('Correct phrase'), {
+      target: { value: 'TalkMore' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Words' }))
+    expect(screen.getByPlaceholderText('Word')).toHaveValue('TalkMore')
+    expect(screen.getByPlaceholderText('Pronunciation optional')).toHaveValue('talk more')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Corrections' }))
+    expect(screen.getByPlaceholderText('Wrong phrase')).toHaveValue('talk more app')
+    expect(screen.getByPlaceholderText('Correct phrase')).toHaveValue('TalkMore')
   })
 
   it('adds a correction rule and refreshes correction rules', async () => {
@@ -106,6 +138,7 @@ describe('DictionaryPane', () => {
     ])
 
     render(<DictionaryPane />)
+    fireEvent.click(screen.getByRole('button', { name: 'Corrections' }))
 
     fireEvent.change(screen.getByPlaceholderText('Wrong phrase'), {
       target: { value: ' 拓肯 ' },
@@ -139,6 +172,7 @@ describe('DictionaryPane', () => {
     expect(screen.getByText('MeloLab')).toBeInTheDocument()
     expect(screen.queryByText('OpenTypeless')).toBeNull()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Corrections' }))
     fireEvent.change(screen.getByPlaceholderText('Search dictionary'), {
       target: { value: 'open type less' },
     })
@@ -163,6 +197,7 @@ describe('DictionaryPane', () => {
       expect(tauri.updateDictionaryEntry).toHaveBeenCalledWith(1, 'TalkMore', 'talk more'),
     )
 
+    fireEvent.click(screen.getByRole('button', { name: 'Corrections' }))
     fireEvent.click(screen.getByRole('button', { name: 'Edit correction open type less' }))
     fireEvent.change(screen.getByLabelText('Wrong phrase'), { target: { value: 'token' } })
     fireEvent.change(screen.getByLabelText('Correct phrase'), { target: { value: 'Token' } })
