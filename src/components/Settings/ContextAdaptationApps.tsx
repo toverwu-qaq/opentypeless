@@ -26,6 +26,7 @@ export function ContextAdaptationApps({ disabled }: { disabled: boolean }) {
     <div
       role="group"
       aria-label={t('settings.contextAdaptationApps')}
+      aria-disabled={disabled}
       className={`mt-2 ml-[52px] flex min-w-0 items-center gap-1.5 transition-opacity ${disabled ? 'opacity-40' : 'opacity-100'}`}
     >
       {REPRESENTATIVE_APPS.map((app) => (

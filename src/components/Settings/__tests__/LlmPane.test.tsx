@@ -51,7 +51,8 @@ vi.mock('react-i18next', () => ({
         'settings.translationModeDesc': 'Translate each dictation result',
         'settings.selectedTextContext': 'Use selected text as context',
         'settings.selectedTextContextDesc': 'Use selected text for context',
-        'settings.targetLanguage': 'Target Language',
+        'settings.targetLanguage': 'Translate to',
+        'settings.manageTranslationTargets': 'Manage languages',
         'settings.cloudLlmPro': 'Cloud LLM (Pro)',
         'settings.llmSignInHint': 'Sign in to use cloud LLM',
         'settings.llmUpgradeHint': 'Upgrade to Pro to use cloud LLM',
@@ -461,23 +462,22 @@ describe('LlmPane', () => {
   })
 
   describe('Model input', () => {
-    it('shows one restrained note for a certified model', async () => {
+    it('does not expose model capability implementation notes in the default flow', async () => {
       vi.mocked(tauri.getLlmModelCapability).mockResolvedValueOnce('certified')
       render(<LlmPane />)
 
+      expect(screen.queryByText('Optimized context and thought-aware support')).not.toBeInTheDocument()
       expect(
-        await screen.findByText('Optimized context and thought-aware support'),
-      ).toBeInTheDocument()
+        screen.queryByText('Context and thought-aware support is best effort'),
+      ).not.toBeInTheDocument()
+      expect(tauri.getLlmModelCapability).not.toHaveBeenCalled()
       expect(screen.queryByRole('table')).not.toBeInTheDocument()
     })
 
-    it('labels unlisted models as best-effort without blocking them', async () => {
-      vi.mocked(tauri.getLlmModelCapability).mockResolvedValueOnce('best_effort')
+    it('keeps model editing available without a best-effort banner', () => {
       render(<LlmPane />)
 
-      expect(
-        await screen.findByText('Context and thought-aware support is best effort'),
-      ).toBeInTheDocument()
+      expect(screen.queryByText('Context and thought-aware support is best effort')).not.toBeInTheDocument()
       expect(screen.getByPlaceholderText('e.g. gpt-4o-mini')).not.toBeDisabled()
     })
 
@@ -556,6 +556,26 @@ describe('LlmPane', () => {
       expect(within(coverage).getByText('+63')).toBeInTheDocument()
       expect(within(coverage).queryByRole('button')).not.toBeInTheDocument()
       expect(within(coverage).queryByRole('link')).not.toBeInTheDocument()
+      expect(coverage).toHaveAttribute('aria-disabled', 'false')
+    })
+
+    it('dims representative apps whenever app adaptation is not active', () => {
+      mockAppStore.config.context_adaptation_enabled = false
+      render(<LlmPane />)
+
+      expect(screen.getByLabelText('Apps adapted by context')).toHaveAttribute(
+        'aria-disabled',
+        'true',
+      )
+    })
+
+    it('keeps only the explanations that clarify non-obvious behavior', () => {
+      render(<LlmPane />)
+
+      expect(screen.queryByText('Cleans up dictation before output')).not.toBeInTheDocument()
+      expect(screen.queryByText('Translate each dictation result')).not.toBeInTheDocument()
+      expect(screen.getByText('Uses a private local app category')).toBeInTheDocument()
+      expect(screen.getByText('Use selected text for context')).toBeInTheDocument()
     })
 
     it('hides last context until an operation snapshot exists', () => {
@@ -649,11 +669,12 @@ describe('LlmPane', () => {
       expect(screen.queryByText('Gmail')).not.toBeInTheDocument()
     })
 
-    it('shows target language selector when translation is enabled', () => {
+    it('shows a compact translate-to control next to translation when enabled', () => {
       mockAppStore.config.translate_enabled = true
 
       render(<LlmPane />)
-      expect(screen.getByText('Target Language')).toBeInTheDocument()
+      expect(screen.getByText('Translate to')).toBeInTheDocument()
+      expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     })
   })
 })

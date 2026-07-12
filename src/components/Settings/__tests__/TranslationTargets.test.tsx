@@ -23,9 +23,22 @@ function renderTargets(
 }
 
 describe('TranslationTargets', () => {
+  it('keeps the common single-language state compact', () => {
+    renderTargets({ targets: ['en'], active_target: 'en' })
+
+    expect(screen.getByRole('combobox', { name: 'settings.targetLanguage' })).toHaveValue('en')
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /moveTranslationTarget/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /removeTranslationTarget/ })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'settings.manageTranslationTargets' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('keeps language choices unique and adds the first available target', () => {
     const onChange = renderTargets()
 
+    fireEvent.click(screen.getByRole('button', { name: 'settings.manageTranslationTargets' }))
     const japaneseRow = screen.getByTestId('translation-target-ja')
     expect(within(japaneseRow).queryByRole('option', { name: 'English' })).not.toBeInTheDocument()
 
@@ -44,6 +57,7 @@ describe('TranslationTargets', () => {
     })
 
     expect(screen.getByRole('button', { name: 'settings.addTranslationTarget' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'settings.manageTranslationTargets' }))
     expect(screen.getAllByTestId(/^translation-target-/)).toHaveLength(5)
   })
 
@@ -53,6 +67,7 @@ describe('TranslationTargets', () => {
       active_target: 'ja',
     })
 
+    fireEvent.click(screen.getByRole('button', { name: 'settings.manageTranslationTargets' }))
     fireEvent.click(screen.getByRole('button', { name: 'settings.moveTranslationTargetUp ja' }))
 
     expect(onChange).toHaveBeenCalledWith({
@@ -67,6 +82,7 @@ describe('TranslationTargets', () => {
       active_target: 'ja',
     })
 
+    fireEvent.click(screen.getByRole('button', { name: 'settings.manageTranslationTargets' }))
     fireEvent.click(screen.getByRole('button', { name: 'settings.removeTranslationTarget ja' }))
 
     expect(onChange).toHaveBeenCalledWith({
@@ -75,14 +91,13 @@ describe('TranslationTargets', () => {
     })
   })
 
-  it('does not allow removing the final target and exposes active selection', () => {
-    renderTargets({ targets: ['en'], active_target: 'en' })
+  it('changes the active target from the compact selector', () => {
+    const onChange = renderTargets({ targets: ['en', 'ja'], active_target: 'en' })
 
-    expect(
-      screen.getByRole('button', { name: 'settings.removeTranslationTarget en' }),
-    ).toBeDisabled()
-    expect(
-      screen.getByRole('radio', { name: 'settings.setActiveTranslationTarget en' }),
-    ).toBeChecked()
+    fireEvent.change(screen.getByRole('combobox', { name: 'settings.targetLanguage' }), {
+      target: { value: 'ja' },
+    })
+
+    expect(onChange).toHaveBeenCalledWith({ targets: ['en', 'ja'], active_target: 'ja' })
   })
 })

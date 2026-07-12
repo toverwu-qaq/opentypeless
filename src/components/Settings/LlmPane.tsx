@@ -8,17 +8,12 @@ import {
   benchLlmConnection,
   fetchLlmModels,
   getLatestMappingCandidate,
-  getLlmModelCapability,
   listCustomAppMappings,
   readCredential,
   setCredential,
   updateConfig as persistConfig,
 } from '../../lib/tauri'
-import type {
-  CustomAppMappingView,
-  LlmModelCapability,
-  MappingCandidateView,
-} from '../../lib/tauri'
+import type { CustomAppMappingView, MappingCandidateView } from '../../lib/tauri'
 import { FormField } from './shared/FormField'
 import { Toggle } from './shared/Toggle'
 import {
@@ -63,7 +58,6 @@ export function LlmPane() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const credentialSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [llmApiKey, setLlmApiKey] = useState(config.llm_api_key)
-  const [modelCapability, setModelCapability] = useState<LlmModelCapability>('unknown')
   const [mappingCandidate, setMappingCandidate] = useState<MappingCandidateView | null>(null)
   const [appMappings, setAppMappings] = useState<CustomAppMappingView[]>([])
   const [appStyleMenuOpen, setAppStyleMenuOpen] = useState(false)
@@ -119,20 +113,6 @@ export function LlmPane() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [appStyleMenuOpen, closeAppStyleMenu])
-
-  useEffect(() => {
-    let cancelled = false
-    getLlmModelCapability(config.llm_provider, config.llm_base_url, config.llm_model)
-      .then((capability) => {
-        if (!cancelled) setModelCapability(capability)
-      })
-      .catch(() => {
-        if (!cancelled) setModelCapability('unknown')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [config.llm_base_url, config.llm_model, config.llm_provider])
 
   useEffect(() => {
     if (hasCustomPolishConfig) setPolishAdvancedOpen(true)
@@ -390,14 +370,6 @@ export function LlmPane() {
         </>
       )}
 
-      {config.polish_enabled && config.llm_model.trim() && (
-        <p className="text-[11px] leading-relaxed text-text-tertiary">
-          {modelCapability === 'certified'
-            ? t('settings.modelCertified')
-            : t('settings.modelBestEffort')}
-        </p>
-      )}
-
       <div className="space-y-3 pt-1">
         <div>
           <Toggle
@@ -405,9 +377,6 @@ export function LlmPane() {
             onChange={(checked) => updateConfig({ polish_enabled: checked })}
             label={t('settings.enableAiPolish')}
           />
-          <p className="mt-1 ml-[52px] text-[11px] leading-relaxed text-text-tertiary">
-            {t('settings.enableAiPolishDesc')}
-          </p>
         </div>
         <div>
           <Toggle
@@ -419,7 +388,9 @@ export function LlmPane() {
           <p className="mt-1 ml-[52px] text-[11px] leading-relaxed text-text-tertiary">
             {t('settings.contextAdaptationHint')}
           </p>
-          <ContextAdaptationApps disabled={!config.polish_enabled} />
+          <ContextAdaptationApps
+            disabled={!config.polish_enabled || !config.context_adaptation_enabled}
+          />
           {lastContext && (
             <div className="mt-2 ml-[52px] min-w-0">
               <p className="text-[11px] leading-relaxed text-text-tertiary">
@@ -486,9 +457,14 @@ export function LlmPane() {
             onChange={(checked) => updateConfig({ translate_enabled: checked })}
             label={t('settings.translationMode')}
           />
-          <p className="mt-1 ml-[52px] text-[11px] leading-relaxed text-text-tertiary">
-            {t('settings.translationModeDesc')}
-          </p>
+          {config.translate_enabled && (
+            <div className="mt-2 ml-[52px] min-w-0">
+              <TranslationTargets
+                value={config.translation}
+                onChange={(translation) => updateConfig({ translation })}
+              />
+            </div>
+          )}
         </div>
         <div>
           <Toggle
@@ -571,15 +547,6 @@ export function LlmPane() {
             </div>
           )}
         </div>
-      )}
-
-      {config.translate_enabled && (
-        <FormField label={t('settings.targetLanguage')}>
-          <TranslationTargets
-            value={config.translation}
-            onChange={(translation) => updateConfig({ translation })}
-          />
-        </FormField>
       )}
 
       {appStyleDialogOpen && lastContext && (
