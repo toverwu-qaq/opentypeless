@@ -1,0 +1,51 @@
+src/components/AccountPage/PasswordDialog.tsx
+  s_7724aa1accb26b::t_854d6a3df30c18 1-164
+src/components/AccountPage/PasswordField.tsx
+  s_7724aa1accb26b::t_2a9411650ef04e 1-63
+src/components/Settings/LlmPane.tsx
+  s_7724aa1accb26b::t_b6a41545efb0bd 34,422
+src/components/Settings/__tests__/LlmPane.test.tsx
+  s_7724aa1accb26b::t_5901b9545cddcf 2,32,540-560,618-620
+src/i18n/locales/de.json
+  s_7724aa1accb26b::t_74e83ce2f75ff7 340
+src/i18n/locales/en.json
+  s_7724aa1accb26b::t_2648e3249b0ef2 338
+src/i18n/locales/es.json
+  s_7724aa1accb26b::t_5d4f6d6abc7d9f 340
+src/i18n/locales/fr.json
+  s_7724aa1accb26b::t_e0f26dfd7e6e8a 340
+src/i18n/locales/it.json
+  s_7724aa1accb26b::t_33bc69b181d3ca 340
+src/i18n/locales/ja.json
+  s_7724aa1accb26b::t_cc1285372172b4 340
+src/i18n/locales/ko.json
+  s_7724aa1accb26b::t_935012e27fc860 340
+src/i18n/locales/pt.json
+  s_7724aa1accb26b::t_2d344befde1e70 340
+src/i18n/locales/ru.json
+  s_7724aa1accb26b::t_c4acd170d2927b 340
+src/i18n/locales/zh.json
+  s_7724aa1accb26b::t_113860d6a065f0 338
+src/lib/__tests__/desktop-auth-callback.test.ts
+  s_7724aa1accb26b::t_4861f65a041081 2,10
+vitest.config.ts
+  s_7724aa1accb26b::t_9a5bfc206b43b0 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6adf158a00c83f3cd0f750511420a04b1ed2f297",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
