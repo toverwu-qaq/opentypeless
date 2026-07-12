@@ -440,6 +440,52 @@ describe('Settings tab 切换', () => {
     expect(await screen.findByText('settings.hotkeyConflict')).toBeDefined()
   })
 
+  it('does not duplicate an Accessibility-limited Fn registration failure', () => {
+    const originalPlatform = window.navigator.platform
+    Object.defineProperty(window.navigator, 'platform', {
+      value: 'MacIntel',
+      configurable: true,
+    })
+    useAppStore.getState().setAccessibilityTrusted(false)
+    useAppStore
+      .getState()
+      .setHotkeyRegistrationError(
+        'Failed to create macOS native hotkey EventTap; Accessibility permission may be denied',
+      )
+
+    try {
+      renderSettings()
+
+      expect(screen.queryByText('settings.hotkeyRegistrationFailed')).toBeNull()
+    } finally {
+      Object.defineProperty(window.navigator, 'platform', {
+        value: originalPlatform,
+        configurable: true,
+      })
+    }
+  })
+
+  it('keeps unrelated shortcut registration failures visible', () => {
+    const originalPlatform = window.navigator.platform
+    Object.defineProperty(window.navigator, 'platform', {
+      value: 'MacIntel',
+      configurable: true,
+    })
+    useAppStore.getState().setAccessibilityTrusted(false)
+    useAppStore.getState().setHotkeyRegistrationError('Shortcut is already registered')
+
+    try {
+      renderSettings()
+
+      expect(screen.getByText('settings.hotkeyRegistrationFailed')).toBeDefined()
+    } finally {
+      Object.defineProperty(window.navigator, 'platform', {
+        value: originalPlatform,
+        configurable: true,
+      })
+    }
+  })
+
   it('General pane does not expose the optional Ask hotkey disable action', () => {
     renderSettings()
 

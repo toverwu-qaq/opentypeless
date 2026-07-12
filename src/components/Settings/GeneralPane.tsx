@@ -3,11 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronDown, MessageCircle } from 'lucide-react'
 import { isMacPlatform, useAppStore } from '../../stores/appStore'
 import type { HotkeyMode, OutputMode, ShortcutBinding } from '../../stores/appStore'
-import {
-  getPlatformCapabilities,
-  getHotkeyStatus,
-  startAskFlow,
-} from '../../lib/tauri'
+import { getPlatformCapabilities, getHotkeyStatus, startAskFlow } from '../../lib/tauri'
 import type { HotkeyStatus } from '../../lib/tauri'
 import { SegmentedControl } from './shared/SegmentedControl'
 import { Toggle } from './shared/Toggle'
@@ -19,6 +15,7 @@ export function GeneralPane() {
   const platformCapabilities = useAppStore((s) => s.platformCapabilities)
   const setPlatformCapabilities = useAppStore((s) => s.setPlatformCapabilities)
   const hotkeyRegistrationError = useAppStore((s) => s.hotkeyRegistrationError)
+  const accessibilityTrusted = useAppStore((s) => s.accessibilityTrusted)
   const { t } = useTranslation()
   const isMac = isMacPlatform()
   const [hotkeyStatus, setHotkeyStatus] = useState<HotkeyStatus | null>(null)
@@ -58,6 +55,11 @@ export function GeneralPane() {
     : hotkeyStatus && (!hotkeyStatus.dictation.valid || !hotkeyStatus.ask.valid)
       ? t('settings.hotkeyInvalid')
       : null
+  const registrationErrorCoveredByAccessibilityBanner = Boolean(
+    isMac &&
+    !accessibilityTrusted &&
+    hotkeyRegistrationError?.includes('Accessibility permission may be denied'),
+  )
   const dictationSpecialOptions = isMac
     ? [{ value: 'Fn', label: 'Fn' }]
     : platformCapabilities?.os === 'windows'
@@ -78,8 +80,7 @@ export function GeneralPane() {
     : [config.hotkeys.dictation]
   const askBindings = config.hotkeys.askBindings ?? (config.hotkeys.ask ? [config.hotkeys.ask] : [])
   const translateBindings =
-    config.hotkeys.translateBindings ??
-    (config.hotkeys.translate ? [config.hotkeys.translate] : [])
+    config.hotkeys.translateBindings ?? (config.hotkeys.translate ? [config.hotkeys.translate] : [])
   const secondaryBindings = [
     config.hotkeys.editSelection,
     config.hotkeys.switchScene,
@@ -158,7 +159,7 @@ export function GeneralPane() {
             {t('settings.waylandHotkeyLimited')}
           </p>
         )}
-        {hotkeyRegistrationError && (
+        {hotkeyRegistrationError && !registrationErrorCoveredByAccessibilityBanner && (
           <p className="mt-2 rounded-[8px] border border-error/30 bg-error/10 px-3 py-2 text-[12px] leading-relaxed text-error">
             {t('settings.hotkeyRegistrationFailed')}
           </p>
