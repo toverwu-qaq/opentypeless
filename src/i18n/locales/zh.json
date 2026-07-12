@@ -335,6 +335,7 @@
     "enableAiPolishDesc": "输出前清理口癖、标点和语序。关闭后会直接输出原始转写。",
     "contextAdaptation": "根据当前应用调整写作风格",
     "contextAdaptationHint": "只使用本地识别的应用类别来调整表达方式。",
+    "contextAdaptationApps": "根据上下文适配的应用",
     "lastDictationContext": "上次听写场景",
     "generalContext": "通用",
     "polishStyle": "润色风格",

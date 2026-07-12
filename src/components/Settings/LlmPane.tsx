@@ -31,6 +31,7 @@ import {
   MoreHorizontal,
 } from 'lucide-react'
 import { AppLogo } from '../AppLogo'
+import { ContextAdaptationApps } from './ContextAdaptationApps'
 import { TranslationTargets } from './TranslationTargets'
 import { AppStyleMappingDialog } from './AppStyleMappingDialog'
 import { ManageAppMappingsDialog } from './ManageAppMappingsDialog'
@@ -418,6 +419,7 @@ export function LlmPane() {
           <p className="mt-1 ml-[52px] text-[11px] leading-relaxed text-text-tertiary">
             {t('settings.contextAdaptationHint')}
           </p>
+          <ContextAdaptationApps disabled={!config.polish_enabled} />
           {lastContext && (
             <div className="mt-2 ml-[52px] min-w-0">
               <p className="text-[11px] leading-relaxed text-text-tertiary">

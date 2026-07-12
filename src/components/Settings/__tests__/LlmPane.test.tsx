@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react'
 import { LlmPane } from '../LlmPane'
 import * as tauri from '../../../lib/tauri'
 
@@ -29,6 +29,7 @@ vi.mock('react-i18next', () => ({
         'settings.enableAiPolishDesc': 'Cleans up dictation before output',
         'settings.contextAdaptation': 'Adapt writing to the current app',
         'settings.contextAdaptationHint': 'Uses a private local app category',
+        'settings.contextAdaptationApps': 'Apps adapted by context',
         'settings.lastDictationContext': 'Last dictation context',
         'settings.appStyleMenu': 'App writing style',
         'settings.useDifferentWritingStyle': 'Use a different writing style',
@@ -536,6 +537,27 @@ describe('LlmPane', () => {
       })
     })
 
+    it('shows a compact noninteractive line of representative adapted apps', () => {
+      render(<LlmPane />)
+
+      const coverage = screen.getByLabelText('Apps adapted by context')
+      for (const name of [
+        'Gmail',
+        'Slack',
+        'Lark',
+        'WeChat',
+        'Google Docs',
+        'Notion',
+        'GitHub',
+        'Cursor',
+      ]) {
+        expect(within(coverage).getByLabelText(name)).toBeInTheDocument()
+      }
+      expect(within(coverage).getByText('+63')).toBeInTheDocument()
+      expect(within(coverage).queryByRole('button')).not.toBeInTheDocument()
+      expect(within(coverage).queryByRole('link')).not.toBeInTheDocument()
+    })
+
     it('hides last context until an operation snapshot exists', () => {
       render(<LlmPane />)
       expect(screen.queryByText('Last dictation context')).not.toBeInTheDocument()
@@ -593,7 +615,9 @@ describe('LlmPane', () => {
       fireEvent.click(await screen.findByRole('button', { name: 'App writing style' }))
       fireEvent.click(screen.getByText('Use a different writing style'))
 
-      expect(await screen.findByRole('dialog', { name: 'Writing style for this app' })).toBeVisible()
+      expect(
+        await screen.findByRole('dialog', { name: 'Writing style for this app' }),
+      ).toBeVisible()
       expect(screen.getByText('docs.example.com')).toBeInTheDocument()
     })
 

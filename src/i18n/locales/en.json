@@ -335,6 +335,7 @@
     "enableAiPolishDesc": "Cleans up fillers, punctuation, and wording before output. Turn off to output raw transcription.",
     "contextAdaptation": "Adapt writing to the current app",
     "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "contextAdaptationApps": "Apps adapted by context",
     "lastDictationContext": "Last dictation context",
     "generalContext": "General",
     "polishStyle": "Polish style",

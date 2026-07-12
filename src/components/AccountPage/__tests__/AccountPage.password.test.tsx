@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../../i18n'
 import { useAuthStore } from '../../../stores/authStore'
@@ -73,28 +73,49 @@ describe('AccountPage password controls', () => {
     expect(screen.getByText('请检查邮箱')).toBeInTheDocument()
   })
 
-  it('renders Change password for credential accounts and keeps invalid forms disabled', () => {
+  it('opens credential password controls in a focused modal and keeps invalid forms disabled', () => {
     signedIn('present')
     render(<AccountPage />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Change password' }))
-    const submit = screen.getByRole('button', { name: 'Change password' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Current password')).not.toBeInTheDocument()
+    const trigger = screen.getByRole('button', { name: 'Change password' })
+    fireEvent.click(trigger)
+    const dialog = screen.getByRole('dialog', { name: 'Change password' })
+    expect(dialog.parentElement).toHaveClass('z-[9999]')
+    expect(within(dialog).getByLabelText('Current password')).toHaveFocus()
+    const submit = within(dialog).getByRole('button', { name: 'Change password' })
     expect(submit).toBeDisabled()
 
-    fireEvent.change(screen.getByLabelText('Current password'), { target: { value: 'old-password' } })
-    fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'new-password' } })
-    fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'different' } })
+    fireEvent.change(within(dialog).getByLabelText('Current password'), {
+      target: { value: 'old-password' },
+    })
+    fireEvent.change(within(dialog).getByLabelText('New password'), {
+      target: { value: 'new-password' },
+    })
+    fireEvent.change(within(dialog).getByLabelText('Confirm password'), {
+      target: { value: 'different' },
+    })
     expect(submit).toBeDisabled()
 
-    fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'new-password' } })
+    fireEvent.change(within(dialog).getByLabelText('Confirm password'), {
+      target: { value: 'new-password' },
+    })
     expect(submit).toBeEnabled()
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
   })
 
   it('renders Set password for OAuth-only accounts', () => {
     signedIn('none')
     render(<AccountPage />)
 
-    expect(screen.getByRole('button', { name: 'Set password' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Set password' }))
+    const dialog = screen.getByRole('dialog', { name: 'Set password' })
+    expect(within(dialog).queryByLabelText('Current password')).not.toBeInTheDocument()
+    expect(within(dialog).getByLabelText('New password')).toHaveFocus()
     expect(screen.queryByRole('button', { name: 'Change password' })).not.toBeInTheDocument()
   })
 

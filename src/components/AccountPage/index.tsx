@@ -1,4 +1,4 @@
-import { useState, useEffect, useId } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   LogOut,
@@ -8,10 +8,7 @@ import {
   ExternalLink,
   ClipboardCheck,
   Mail,
-  Eye,
-  EyeOff,
   KeyRound,
-  ChevronDown,
 } from 'lucide-react'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { readText } from '@tauri-apps/plugin-clipboard-manager'
@@ -27,6 +24,8 @@ import {
   handleDeepLinkUrl,
 } from '../../lib/deep-link'
 import { createDesktopAuthCallbackURL } from '../../lib/desktop-auth-callback'
+import { PasswordDialog } from './PasswordDialog'
+import { PasswordField } from './PasswordField'
 
 type Tab = 'signin' | 'signup'
 type AuthMode = 'auth' | 'forgot' | 'forgot-sent'
@@ -568,10 +567,7 @@ function AccountDetails() {
   const [backupMsg, setBackupMsg] = useState<string | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
   const [securityOpen, setSecurityOpen] = useState(false)
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [securityError, setSecurityError] = useState<string | null>(null)
+  const passwordTriggerRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (credentialCapability !== 'unknown') return
@@ -637,44 +633,10 @@ function AccountDetails() {
     }
   }
 
-  const passwordActionLabel = credentialCapability === 'present'
-    ? t('account.changePassword', 'Change password')
-    : t('account.setPassword', 'Set password')
-  const passwordMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword
-  const passwordTooShort = newPassword.length > 0 && newPassword.length < 8
-  const passwordFormValid =
-    credentialCapability !== 'unknown'
-    && newPassword.length >= 8
-    && newPassword.length <= 128
-    && newPassword === confirmPassword
-    && (credentialCapability === 'none' || currentPassword.length > 0)
-
-  const clearSecurityForm = () => {
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
-    setSecurityError(null)
-  }
-
-  const handlePasswordChange = async (event: React.FormEvent) => {
-    event.preventDefault()
-    if (!passwordFormValid) return
-    setSecurityError(null)
-    try {
-      await changePassword(
-        credentialCapability === 'present' ? currentPassword : null,
-        newPassword,
-      )
-      clearSecurityForm()
-      setSecurityOpen(false)
-    } catch (caught) {
-      setSecurityError(
-        caught instanceof Error
-          ? caught.message
-          : t('account.passwordChangeFailed', 'Failed to update password'),
-      )
-    }
-  }
+  const passwordActionLabel =
+    credentialCapability === 'present'
+      ? t('account.changePassword', 'Change password')
+      : t('account.setPassword', 'Set password')
 
   return (
     <div className="max-w-[400px] mx-auto py-8 px-6 space-y-5 text-[13px]">
@@ -715,85 +677,35 @@ function AccountDetails() {
             <span>{t('account.security', 'Security')}</span>
           </div>
           {credentialCapability === 'unknown' ? (
-            <Loader2 size={14} className="animate-spin text-text-tertiary" aria-label={t('common.loading')} />
+            <Loader2
+              size={14}
+              className="animate-spin text-text-tertiary"
+              aria-label={t('common.loading')}
+            />
           ) : (
             <button
+              ref={passwordTriggerRef}
               type="button"
-              aria-label={securityOpen ? t('account.cancel', 'Cancel') : passwordActionLabel}
-              onClick={() => {
-                if (securityOpen) clearSecurityForm()
-                setSecurityOpen((current) => !current)
-              }}
-              className="flex items-center gap-1 p-0 bg-transparent border-none text-accent text-[12px] font-medium cursor-pointer hover:underline"
+              aria-haspopup="dialog"
+              aria-expanded={securityOpen}
+              onClick={() => setSecurityOpen(true)}
+              className="h-7 rounded-[6px] border border-border bg-bg-primary px-2.5 text-[12px] font-medium text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
             >
               {passwordActionLabel}
-              <ChevronDown
-                size={13}
-                aria-hidden="true"
-                className={`transition-transform ${securityOpen ? 'rotate-180' : ''}`}
-              />
             </button>
           )}
         </div>
-        {securityOpen && credentialCapability !== 'unknown' && (
-          <form onSubmit={handlePasswordChange} className="px-3 py-3 border-t border-border space-y-3">
-            {credentialCapability === 'present' && (
-              <PasswordField
-                label={t('account.currentPassword', 'Current password')}
-                value={currentPassword}
-                onChange={setCurrentPassword}
-                autoComplete="current-password"
-                showLabel
-              />
-            )}
-            <PasswordField
-              label={t('account.newPassword', 'New password')}
-              value={newPassword}
-              onChange={setNewPassword}
-              autoComplete="new-password"
-              showLabel
-            />
-            <PasswordField
-              label={t('account.confirmPassword', 'Confirm password')}
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              autoComplete="new-password"
-              showLabel
-            />
-            {passwordTooShort && (
-              <p className="text-red-500 text-[12px]" role="alert">
-                {t('account.passwordTooShort', 'Password must be 8 to 128 characters')}
-              </p>
-            )}
-            {passwordMismatch && (
-              <p className="text-red-500 text-[12px]" role="alert">
-                {t('account.passwordMismatch', 'Passwords do not match')}
-              </p>
-            )}
-            {securityError && <p className="text-red-500 text-[12px]" role="alert">{securityError}</p>}
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={!passwordFormValid || loading}
-                className="flex-1 py-2 rounded-[8px] bg-accent text-white text-[13px] font-medium cursor-pointer border-none hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-              >
-                {loading && <Loader2 size={13} className="animate-spin" aria-hidden="true" />}
-                {passwordActionLabel}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  clearSecurityForm()
-                  setSecurityOpen(false)
-                }}
-                className="px-3 py-2 rounded-[8px] border border-border bg-transparent text-text-secondary text-[13px] cursor-pointer hover:bg-bg-secondary transition-colors"
-              >
-                {t('account.cancel', 'Cancel')}
-              </button>
-            </div>
-          </form>
-        )}
       </section>
+
+      {securityOpen && credentialCapability !== 'unknown' && (
+        <PasswordDialog
+          credentialCapability={credentialCapability}
+          loading={loading}
+          returnFocusRef={passwordTriggerRef}
+          onCancel={() => setSecurityOpen(false)}
+          onSubmit={changePassword}
+        />
+      )}
 
       {/* Quota */}
       {wordsLimit > 0 ? (
@@ -908,61 +820,6 @@ function AccountDetails() {
         <LogOut size={14} />
         {t('account.signOut')}
       </button>
-    </div>
-  )
-}
-
-function PasswordField({
-  label,
-  value,
-  onChange,
-  autoComplete,
-  showLabel = false,
-}: {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  autoComplete: 'current-password' | 'new-password'
-  showLabel?: boolean
-}) {
-  const id = useId()
-  const [visible, setVisible] = useState(false)
-  const { t } = useTranslation()
-  const visibilityLabel = visible
-    ? t('account.hidePassword', { label, defaultValue: `Hide ${label}` })
-    : t('account.showPassword', { label, defaultValue: `Show ${label}` })
-
-  return (
-    <div className="space-y-1.5">
-      {showLabel && (
-        <label htmlFor={id} className="block text-[12px] text-text-secondary">
-          {label}
-        </label>
-      )}
-      <div className="relative">
-        <input
-          id={id}
-          type={visible ? 'text' : 'password'}
-          aria-label={label}
-          autoComplete={autoComplete}
-          placeholder={label}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          minLength={autoComplete === 'new-password' ? 8 : undefined}
-          maxLength={128}
-          required
-          className="w-full px-3 py-2 pr-9 rounded-[8px] border border-border bg-bg-secondary text-text-primary text-[13px] outline-none focus:border-accent transition-colors"
-        />
-        <button
-          type="button"
-          aria-label={visibilityLabel}
-          title={visibilityLabel}
-          onClick={() => setVisible((current) => !current)}
-          className="absolute inset-y-0 right-0 w-9 flex items-center justify-center bg-transparent border-none text-text-tertiary hover:text-text-primary cursor-pointer"
-        >
-          {visible ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />}
-        </button>
-      </div>
     </div>
   )
 }

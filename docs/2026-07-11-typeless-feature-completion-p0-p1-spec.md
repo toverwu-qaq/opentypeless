@@ -1765,18 +1765,18 @@ P1 is complete when:
 - the compact mapping menu and flat user-mapping dialog work without exposing the full built-in registry or adding a navigation destination.
 - multiple shortcut bindings migrate, register, persist across restart, roll back on registration failure, and work without conflict or a separate UI surface.
 
-## 23. Revision 2.0 Implementation and Verification Record
+## 23. Revision 2.1 Implementation and Verification Record
 
 ### 23.1 Implemented Revisions
 
-Feature implementation was completed in isolated worktrees without changing either original checkout.
+The initial feature implementation was completed in isolated worktrees without changing either original checkout. Revision 2.1 was completed on the same branches.
 
-| Repository | Branch | Feature Head | Baseline |
+| Repository | Branch | Initial Feature Head | Baseline |
 | --- | --- | --- | --- |
-| OpenTypeless desktop | `codex/typeless-p0-p1` | `932745a` | `origin/main@1e5df0a` |
+| OpenTypeless desktop | `codex/typeless-p0-p1` | `932745a` | `origin/main@e76ee86` |
 | TalkMore cloud/web | `codex/typeless-p0-p1` | `7fce777` | `origin/main@dd7d023` |
 
-The OpenTypeless branch contains 25 scoped commits covering account integrity, context adaptation, typed intent routing, translation, dictionary workflows, local mappings, multiple shortcuts, UI, fixtures, and release-gate fixes. The TalkMore branch contains six scoped commits covering account recovery, stable cloud-auth errors, desktop metadata validation, backup privacy, and test stabilization.
+The initial OpenTypeless implementation contains 25 scoped commits covering account integrity, context adaptation, typed intent routing, translation, dictionary workflows, local mappings, multiple shortcuts, UI, fixtures, and release-gate fixes. Revision 2.1 adds focused specification, desktop UI, packaged-app verification, and test-runner stabilization commits on the same branch. The TalkMore branch contains six scoped commits covering account recovery, stable cloud-auth errors, desktop metadata validation, backup privacy, and test stabilization.
 
 ### 23.2 User-Visible Outcome
 
@@ -1960,21 +1960,24 @@ All new desktop strings are present in the ten existing locale files. TalkMore a
 
 ### 23.9 Automated Verification Evidence
 
-The following gates were run from committed feature heads on 2026-07-11:
+The following gates were run in the isolated feature worktrees across 2026-07-11 and 2026-07-12:
 
 | Repository | Command | Result |
 | --- | --- | --- |
 | OpenTypeless Rust | `cargo fmt --all` | completed |
 | OpenTypeless Rust | `cargo test -q` | 434 passed, 0 failed |
-| OpenTypeless frontend | `npm test` | 36 files, 319 passed, 0 failed |
+| OpenTypeless frontend | `npm test -- --reporter=dot` | 36 files, 320 passed, 0 failed |
 | OpenTypeless frontend | `npm run lint` | passed; three pre-existing warnings only |
 | OpenTypeless frontend | `npm run build` | production Vite build passed |
+| OpenTypeless macOS bundle | `npm run tauri -- build --debug --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'` | Debug `.app` bundle passed |
 | TalkMore | `npm test -- --reporter=dot` | 69 files, 316 passed, 0 failed |
 | TalkMore | `npm run build` | Next.js 16 production build passed; 5,487 static pages generated |
 
 TalkMore production build used the existing local Vercel production environment only for the build process. No environment value was copied, printed, modified, or committed.
 
 Automated coverage includes registry validation and matching, snapshot staleness and refresh, raw-signal privacy, prompt layering, intent corpora, output placement and target guards, translation migration/switching, dictionary parsing/rollback/export, mapping candidate lifetime and persistence, backup sanitization at both boundaries, shortcut migration/conflict/rollback, account reset/set/change contracts, token rotation, concurrent invalidation, locale parity, and compact component interaction.
+
+Revision 2.1 packaged-desktop verification on 2026-07-12 covered the normal 900x700 window and the configured 720x480 minimum. The Account security row remained collapsed; the password dialog opened without page reflow, focused the correct first field, closed on Escape, restored trigger focus, stayed fully inside the minimum viewport, and rendered above the existing update notification. AI Polish rendered all eight representative local marks plus `+63` without horizontal overflow. No password was submitted and no macOS permission was changed.
 
 ### 23.10 Release Controls and Rollback
 
@@ -1995,6 +1998,6 @@ The implementation and repository gates are complete. The following checks requi
 2. Run the reference app recognition matrix on release macOS and Windows machines, plus Linux X11/Wayland fallback checks where supported.
 3. Verify Fn and RightAlt native combinations with actual external keyboards and confirm focus restoration in representative native and browser apps.
 4. Run the thought-aware same-payload matrix against the pinned managed model/prompt version and record model, temperature, corpus revision, and exact pass counts.
-5. Perform visual comparison at the supported minimum desktop size and normal desktop sizes in the user-selected browser/runtime before release packaging.
+5. Repeat the completed macOS 900x700 and 720x480 visual checks on the Windows release runtime and any supported Linux packaging target before those platforms ship.
 
 These checks do not require additional product UI or cloud data collection. A failed check blocks release of the affected track and uses the controls in Section 23.10; it does not silently weaken classifier, intent, privacy, or account contracts.

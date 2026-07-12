@@ -337,6 +337,7 @@
     "enableAiPolishDesc": "출력 전에 음성 입력을 자동으로 정리하고 형식을 맞추며 개선합니다.",
     "contextAdaptation": "Adapt writing to the current app",
     "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "contextAdaptationApps": "컨텍스트에 맞게 조정되는 앱",
     "lastDictationContext": "Last dictation context",
     "generalContext": "General",
     "polishStyle": "다듬기 스타일",

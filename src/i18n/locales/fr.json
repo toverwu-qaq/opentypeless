@@ -337,6 +337,7 @@
     "enableAiPolishDesc": "Nettoie, met en forme et améliore automatiquement votre dictée avant la sortie.",
     "contextAdaptation": "Adapt writing to the current app",
     "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
+    "contextAdaptationApps": "Applications adaptées au contexte",
     "lastDictationContext": "Last dictation context",
     "generalContext": "General",
     "polishStyle": "Style de réécriture",

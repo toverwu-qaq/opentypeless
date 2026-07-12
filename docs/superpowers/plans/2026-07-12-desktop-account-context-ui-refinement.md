@@ -28,9 +28,9 @@
 
 **Interfaces:**
 - Consumes: `credentialCapability: 'present' | 'none'`, `loading: boolean`, translated labels, and `onSubmit(currentPassword: string | null, newPassword: string): Promise<void>`.
-- Produces: `PasswordDialog({ open, credentialCapability, loading, onCancel, onSubmit })` and a collapsed Account security row that only controls `open`.
+- Produces: `PasswordDialog({ credentialCapability, loading, returnFocusRef, onCancel, onSubmit })` and a collapsed Account security row that conditionally mounts the dialog.
 
-- [ ] **Step 1: Write the failing modal tests**
+- [x] **Step 1: Write the failing modal tests**
 
 Add assertions that clicking the Account password action opens `role="dialog"`, leaves the security row in place, does not render password fields before the click, renders current password only for credential users, closes on Escape, and stays open when validation fails.
 
@@ -43,18 +43,18 @@ fireEvent.keyDown(window, { key: 'Escape' })
 expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 ```
 
-- [ ] **Step 2: Run the focused test and verify red**
+- [x] **Step 2: Run the focused test and verify red**
 
 Run: `npx vitest run src/components/AccountPage/__tests__/AccountPage.password.test.tsx --reporter=verbose`
 
 Expected: FAIL because the current password fields render inline and there is no password dialog.
 
-- [ ] **Step 3: Implement `PasswordDialog` using the existing dialog pattern**
+- [x] **Step 3: Implement `PasswordDialog` using the existing dialog pattern**
 
 Use the same backdrop, border, shadow, spacing, font sizes, and footer order as `CreateCorrectionDialog`. On open, focus the current-password field for `present`, otherwise the new-password field. Keep all field state and validation inside the dialog, prevent Escape/backdrop close while submitting, and clear state after successful submission or cancellation.
 
 ```tsx
-<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 px-5">
+<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/25 px-5">
   <div className="fixed inset-0" onClick={loading ? undefined : onCancel} />
   <div role="dialog" aria-modal="true" aria-label={title}
     className="relative z-10 w-full max-w-[380px] rounded-[10px] border border-border bg-bg-primary shadow-float">
@@ -63,11 +63,11 @@ Use the same backdrop, border, shadow, spacing, font sizes, and footer order as 
 </div>
 ```
 
-- [ ] **Step 4: Replace inline Account form with the modal trigger**
+- [x] **Step 4: Replace inline Account form with the modal trigger**
 
 Keep the `Security` row and one `Change password` or `Set password` text action. Render `PasswordDialog` adjacent to the page root when open; pass the existing store mutation without changing token rotation or OAuth-only behavior.
 
-- [ ] **Step 5: Run focused tests and verify green**
+- [x] **Step 5: Run focused tests and verify green**
 
 Run: `npx vitest run src/components/AccountPage/__tests__/AccountPage.password.test.tsx --reporter=verbose`
 
@@ -84,7 +84,7 @@ Expected: all Account password tests pass.
 - Consumes: `disabled: boolean` and existing `AppLogo({ iconKey, family })`.
 - Produces: `ContextAdaptationApps({ disabled })`, a noninteractive logo line with accessible names and a `+63` count.
 
-- [ ] **Step 1: Write the failing logo-line test**
+- [x] **Step 1: Write the failing logo-line test**
 
 Render `LlmPane` and assert all eight representative app names are exposed exactly once, `+63` is visible, and there are no links or buttons inside the logo line.
 
@@ -97,21 +97,21 @@ expect(within(coverage).getByText('+63')).toBeInTheDocument()
 expect(within(coverage).queryByRole('button')).not.toBeInTheDocument()
 ```
 
-- [ ] **Step 2: Run the focused test and verify red**
+- [x] **Step 2: Run the focused test and verify red**
 
 Run: `npx vitest run src/components/Settings/__tests__/LlmPane.test.tsx --reporter=verbose`
 
 Expected: FAIL because the representative coverage line does not exist.
 
-- [ ] **Step 3: Implement the static app metadata and compact row**
+- [x] **Step 3: Implement the static app metadata and compact row**
 
 Define the eight entries in the component with `iconKey`, `family`, and `label`. Wrap each existing `AppLogo` in a noninteractive `span` with `aria-label` and `title`; use a stable 16px slot and 6px gap. Add `+63` as an 11px tertiary label and apply `opacity-40` when disabled.
 
-- [ ] **Step 4: Place the row under the context-adaptation hint**
+- [x] **Step 4: Place the row under the context-adaptation hint**
 
-Render it inside the existing adaptation block at `ml-[52px]`, before the optional last-dictation context. Pass `disabled={!config.polish_enabled}` and do not add locale strings or an app-management action.
+Render it inside the existing adaptation block at `ml-[52px]`, before the optional last-dictation context. Pass `disabled={!config.polish_enabled}`, add only the accessibility label to the ten existing locale files, and do not add an app-management action.
 
-- [ ] **Step 5: Run focused tests and verify green**
+- [x] **Step 5: Run focused tests and verify green**
 
 Run: `npx vitest run src/components/Settings/__tests__/LlmPane.test.tsx --reporter=verbose`
 
@@ -128,11 +128,11 @@ Expected: all LLM settings tests pass.
 - Consumes: the existing 36-file frontend suite and local macOS debug bundle workflow.
 - Produces: deterministic four-worker frontend tests and revision 2.1 verification evidence.
 
-- [ ] **Step 1: Preserve the verified test-runner stabilization**
+- [x] **Step 1: Preserve the verified test-runner stabilization**
 
 Keep `maxWorkers: 4` in `vitest.config.ts` and the static `createDesktopAuthCallbackURL` import. This removes environment-worker starvation without increasing the five-second per-test timeout.
 
-- [ ] **Step 2: Run all desktop gates**
+- [x] **Step 2: Run all desktop gates**
 
 Run:
 
@@ -143,19 +143,19 @@ npm run build
 cd src-tauri && cargo test -q
 ```
 
-Expected: 319 frontend tests and 434 Rust tests pass; lint has zero errors; production frontend build exits zero.
+Expected: 320 frontend tests and 434 Rust tests pass; lint has zero errors; production frontend build exits zero.
 
-- [ ] **Step 3: Build and launch the debug app bundle**
+- [x] **Step 3: Build and launch the debug app bundle**
 
-Run: `npm run tauri -- build --debug --bundles app`
+Run: `npm run tauri -- build --debug --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'`
 
-Expected: `OpenTypeless.app` is produced under `src-tauri/target/debug/bundle/macos/`. The existing updater private-key requirement may make the command exit nonzero after the app bundle is complete; record it separately from compilation/UI status.
+Expected: `OpenTypeless.app` is produced under `src-tauri/target/debug/bundle/macos/` without requiring a local updater signing key.
 
-- [ ] **Step 4: Verify real desktop interactions**
+- [x] **Step 4: Verify real desktop interactions**
 
 Launch the generated bundle by absolute path. Verify Account shows one collapsed Security row, password action opens a centered dialog without page reflow, Cancel/Escape closes it, AI Polish shows eight 16px marks plus `+63`, and no clipping/overlap appears in the current window size. Do not submit a real password or change macOS permissions.
 
-- [ ] **Step 5: Commit the refinement**
+- [x] **Step 5: Commit the refinement**
 
 ```bash
 git add docs/2026-07-11-typeless-feature-completion-p0-p1-spec.md \
@@ -164,9 +164,11 @@ git add docs/2026-07-11-typeless-feature-completion-p0-p1-spec.md \
   src/lib/__tests__/desktop-auth-callback.test.ts \
   src/components/AccountPage/index.tsx \
   src/components/AccountPage/PasswordDialog.tsx \
+  src/components/AccountPage/PasswordField.tsx \
   src/components/AccountPage/__tests__/AccountPage.password.test.tsx \
   src/components/Settings/LlmPane.tsx \
   src/components/Settings/ContextAdaptationApps.tsx \
-  src/components/Settings/__tests__/LlmPane.test.tsx
+  src/components/Settings/__tests__/LlmPane.test.tsx \
+  src/i18n/locales/{de,en,es,fr,it,ja,ko,pt,ru,zh}.json
 git commit -m "fix: refine desktop account and context UI"
 ```
