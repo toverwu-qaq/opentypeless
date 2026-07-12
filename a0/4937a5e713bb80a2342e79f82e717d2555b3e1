@@ -1,0 +1,43 @@
+src/components/Settings/LlmPane.tsx
+  s_7724aa1accb26b::t_12cecc12a39939 229,254-265,268,482-486,488-523,525,539-542
+src/components/Settings/__tests__/LlmPane.test.tsx
+  s_7724aa1accb26b::t_c8cb7721f22551 242,408,411,416-417,421-430,484-486,497-499,591,596-598
+src/i18n/locales/de.json
+  s_7724aa1accb26b::t_18df8be405a77a 321-323
+src/i18n/locales/en.json
+  s_7724aa1accb26b::t_452d9380a65294 319-321
+src/i18n/locales/es.json
+  s_7724aa1accb26b::t_6ea8d1aa00ebed 321-323
+src/i18n/locales/fr.json
+  s_7724aa1accb26b::t_b0b725c2fe9383 321-323
+src/i18n/locales/it.json
+  s_7724aa1accb26b::t_4fd0c9172e96bd 321-323
+src/i18n/locales/ja.json
+  s_7724aa1accb26b::t_af73e90dbf912c 321-323
+src/i18n/locales/ko.json
+  s_7724aa1accb26b::t_7a125d2e4f0111 321-323
+src/i18n/locales/pt.json
+  s_7724aa1accb26b::t_3bb79edd22bb61 321-323
+src/i18n/locales/ru.json
+  s_7724aa1accb26b::t_037c8d02e1a215 321-323
+src/i18n/locales/zh.json
+  s_7724aa1accb26b::t_7de6241ef73848 319-321
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a04937a5e713bb80a2342e79f82e717d2555b3e1",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
