@@ -1,0 +1,29 @@
+src/components/Settings/ContextAdaptationApps.tsx
+  s_7724aa1accb26b::t_3579e14a017e72 29
+src/components/Settings/LlmPane.tsx
+  s_7724aa1accb26b::t_1741858298df6c 16,391-393,460-467
+src/components/Settings/TranslationTargets.tsx
+  s_7724aa1accb26b::t_bce1b4408bc646 1-2,16,18-22,64-71,74-99,101-104,106-107,114,119-174
+src/components/Settings/__tests__/LlmPane.test.tsx
+  s_7724aa1accb26b::t_f2991a95c44215 54-55,465,469,471-473,477,480,559-578,672,676-677
+src/components/Settings/__tests__/TranslationTargets.test.tsx
+  s_7724aa1accb26b::t_ab714842192380 26-37,41,60,70,85,94-95,97-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3f1b9671bf0f01b4bbb2737edf65c6b0be605a1f",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
