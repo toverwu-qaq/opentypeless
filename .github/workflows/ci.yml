@@ -62,15 +62,15 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libasound2-dev libxdo-dev
 
       - run: cargo fmt --check --manifest-path src-tauri/Cargo.toml
-      - run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
+      - run: cargo clippy --target ${{ matrix.target }} --manifest-path src-tauri/Cargo.toml -- -D warnings
       - name: Run Rust tests
-        run: cargo test --manifest-path src-tauri/Cargo.toml
+        run: cargo test --target ${{ matrix.target }} --manifest-path src-tauri/Cargo.toml
 
       - name: Diagnose Windows loader failure
         if: failure() && matrix.platform == 'windows-latest'
         shell: pwsh
         run: |
-          $testExe = Get-ChildItem src-tauri/target/debug/deps/opentypeless_lib-*.exe |
+          $testExe = Get-ChildItem src-tauri/target/${{ matrix.target }}/debug/deps/opentypeless_lib-*.exe |
             Sort-Object LastWriteTime -Descending |
             Select-Object -First 1
           if (-not $testExe) {
