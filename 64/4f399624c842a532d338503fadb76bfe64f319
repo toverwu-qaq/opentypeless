@@ -1,0 +1,23 @@
+src-tauri/Cargo.toml
+  s_7724aa1accb26b::t_7ba3b85d1fe16a 46
+src-tauri/src/app_detector/user_mappings.rs
+  s_7724aa1accb26b::t_85fbf18ed04113 6,20-22,710,713-714
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "644f399624c842a532d338503fadb76bfe64f319",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
