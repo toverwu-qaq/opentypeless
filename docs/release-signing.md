@@ -73,29 +73,6 @@ For a complete release without a PFX certificate, dispatch the general
 general workflow's `all` option until a trusted Windows PFX certificate is
 configured, because its Windows job will intentionally fail closed.
 
-Windows SignPath:
-
-- `SIGNPATH_API_TOKEN`: token for a SignPath user that is a submitter for the
-  selected signing policy
-- `SIGNPATH_ORGANIZATION_ID`: SignPath organization ID
-- `SIGNPATH_PROJECT_SLUG`: SignPath project slug
-- `SIGNPATH_SIGNING_POLICY_SLUG`: SignPath signing policy slug
-
-The SignPath project and GitHub trusted build system must point to
-`toverwu-qaq/opentypeless`, because that repository runs the GitHub Actions
-workflow and owns the GitHub artifact submitted to SignPath. Signed Windows
-artifacts are still published to `tover0314-w/opentypeless`.
-
-The Windows SignPath workflow uses the project's default artifact
-configuration. This default artifact configuration must have a `<zip-file>`
-root because GitHub's `actions/upload-artifact` action stores files as a ZIP
-archive.
-
-Signing policies whose slug starts with `test-` or `test_` are dry-run only.
-They may verify the build-to-SignPath integration, but the workflow refuses to
-publish those installers to a production GitHub Release. Publishing requires a
-production SignPath policy whose Authenticode result is `Valid`.
-
 ## Windows Certificate Notes
 
 Use a real code signing certificate. SSL/TLS certificates do not sign Windows
