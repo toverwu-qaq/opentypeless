@@ -1,0 +1,25 @@
+.github/workflows/ci.yml
+  s_7724aa1accb26b::t_44e594eb5af8ac 65-67
+src-tauri/build.rs
+  s_7724aa1accb26b::t_05663bc34b742d 5-9
+src-tauri/src/hotkey.rs
+  s_7724aa1accb26b::t_4cecd784b82089 1337,1341-1349
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b967a78e2472cab4eddf9413e133ae524d6efa70",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
