@@ -32,14 +32,46 @@ Linux:
 - `LINUX_GPG_KEY_ID`: GPG key ID or fingerprint
 - `LINUX_GPG_PASSPHRASE`: GPG key passphrase
 
-Windows:
+Windows PFX fallback:
 
-- `WINDOWS_CERTIFICATE`: optional base64-encoded PFX code signing certificate
+- `WINDOWS_CERTIFICATE`: base64-encoded PFX code signing certificate
 - `WINDOWS_CERTIFICATE_PASSWORD`: required when `WINDOWS_CERTIFICATE` is set
 - `WINDOWS_TIMESTAMP_URL`: optional timestamp server URL; defaults to DigiCert
 
-The release workflow publishes Windows artifacts even when Windows signing
-secrets are not configured. In that case, the Windows installers are unsigned.
+The general `Release` workflow refuses to build or publish Windows artifacts
+when the PFX signing secrets are absent. Use that workflow for Windows only when
+a trusted PFX certificate is configured. Otherwise, publish Windows through the
+dedicated `Release Windows SignPath` workflow below. Unsigned and test-signed
+installers must never be attached to a public release.
+
+Windows SignPath:
+
+- `SIGNPATH_API_TOKEN`: token for a SignPath user that is a submitter for the
+  selected signing policy
+- `SIGNPATH_ORGANIZATION_ID`: SignPath organization ID
+- `SIGNPATH_PROJECT_SLUG`: SignPath project slug
+- `SIGNPATH_SIGNING_POLICY_SLUG`: SignPath signing policy slug
+
+The SignPath project and GitHub trusted build system must point to
+`toverwu-qaq/opentypeless`, because that repository runs the GitHub Actions
+workflow and owns the GitHub artifact submitted to SignPath. Signed Windows
+artifacts are still published to `tover0314-w/opentypeless`.
+
+The Windows SignPath workflow uses the project's default artifact
+configuration. This default artifact configuration must have a `<zip-file>`
+root because GitHub's `actions/upload-artifact` action stores files as a ZIP
+archive.
+
+Signing policies whose slug starts with `test-` or `test_` are dry-run only.
+They may verify the build-to-SignPath integration, but the workflow refuses to
+publish those installers to a production GitHub Release. Publishing requires a
+production SignPath policy whose Authenticode result is `Valid`.
+
+For a complete release without a PFX certificate, dispatch the general
+`Release` workflow separately for `macos` and `linux`, then dispatch
+`Release Windows SignPath` with `publish_release` set to `true`. Do not use the
+general workflow's `all` option until a trusted Windows PFX certificate is
+configured, because its Windows job will intentionally fail closed.
 
 Windows SignPath:
 
