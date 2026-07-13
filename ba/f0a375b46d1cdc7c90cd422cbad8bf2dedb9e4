@@ -1,0 +1,27 @@
+.github/scripts/import-windows-certificate.ps1
+  s_7724aa1accb26b::t_8f1ae32c683a43 5,8-11
+.github/workflows/release.yml
+  s_7724aa1accb26b::t_eb825c3cd7456a 30-37,173,196
+docs/release-signing.md
+  s_7724aa1accb26b::t_c18d19a8de87f4 45-50
+src/lib/__tests__/releaseVersion.test.ts
+  s_7724aa1accb26b::t_62b92b400f8e35 3,14-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "baf0a375b46d1cdc7c90cd422cbad8bf2dedb9e4",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
