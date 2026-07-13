@@ -66,40 +66,6 @@ jobs:
       - name: Run Rust tests
         run: cargo test --target ${{ matrix.target }} --manifest-path src-tauri/Cargo.toml
 
-      - name: Diagnose Windows loader failure
-        if: failure() && matrix.platform == 'windows-latest'
-        shell: pwsh
-        run: |
-          $testExe = Get-ChildItem src-tauri/target/${{ matrix.target }}/debug/deps/opentypeless_lib-*.exe |
-            Sort-Object LastWriteTime -Descending |
-            Select-Object -First 1
-          if (-not $testExe) {
-            throw "Rust test executable was not found"
-          }
-
-          Write-Host "Test executable: $($testExe.FullName)"
-          Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, OsBuildNumber
-
-          $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
-          $vsRoot = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-          $dumpbin = Get-ChildItem "$vsRoot/VC/Tools/MSVC/*/bin/Hostx64/x64/dumpbin.exe" |
-            Sort-Object FullName -Descending |
-            Select-Object -First 1
-          if (-not $dumpbin) {
-            throw "dumpbin.exe was not found"
-          }
-
-          & $dumpbin.FullName /DEPENDENTS $testExe.FullName
-          & $dumpbin.FullName /IMPORTS $testExe.FullName
-
-          Get-WinEvent -FilterHashtable @{
-            LogName = 'Application'
-            StartTime = (Get-Date).AddMinutes(-15)
-          } -ErrorAction SilentlyContinue |
-            Where-Object { $_.Message -match 'opentypeless|entry point|side-by-side' } |
-            Select-Object TimeCreated, ProviderName, Id, LevelDisplayName, Message |
-            Format-List
-
   audit:
     runs-on: ubuntu-latest
     steps:
