@@ -3399,6 +3399,7 @@ dependencies = [
  "enigo",
  "flate2",
  "futures-util",
+ "getrandom 0.2.17",
  "http",
  "keyring",
  "libloading 0.8.9",
