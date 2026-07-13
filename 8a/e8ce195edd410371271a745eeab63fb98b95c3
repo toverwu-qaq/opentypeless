@@ -1,0 +1,21 @@
+.cargo/config.toml
+  s_7724aa1accb26b::t_719e3d8bf83d0c 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8ae8ce195edd410371271a745eeab63fb98b95c3",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
