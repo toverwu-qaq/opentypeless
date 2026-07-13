@@ -1,0 +1,193 @@
+docs/superpowers/plans/2026-07-12-desktop-settings-simplification.md
+  s_7724aa1accb26b::t_092315f243cb56 5,7,17-18,165,170-171,175-176,178,180,187,190,192,194,196,198,200,202,204-212,214,278
+docs/superpowers/specs/2026-07-12-desktop-settings-simplification-design.md
+  s_7724aa1accb26b::t_fdad9ead78bf84 19,62-74,105,115-118
+src-tauri/src/app_detector/cache.rs
+  s_7724aa1accb26b::t_2d484a581ab2f8 11-12,34-35,122-123,191-200,220-221,337-338,393-400,406-407,413-414,422-423,435-436,485-497,562-581
+src-tauri/src/app_detector/platform/linux.rs
+  s_7724aa1accb26b::t_610cc5e6acb402 5,64-67
+src-tauri/src/app_detector/platform/macos.rs
+  s_7724aa1accb26b::t_e4b2ae3e64061f 1,7-9,13-19,58-74,82-84,108,111-135,137-141,147-223,244-272
+src-tauri/src/app_detector/platform/mod.rs
+  s_7724aa1accb26b::t_9ced2fcf7f59d6 5,57-68
+src-tauri/src/app_detector/platform/windows.rs
+  s_7724aa1accb26b::t_4dc2bc9fee481d 5,96-97
+src-tauri/src/app_detector/types.rs
+  s_7724aa1accb26b::t_4f834680c0b449 70-71,90-92,103-104,154-230
+src-tauri/src/app_detector/user_mappings.rs
+  s_7724aa1accb26b::t_009cdea2f0601c 236
+src-tauri/src/commands/app_mappings.rs
+  s_7724aa1accb26b::t_7cbee6d20e6fab 221-227,249-257
+src-tauri/src/commands/backup.rs
+  s_7724aa1accb26b::t_e7ed417a380a6b 1-362
+src-tauri/src/commands/llm.rs
+  s_7724aa1accb26b::t_77d1ce9af2722f 102,119-120,130-138,140-144,148-150,161,241-271,331,348-349
+src-tauri/src/commands/misc.rs
+  s_7724aa1accb26b::t_032b8dbd4d6cdd 1-2,17-26,288-294,300,324,342,370,388,400-405,442-447,534,1243-1246
+src-tauri/src/commands/mod.rs
+  s_7724aa1accb26b::t_8c317740e3cb5f 3
+src-tauri/src/dictionary_io.rs
+  s_7724aa1accb26b::t_285c1c2911d126 667
+src-tauri/src/hotkey.rs
+  s_7724aa1accb26b::t_27b24003bd2334 479,484
+src-tauri/src/lib.rs
+  s_7724aa1accb26b::t_d76c2c6319e1dc 307-376,460-557,561-570,573-581,585-608,708-710,1074,1091
+src-tauri/src/llm/cloud.rs
+  s_7724aa1accb26b::t_ce76d1c73d51c1 366-367
+src-tauri/src/llm/mod.rs
+  s_7724aa1accb26b::t_9161b15b160de9 15,26,91-111,124-145,158-159,215
+src-tauri/src/llm/prompt.rs
+  s_7724aa1accb26b::t_23c8fe56d25f57 176,203-204,209-212,229,304-305,371-382,576-748,838-839,845
+src-tauri/src/pipeline.rs
+  s_7724aa1accb26b::t_fc4a13367ec723 518-526,532,540-543,546-554,1814,1938-1941,1993,2038,2045,2487,3265-3269
+src-tauri/src/storage/mod.rs
+  s_7724aa1accb26b::t_6660f7fa039318 2,20-21,61-67,190-191,351,403,453-455,474,478-489,493,499-533,555,557-561,617-628,674,681,685,696,707,709,914-959,987,1007-1013,1023-1037,1042-1044,1065,1079-1082,1183,1260,1308,1322,1329,1391,1414-1428,1443-1607,1658-1661,2697,2716,2727-2732,2744-2748,2770-2804,2908,2910-2915,2922,2930,2941-2948,3056,3069,3109-3122,3192-3280,3324-3351
+src-tauri/src/voice_intent/grammar/zh_hans.rs
+  s_7724aa1accb26b::t_019ff1c1b3fce2 15-31,35-40
+src-tauri/tests/fixtures/voice_intent_zh_hans.json
+  s_7724aa1accb26b::t_46e0238bb8f6c5 4904-4941,5017-5035
+src/components/AccountPage/PasswordDialog.tsx
+  s_7724aa1accb26b::t_a75a4dd86107cc 46-47,157
+src/components/AccountPage/__tests__/AccountPage.password.test.tsx
+  s_7724aa1accb26b::t_aec7346b5915b4 4-6,17,126-263
+src/components/AccountPage/index.tsx
+  s_7724aa1accb26b::t_21caf99d857479 19-25,384-413,497-503,506-542,574,576,579,614-618,630,633-654
+src/components/History/AppContextMeta.tsx
+  s_7724aa1accb26b::t_1bd295a29acfc3 12,15-22,24,30-37,45
+src/components/History/__tests__/AppContextMeta.test.tsx
+  s_7724aa1accb26b::t_2bb2e30b4c479c 8-14,53-67
+src/components/History/index.tsx
+  s_7724aa1accb26b::t_e72ff7eb189ab6 8,21,73,184,257-280,282,286
+src/components/MainLayout/AccessibilityBanner.tsx
+  s_7724aa1accb26b::t_a47735b3a8941f 3,6,10-11,20-25,27-39,43,46-51,64-68,71-83,95-99,101-103,106-107,110-113,116-123,125
+src/components/MainLayout/__tests__/AccessibilityBanner.test.tsx
+  s_7724aa1accb26b::t_2ac8a2b9bbf454 1-196
+src/components/Onboarding/DoneStep.tsx
+  s_7724aa1accb26b::t_f63f77f05275f5 9,70-74
+src/components/Onboarding/LlmSetupStep.tsx
+  s_7724aa1accb26b::t_1ec79938140e18 3-8,22-48,50,54,66,68,73,80,94,108,116-140,159-162,177-198
+src/components/Onboarding/PermissionsStep.tsx
+  s_7724aa1accb26b::t_4fba03b7da36ca 1,3-11,13-20,23,25-27,30-32,34-37,39-76,78-85,90-109,111-133,135-142,144-159
+src/components/Onboarding/SttSetupStep.tsx
+  s_7724aa1accb26b::t_4300da2e5682fb 3-4,15-20,23,26,28,33-40,49-80,86,88-92,100-105
+src/components/Onboarding/__tests__/DoneStep.test.tsx
+  s_7724aa1accb26b::t_fb921010295fe6 5,61,65,79,113-133
+src/components/Onboarding/__tests__/LlmSetupStep.test.tsx
+  s_7724aa1accb26b::t_26648c969af315 3,6-16,22-31,35-37,39,41-54,56-63,66-72,74,76,78-82,86-100,102,104-112,114
+src/components/Onboarding/__tests__/Onboarding.test.tsx
+  s_7724aa1accb26b::t_c02d6218a50753 1-88
+src/components/Onboarding/__tests__/PermissionsStep.test.tsx
+  s_7724aa1accb26b::t_12e6bccb2cb32b 1-132
+src/components/Onboarding/__tests__/SttSetupStep.test.tsx
+  s_7724aa1accb26b::t_03b605858f1945 1-104
+src/components/Onboarding/index.tsx
+  s_7724aa1accb26b::t_ad998526aceb79 12,17,44,46-47,63,106,173-175
+src/components/Settings/AppStyleMappingDialog.tsx
+  s_7724aa1accb26b::t_cfd0ed4e49dbd1 3-4,46-48,52-56,64,67-68,90,146-154,178
+src/components/Settings/ContextAdaptationApps.tsx
+  s_7724aa1accb26b::t_c30fd298466a89 9,15,18,31,39,44-49
+src/components/Settings/DictionaryPane.tsx
+  s_7724aa1accb26b::t_8d8be3e6a6a4cf 33,364,486
+src/components/Settings/GeneralPane.tsx
+  s_7724aa1accb26b::t_2f370c0253a62b 1,6-11,17-18,25,31,46-49,57-81,99-101,181,196-206
+src/components/Settings/LlmPane.tsx
+  s_7724aa1accb26b::t_5024f4e3433461 6,46,49-51,69-74,129,148,152,165,169,173,188,192,200-208,231-254,284-294,296-298,300,303-336,338-340,363-364,379-405,456-468,487-491
+src/components/Settings/ManageAppMappingsDialog.tsx
+  s_7724aa1accb26b::t_ddb489cbba549f 50,129
+src/components/Settings/ScenesPane.tsx
+  s_7724aa1accb26b::t_d7502f000c086e 1,3,9-10,12,17,24-127,172,175-181,183-186,188-190,194-196,199-200,210-213,224-237,245-259,288,300,304,306-308,314,317-320,353,356,399-427,429,472,476-497,521-524,535-537,539-603,624-647,688-691,701,703-706,753-760,770-778,788-810
+src/components/Settings/ShortcutBindingList.tsx
+  s_7724aa1accb26b::t_cbfd69814efb35 4,68,79,98,110,117-124,356-359,442-444
+src/components/Settings/__tests__/AppStyleMappingDialog.test.tsx
+  s_7724aa1accb26b::t_c6f00d6ebcb96a 146,157-161,163,168-211
+src/components/Settings/__tests__/LlmPane.test.tsx
+  s_7724aa1accb26b::t_d088db8f402c19 15,35-36,60-64,246-249,258-265,274-276,330-374,513,523-524,625-629,633,668,677-693,701,717,746,765
+src/components/Settings/__tests__/Settings.test.tsx
+  s_7724aa1accb26b::t_8771f625e880bf 77,208,249,341,348,376-407,524-569,593,615-616,787,790-800,807-808,810-823,826-841,846-849,852,861-889,900-901,909,911,915-1012
+src/components/Settings/__tests__/ShortcutBindingList.test.tsx
+  s_7724aa1accb26b::t_56657e93bb9a23 76-78,177-197
+src/components/Settings/__tests__/TranslationTargets.test.tsx
+  s_7724aa1accb26b::t_489003c76e6abf 32-34
+src/components/Settings/index.tsx
+  s_7724aa1accb26b::t_3bdb19a4843f2d 12-13,32,34
+src/components/Settings/shared/DirtyBar.tsx
+  s_7724aa1accb26b::t_666ed7f82719d2 12,121
+src/components/Settings/shared/Toggle.tsx
+  s_7724aa1accb26b::t_08aedb9ab16a2f 23
+src/components/Settings/shared/useDirtyConfig.ts
+  s_7724aa1accb26b::t_6b53c56625518b 1-36
+src/components/Toast.tsx
+  s_7724aa1accb26b::t_39cade8a91d78c 5,33,37
+src/components/toast-service.ts
+  s_7724aa1accb26b::t_c81e0301bb633f 1-19
+src/hooks/__tests__/useTauriEvents.test.tsx
+  s_7724aa1accb26b::t_70d758f72f6791 32
+src/hooks/useTauriEvents.ts
+  s_7724aa1accb26b::t_2172713cabac43 14
+src/i18n/locales/de.json
+  s_7724aa1accb26b::t_dead7742e00fc9 104-105,131-132,186-205,343-345,366-367,462-463,594-621,634,642,791
+src/i18n/locales/en.json
+  s_7724aa1accb26b::t_30330a8663866b 104-105,131-132,186-205,341-343,364-365,462-463,594-621,634,642,791
+src/i18n/locales/es.json
+  s_7724aa1accb26b::t_3028b140606f26 104-105,131-132,186-205,343-345,366-367,462-463,594-621,634,642,791
+src/i18n/locales/fr.json
+  s_7724aa1accb26b::t_5316907658defa 104-105,131-132,186-205,343-345,366-367,462-463,594-621,634,642,791
+src/i18n/locales/it.json
+  s_7724aa1accb26b::t_5aecf4cc47122f 104-105,131-132,186-205,343-345,366-367,462-463,594-621,634,642,791
+src/i18n/locales/ja.json
+  s_7724aa1accb26b::t_b0c3107210f3d0 104-105,131-132,186-205,343-345,366-367,462-463,594-621,634,642,791
+src/i18n/locales/ko.json
+  s_7724aa1accb26b::t_ea7457ea176a4b 104-105,131-132,186-205,343-345,366-367,462-463,594-621,634,642,791
+src/i18n/locales/pt.json
+  s_7724aa1accb26b::t_f777d25bb6aaf7 104-105,131-132,186-205,343-345,366-367,462-463,594-621,634,642,791
+src/i18n/locales/ru.json
+  s_7724aa1accb26b::t_e16964f42af6f8 104-105,131-132,186-205,343-345,366-367,462-463,594-621,634,642,791
+src/i18n/locales/zh.json
+  s_7724aa1accb26b::t_f3b065c61f78e4 104-105,131-132,186-205,341-343,364-365,462-463,594-621,634,642,791
+src/lib/__tests__/api.test.ts
+  s_7724aa1accb26b::t_e12ba0c4f55121 117-126,128,146-154,164-172
+src/lib/__tests__/backup-settings.test.ts
+  s_7724aa1accb26b::t_191a816efce0e8 3-4,19,21,36-38,58-81
+src/lib/__tests__/cloud-session.test.ts
+  s_7724aa1accb26b::t_b77a5ab3511b3d 39-41
+src/lib/accessibility.ts
+  s_7724aa1accb26b::t_85c6fcfd7fb451 1-25
+src/lib/auth-client.ts
+  s_7724aa1accb26b::t_ff1c4aa501f3d0 28,31-34
+src/lib/backup-settings.ts
+  s_7724aa1accb26b::t_42cd9c9e598394 8,54,95-100,189-266
+src/lib/cloud-session.ts
+  s_7724aa1accb26b::t_53029678b5faa0 20
+src/lib/constants.ts
+  s_7724aa1accb26b::t_9b784cc678e30f 136-138,157-160,183-186
+src/lib/tauri.ts
+  s_7724aa1accb26b::t_47f116dfe58743 11-12,108-111,340-345,456-468
+src/stores/__tests__/appStore.test.ts
+  s_7724aa1accb26b::t_be8c04fc687167 56-57,59,62,199,239
+src/stores/__tests__/authStore.test.ts
+  s_7724aa1accb26b::t_bd3b8accd12caf 28,34,36,400-407
+src/stores/appStore.ts
+  s_7724aa1accb26b::t_b8258293b81658 67-68,103,124-125,159-163,208,350,360,535,564-565,731
+src/stores/authStore.ts
+  s_7724aa1accb26b::t_99b77628647c1d 20
+src/styles/globals.css
+  s_7724aa1accb26b::t_442f9040cad7f5 603-617
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "aef7540968efd26f1f7402e6a9832a2afb0d4416",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
