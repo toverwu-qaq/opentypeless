@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 
 use serde::{Deserialize, Serialize};
 use tauri_plugin_store::StoreExt;
-use uuid::{Builder, Uuid};
+use uuid::Uuid;
 
 use super::registry::AppRegistry;
 use super::types::{ContextFamily, ContextProfile, ContextSignals, ContextSource};
@@ -12,15 +12,6 @@ const MAPPING_STORE_FILE: &str = "context-mappings.json";
 const MAPPING_STORE_KEY: &str = "mapping_state";
 const MAPPING_STORE_VERSION: u32 = 1;
 const MAX_MAPPING_LABEL_CHARS: usize = 40;
-
-fn new_mapping_id() -> String {
-    let mut random_bytes = [0u8; 16];
-    getrandom::getrandom(&mut random_bytes)
-        .unwrap_or_else(|error| panic!("could not generate custom app mapping id: {error}"));
-    Builder::from_random_bytes(random_bytes)
-        .into_uuid()
-        .to_string()
-}
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(tag = "type", content = "value", rename_all = "snake_case")]
@@ -127,7 +118,7 @@ impl UserAppMappingCollection {
             mapping.id = if Uuid::parse_str(&mapping.id).is_ok() {
                 mapping.id
             } else {
-                new_mapping_id()
+                Uuid::new_v4().to_string()
             };
             mapping.label = label;
             mapping.matcher = matcher;
@@ -163,7 +154,7 @@ impl UserAppMappingCollection {
             return Err("custom_app_mapping_label_empty".to_string());
         }
         let mapping = CustomAppMapping {
-            id: new_mapping_id(),
+            id: Uuid::new_v4().to_string(),
             label,
             matcher,
             family,
@@ -701,17 +692,6 @@ mod tests {
             "My Writer App"
         );
         assert_eq!(sanitize_mapping_label(&"你".repeat(50)).chars().count(), 40);
-    }
-
-    #[test]
-    fn user_app_mapping_ids_are_unique_rfc4122_random_uuids() {
-        let first = new_mapping_id();
-        let second = new_mapping_id();
-        let parsed = Uuid::parse_str(&first).unwrap();
-
-        assert_ne!(first, second);
-        assert_eq!(parsed.get_version(), Some(uuid::Version::Random));
-        assert_eq!(parsed.get_variant(), uuid::Variant::RFC4122);
     }
 
     #[test]
