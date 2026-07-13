@@ -3,6 +3,7 @@ use std::sync::{Arc, RwLock};
 
 use serde::{Deserialize, Serialize};
 use tauri_plugin_store::StoreExt;
+use uuid::{Builder, Uuid};
 
 use super::registry::AppRegistry;
 use super::types::{ContextFamily, ContextProfile, ContextSignals, ContextSource};
@@ -16,40 +17,9 @@ fn new_mapping_id() -> String {
     let mut random_bytes = [0u8; 16];
     getrandom::getrandom(&mut random_bytes)
         .unwrap_or_else(|error| panic!("could not generate custom app mapping id: {error}"));
-    random_bytes[6] = (random_bytes[6] & 0x0f) | 0x40;
-    random_bytes[8] = (random_bytes[8] & 0x3f) | 0x80;
-
-    format!(
-        "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-        random_bytes[0],
-        random_bytes[1],
-        random_bytes[2],
-        random_bytes[3],
-        random_bytes[4],
-        random_bytes[5],
-        random_bytes[6],
-        random_bytes[7],
-        random_bytes[8],
-        random_bytes[9],
-        random_bytes[10],
-        random_bytes[11],
-        random_bytes[12],
-        random_bytes[13],
-        random_bytes[14],
-        random_bytes[15],
-    )
-}
-
-fn is_canonical_uuid(value: &str) -> bool {
-    let bytes = value.as_bytes();
-    bytes.len() == 36
-        && bytes.iter().enumerate().all(|(index, byte)| {
-            if matches!(index, 8 | 13 | 18 | 23) {
-                *byte == b'-'
-            } else {
-                byte.is_ascii_hexdigit()
-            }
-        })
+    Builder::from_random_bytes(random_bytes)
+        .into_uuid()
+        .to_string()
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -154,7 +124,7 @@ impl UserAppMappingCollection {
             if label.is_empty() {
                 continue;
             }
-            mapping.id = if is_canonical_uuid(&mapping.id) {
+            mapping.id = if Uuid::parse_str(&mapping.id).is_ok() {
                 mapping.id
             } else {
                 new_mapping_id()
@@ -737,12 +707,11 @@ mod tests {
     fn user_app_mapping_ids_are_unique_rfc4122_random_uuids() {
         let first = new_mapping_id();
         let second = new_mapping_id();
-        let bytes = first.as_bytes();
+        let parsed = Uuid::parse_str(&first).unwrap();
 
         assert_ne!(first, second);
-        assert!(is_canonical_uuid(&first));
-        assert_eq!(bytes[14], b'4');
-        assert!(matches!(bytes[19], b'8' | b'9' | b'a' | b'b'));
+        assert_eq!(parsed.get_version(), Some(uuid::Version::Random));
+        assert_eq!(parsed.get_variant(), uuid::Variant::RFC4122);
     }
 
     #[test]
