@@ -1,0 +1,23 @@
+.github/scripts/import-windows-certificate.ps1
+  s_7724aa1accb26b::t_37f7b0a8368e94 7
+docs/release-signing.md
+  s_7724aa1accb26b::t_ea4670e7c04999 35,37,41-45,70-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0bf77b7a0ac10da893152903dbe09f2a7e1d1038",
+  "prompts": {},
+  "sessions": {
+    "s_7724aa1accb26b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f45c4-aae3-7c01-b642-e464d070c436",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
