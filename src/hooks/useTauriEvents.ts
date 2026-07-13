@@ -11,7 +11,7 @@ import type {
   VoiceMode,
 } from '../stores/appStore'
 import { getHistory } from '../lib/tauri'
-import { toast } from '../components/Toast'
+import { toast } from '../components/toast-service'
 import { capsuleErrorKeyFromPayload, type PipelineErrorPayload } from '../lib/capsuleError'
 import { invalidateCloudSessionOnce } from '../lib/cloud-session'
 

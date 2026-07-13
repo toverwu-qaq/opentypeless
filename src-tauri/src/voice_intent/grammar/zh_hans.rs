@@ -12,7 +12,30 @@ pub(super) fn match_draft(view: &NormalizedUtterance<'_>) -> CommandMatch<String
             .map(CommandMatch::Matched)
             .unwrap_or(CommandMatch::MissingPayload);
     }
+    for prefix in [
+        "写一份",
+        "我想写一份",
+        "我想写一封",
+        "帮我写一封邮件",
+        "帮我写一份邮件",
+    ] {
+        if !view.starts_with_prefix(prefix, false) {
+            continue;
+        }
+        let Some(payload) = view.payload_after_prefix(prefix) else {
+            return CommandMatch::MissingPayload;
+        };
+        if looks_like_draft_artifact(&payload) {
+            return CommandMatch::Matched(payload);
+        }
+    }
     CommandMatch::NoMatch
+}
+
+fn looks_like_draft_artifact(payload: &str) -> bool {
+    ["邮件", "封信", "消息", "通知", "回复", "邀请"]
+        .iter()
+        .any(|marker| payload.contains(marker))
 }
 
 pub(super) fn matches_rewrite(view: &NormalizedUtterance<'_>) -> bool {

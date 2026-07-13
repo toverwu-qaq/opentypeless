@@ -1,13 +1,20 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, MessageCircle } from 'lucide-react'
 import { isMacPlatform, useAppStore } from '../../stores/appStore'
 import type { HotkeyMode, OutputMode, ShortcutBinding } from '../../stores/appStore'
-import { getPlatformCapabilities, getHotkeyStatus, startAskFlow } from '../../lib/tauri'
+import {
+  getPlatformCapabilities,
+  getHotkeyStatus,
+  resumeHotkey,
+  startAskFlow,
+} from '../../lib/tauri'
 import type { HotkeyStatus } from '../../lib/tauri'
 import { SegmentedControl } from './shared/SegmentedControl'
 import { Toggle } from './shared/Toggle'
 import { ShortcutBindingList } from './ShortcutBindingList'
+
+const MAC_ACCESSIBILITY_HOTKEY_ERROR = 'Accessibility permission may be denied'
 
 export function GeneralPane() {
   const config = useAppStore((s) => s.config)
@@ -15,11 +22,13 @@ export function GeneralPane() {
   const platformCapabilities = useAppStore((s) => s.platformCapabilities)
   const setPlatformCapabilities = useAppStore((s) => s.setPlatformCapabilities)
   const hotkeyRegistrationError = useAppStore((s) => s.hotkeyRegistrationError)
+  const setHotkeyRegistrationError = useAppStore((s) => s.setHotkeyRegistrationError)
   const accessibilityTrusted = useAppStore((s) => s.accessibilityTrusted)
   const { t } = useTranslation()
   const isMac = isMacPlatform()
   const [hotkeyStatus, setHotkeyStatus] = useState<HotkeyStatus | null>(null)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const accessibilityRecoveryAttemptedRef = useRef(false)
 
   useEffect(() => {
     if (platformCapabilities) return
@@ -34,7 +43,10 @@ export function GeneralPane() {
     let cancelled = false
     getHotkeyStatus()
       .then((status) => {
-        if (!cancelled) setHotkeyStatus(status)
+        if (!cancelled) {
+          setHotkeyStatus(status)
+          setHotkeyRegistrationError(status.registration_error)
+        }
       })
       .catch((err) => {
         console.error('Failed to load hotkey status:', err)
@@ -42,7 +54,31 @@ export function GeneralPane() {
     return () => {
       cancelled = true
     }
-  }, [config.hotkeys, hotkeyRegistrationError])
+  }, [config.hotkeys, hotkeyRegistrationError, setHotkeyRegistrationError])
+
+  useEffect(() => {
+    if (
+      !isMac ||
+      !accessibilityTrusted ||
+      !hotkeyRegistrationError?.includes(MAC_ACCESSIBILITY_HOTKEY_ERROR)
+    ) {
+      if (!hotkeyRegistrationError) {
+        accessibilityRecoveryAttemptedRef.current = false
+      }
+      return
+    }
+    if (accessibilityRecoveryAttemptedRef.current) return
+    accessibilityRecoveryAttemptedRef.current = true
+
+    resumeHotkey()
+      .then(() => {
+        setHotkeyRegistrationError(null)
+      })
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : String(err)
+        setHotkeyRegistrationError(message)
+      })
+  }, [accessibilityTrusted, hotkeyRegistrationError, isMac, setHotkeyRegistrationError])
 
   const handleOpenAsk = useCallback(() => {
     startAskFlow().catch((err) => {
@@ -60,21 +96,9 @@ export function GeneralPane() {
     !accessibilityTrusted &&
     hotkeyRegistrationError?.includes('Accessibility permission may be denied'),
   )
-  const dictationSpecialOptions = isMac
-    ? [{ value: 'Fn', label: 'Fn' }]
-    : platformCapabilities?.os === 'windows'
-      ? [{ value: 'RightAlt', label: 'Right Alt' }]
-      : []
-  const askSpecialOptions = isMac
-    ? [{ value: 'Fn+Space', label: 'Fn + Space' }]
-    : platformCapabilities?.os === 'windows'
-      ? [{ value: 'RightAlt+Space', label: 'Right Alt + Space' }]
-      : []
-  const translateSpecialOptions = isMac
-    ? [{ value: 'Fn+LeftShift', label: 'Fn + Left Shift' }]
-    : platformCapabilities?.os === 'windows'
-      ? [{ value: 'RightAlt+LeftShift', label: 'Right Alt + Left Shift' }]
-      : []
+  const dictationSpecialOptions = isMac ? [{ value: 'Fn', label: 'Fn' }] : []
+  const askSpecialOptions = isMac ? [{ value: 'Fn+Space', label: 'Fn + Space' }] : []
+  const translateSpecialOptions = isMac ? [{ value: 'Fn+LeftShift', label: 'Fn + Left Shift' }] : []
   const dictationBindings = config.hotkeys.dictationBindings?.length
     ? config.hotkeys.dictationBindings
     : [config.hotkeys.dictation]
@@ -154,7 +178,7 @@ export function GeneralPane() {
             onChange={(bindings) => updateCoreBindings('translate', bindings)}
           />
         </div>
-        {!platformCapabilities?.globalHotkeyReliable && (
+        {platformCapabilities && !platformCapabilities.globalHotkeyReliable && (
           <p className="mt-2 rounded-[8px] border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[12px] leading-relaxed text-text-secondary">
             {t('settings.waylandHotkeyLimited')}
           </p>
@@ -169,16 +193,17 @@ export function GeneralPane() {
             {hotkeyStatusMessage}
           </p>
         )}
-        <div className="mt-3">
-          <SegmentedControl
-            options={[
-              { value: 'hold', label: t('settings.holdToTalk') },
-              { value: 'toggle', label: t('settings.toggleOnOff') },
-            ]}
-            value={config.hotkey_mode}
-            onChange={(v) => updateConfig({ hotkey_mode: v as HotkeyMode })}
-          />
-        </div>
+      </Section>
+
+      <Section title={t('settings.dictationMode')}>
+        <SegmentedControl
+          options={[
+            { value: 'hold', label: t('settings.holdToTalk') },
+            { value: 'toggle', label: t('settings.toggleOnOff') },
+          ]}
+          value={config.hotkey_mode}
+          onChange={(v) => updateConfig({ hotkey_mode: v as HotkeyMode })}
+        />
       </Section>
 
       <Section title={t('settings.outputMode')}>

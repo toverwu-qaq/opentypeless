@@ -1,6 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../../i18n'
+import * as api from '../../../lib/api'
+import * as tauri from '../../../lib/tauri'
+import { useAppStore } from '../../../stores/appStore'
 import { useAuthStore } from '../../../stores/authStore'
 import { AccountPage } from '../index'
 
@@ -11,6 +14,7 @@ vi.mock('../../../lib/api', () => ({
   downloadBackup: vi.fn(),
   createPortalSession: vi.fn(),
 }))
+vi.mock('../../../lib/tauri')
 
 const requestPasswordReset = vi.fn().mockResolvedValue(undefined)
 const changePassword = vi.fn().mockResolvedValue(undefined)
@@ -117,6 +121,144 @@ describe('AccountPage password controls', () => {
     expect(within(dialog).queryByLabelText('Current password')).not.toBeInTheDocument()
     expect(within(dialog).getByLabelText('New password')).toHaveFocus()
     expect(screen.queryByRole('button', { name: 'Change password' })).not.toBeInTheDocument()
+  })
+
+  it('persists allow-listed cloud settings and keeps device credentials local', async () => {
+    signedIn('present')
+    useAuthStore.setState({
+      plan: 'pro',
+      source: 'creem',
+      cloudWordsLimit: 1000,
+      licenseStatus: 'active',
+    })
+    const current = {
+      ...useAppStore.getState().config,
+      llm_api_key: 'local-secret',
+      system_scene_overrides: [],
+    }
+    const restored = {
+      ...current,
+      polish_enabled: false,
+      system_scene_overrides: [{ id: 'system_email', prompt_template: 'Use concise paragraphs.' }],
+    }
+    useAppStore.getState().setConfig(current)
+    useAppStore.getState().setSavedConfig(current)
+    vi.mocked(api.downloadBackup).mockResolvedValue({
+      settings: {
+        polish_enabled: false,
+        system_scene_overrides: restored.system_scene_overrides,
+        llm_api_key: 'cloud-secret',
+      },
+    })
+    vi.mocked(tauri.updateConfig).mockResolvedValue(undefined)
+    vi.mocked(tauri.getConfig).mockResolvedValue(restored)
+
+    render(<AccountPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Restore' }))
+
+    await waitFor(() => {
+      expect(tauri.updateConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          polish_enabled: false,
+          llm_api_key: 'local-secret',
+          system_scene_overrides: restored.system_scene_overrides,
+        }),
+      )
+      expect(useAppStore.getState().config).toEqual(restored)
+      expect(useAppStore.getState().savedConfig).toEqual(restored)
+    })
+  })
+
+  it('backs up dictionary entries and correction rules in one compatible payload', async () => {
+    signedIn('present')
+    useAuthStore.setState({
+      plan: 'pro',
+      source: 'creem',
+      cloudWordsLimit: 1000,
+      licenseStatus: 'active',
+    })
+    const dictionary = [{ id: 7, word: 'OpenTypeless', pronunciation: null }]
+    const correctionRules = [
+      {
+        id: 9,
+        pattern: 'open type less',
+        replacement: 'OpenTypeless',
+        enabled: true,
+      },
+    ]
+    useAppStore.setState({ dictionary, correctionRules })
+    vi.mocked(api.uploadBackup).mockResolvedValue({ success: true })
+
+    render(<AccountPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Backup' }))
+
+    await waitFor(() => {
+      expect(api.uploadBackup).toHaveBeenCalledWith(
+        expect.objectContaining({
+          dictionary: {
+            entries: dictionary,
+            correction_rules: correctionRules,
+          },
+        }),
+      )
+    })
+  })
+
+  it('persists restored cloud data before replacing the desktop stores', async () => {
+    signedIn('present')
+    useAuthStore.setState({
+      plan: 'pro',
+      source: 'creem',
+      cloudWordsLimit: 1000,
+      licenseStatus: 'active',
+    })
+    const cloudHistory = [{ id: 1, raw_text: 'cloud raw' }]
+    const cloudDictionary = {
+      entries: [{ id: 2, word: 'TalkMore', pronunciation: null }],
+      correction_rules: [{ id: 3, pattern: 'talk more', replacement: 'TalkMore', enabled: true }],
+    }
+    const restoredHistory = [{ id: 11, raw_text: 'persisted raw' }]
+    const restoredDictionary = [{ id: 12, word: 'TalkMore', pronunciation: null }]
+    const restoredCorrections = [
+      { id: 13, pattern: 'talk more', replacement: 'TalkMore', enabled: true },
+    ]
+    vi.mocked(api.downloadBackup).mockResolvedValue({
+      history: cloudHistory,
+      dictionary: cloudDictionary,
+    })
+    vi.mocked(tauri.restoreBackupData).mockResolvedValue({
+      history: restoredHistory as never,
+      dictionary: restoredDictionary,
+      correctionRules: restoredCorrections,
+    })
+
+    render(<AccountPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Restore' }))
+
+    await waitFor(() => {
+      expect(tauri.restoreBackupData).toHaveBeenCalledWith(cloudHistory, cloudDictionary)
+      expect(useAppStore.getState().history).toEqual(restoredHistory)
+      expect(useAppStore.getState().dictionary).toEqual(restoredDictionary)
+      expect(useAppStore.getState().correctionRules).toEqual(restoredCorrections)
+    })
+  })
+
+  it('explains why passwords longer than 128 characters cannot be submitted', () => {
+    signedIn('none')
+    render(<AccountPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Set password' }))
+    const dialog = screen.getByRole('dialog', { name: 'Set password' })
+    const tooLong = 'a'.repeat(129)
+    fireEvent.change(within(dialog).getByLabelText('New password'), {
+      target: { value: tooLong },
+    })
+    fireEvent.change(within(dialog).getByLabelText('Confirm password'), {
+      target: { value: tooLong },
+    })
+
+    expect(within(dialog).getByText('Password must be 8 to 128 characters')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Set password' })).toBeDisabled()
   })
 
   it('keeps Tab and Shift+Tab focus inside the password dialog', () => {

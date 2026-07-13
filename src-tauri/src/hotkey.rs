@@ -476,16 +476,12 @@ pub(crate) fn hotkey_registration_plan_from_config_for_platform(
         config.dictation_bindings.as_slice()
     };
     let ask_bindings = if config.ask_bindings.is_empty() {
-        config.ask.as_ref().map(std::slice::from_ref).unwrap_or(&[])
+        config.ask.as_slice()
     } else {
         config.ask_bindings.as_slice()
     };
     let translate_bindings = if config.translate_bindings.is_empty() {
-        config
-            .translate
-            .as_ref()
-            .map(std::slice::from_ref)
-            .unwrap_or(&[])
+        config.translate.as_slice()
     } else {
         config.translate_bindings.as_slice()
     };

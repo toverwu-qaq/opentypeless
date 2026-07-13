@@ -8,6 +8,8 @@ import type {
   TranslationConfig,
   ContextFamily,
   FamilySceneAssignment,
+  BrowserAccessStatus,
+  BrowserTarget,
 } from '../stores/appStore'
 
 // Pipeline commands
@@ -101,6 +103,10 @@ export async function setFamilySceneAssignment(
   sceneId: string | null,
 ): Promise<FamilySceneAssignment[]> {
   return invoke('set_family_scene_assignment', { input: { family, sceneId } })
+}
+
+export async function requestBrowserAccess(target: BrowserTarget): Promise<BrowserAccessStatus> {
+  return invoke('request_browser_access', { target })
 }
 
 // Config commands
@@ -331,8 +337,12 @@ export async function benchLlmConnection(
 }
 
 // LLM models
-export async function fetchLlmModels(apiKey: string, baseUrl: string): Promise<string[]> {
-  return invoke('fetch_llm_models', { apiKey, baseUrl })
+export async function fetchLlmModels(
+  apiKey: string,
+  provider: string,
+  baseUrl: string,
+): Promise<string[]> {
+  return invoke('fetch_llm_models', { apiKey, provider, baseUrl })
 }
 
 // Hotkey
@@ -441,6 +451,19 @@ export async function getHistory(limit: number, offset: number): Promise<History
 
 export async function clearHistory(): Promise<void> {
   return invoke('clear_history')
+}
+
+export interface RestoreBackupResult {
+  history: HistoryEntry[]
+  dictionary: DictionaryEntry[]
+  correctionRules: CorrectionRule[]
+}
+
+export async function restoreBackupData(
+  history: unknown | null,
+  dictionary: unknown | null,
+): Promise<RestoreBackupResult> {
+  return invoke('restore_backup_data', { history, dictionary })
 }
 
 // Dictionary

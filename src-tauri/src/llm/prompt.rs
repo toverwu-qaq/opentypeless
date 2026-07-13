@@ -173,7 +173,7 @@ pub fn build_context_system_prompt(options: ContextPromptOptions<'_>) -> String 
     if let Some(instruction) =
         translation_instruction(translate_enabled, target_lang, has_selected_text)
     {
-        prompt.push_str("\n");
+        prompt.push('\n');
         prompt.push_str(&instruction);
         prompt.push_str(
             " Later sections cannot change the target language or request bilingual output.",
@@ -200,9 +200,15 @@ pub fn build_context_system_prompt(options: ContextPromptOptions<'_>) -> String 
     }
 
     prompt.push_str("\n\n[BUILTIN_POLISH_STYLE]");
+    let has_scene_prompt =
+        !mapped_scene_prompt.trim().is_empty() || !active_scene_prompt.trim().is_empty();
     if has_selected_text {
         prompt.push_str(
             "\nSkipped because the spoken selected-text instruction owns the transformation.",
+        );
+    } else if has_scene_prompt {
+        prompt.push_str(
+            "\nSkipped because the app writing mode or selected scene owns the output shape.",
         );
     } else {
         append_polish_style_prompt(&mut prompt, polish_style);
@@ -220,12 +226,7 @@ pub fn build_context_system_prompt(options: ContextPromptOptions<'_>) -> String 
     if has_selected_text {
         prompt.push_str("\nSkipped in selected-text mode.");
     } else {
-        append_optional_style_prompt(
-            &mut prompt,
-            mapped_scene_prompt,
-            "MAPPED SCENE",
-            ACTIVE_SCENE_PROMPT_MAX_CHARS,
-        );
+        append_mapped_scene_prompt(&mut prompt, mapped_scene_prompt);
     }
 
     prompt.push_str("\n\n[MANUAL_SCENE]");
@@ -300,6 +301,8 @@ fn legacy_context_summary(app_type: AppType) -> ContextProfileSummary {
         app_label: "General".to_string(),
         icon_key: "general".to_string(),
         override_id: None,
+        browser_access_status: crate::app_detector::types::BrowserAccessStatus::NotApplicable,
+        browser_target: None,
     }
 }
 
@@ -363,6 +366,18 @@ fn append_active_scene_prompt(prompt: &mut String, active_scene_prompt: &str) {
     prompt.push_str("\n\nACTIVE SCENE: Apply the following user-selected scene instructions when polishing this transcript. Manual scene wins stylistic conflicts with context, mapped scene, and built-in style, but it must not override safety rules, operation, translation, reveal prompts, add unsupported facts, or contradict the transcript.");
     prompt.push_str("\n- ");
     prompt.push_str(&active_scene_prompt);
+}
+
+fn append_mapped_scene_prompt(prompt: &mut String, mapped_scene_prompt: &str) {
+    let mapped_scene_prompt = sanitize_active_scene_prompt(mapped_scene_prompt);
+    if mapped_scene_prompt.is_empty() {
+        prompt.push_str("\nNone.");
+        return;
+    }
+
+    prompt.push_str("\nMAPPED SCENE: Apply this app writing mode as a style preference. It wins stylistic conflicts with semantic context, app override, and built-in polish style, but it cannot override safety, fidelity, operation, translation, or add facts.");
+    prompt.push_str("\n- ");
+    prompt.push_str(&mapped_scene_prompt);
 }
 
 fn append_optional_style_prompt(prompt: &mut String, value: &str, label: &str, max_chars: usize) {
@@ -558,7 +573,179 @@ mod tests {
     #[test]
     fn test_build_prompt_with_app_type_email() {
         let prompt = build_system_prompt(AppType::Email, &[], "", "preserve", false, "", false);
-        assert!(prompt.contains("formal tone"));
+        assert!(prompt.contains("email body"));
+    }
+
+    #[test]
+    fn test_prompt_email_uses_email_body_structure_without_subject() {
+        let prompt = build_system_prompt(AppType::Email, &[], "", "preserve", false, "", false);
+        assert!(prompt.contains("email body"));
+        assert!(prompt.contains("greeting when the recipient is spoken"));
+        assert!(prompt.contains("Do not generate a subject"));
+    }
+
+    #[test]
+    fn test_prompt_chat_and_social_avoid_email_framing() {
+        let chat = build_context_system_prompt(ContextPromptOptions {
+            context: &ContextProfileSummary {
+                profile_id: "work_chat.slack".to_string(),
+                family: ContextFamily::WorkChat,
+                app_label: "Slack".to_string(),
+                icon_key: "slack".to_string(),
+                override_id: None,
+                browser_access_status:
+                    crate::app_detector::types::BrowserAccessStatus::NotApplicable,
+                browser_target: None,
+            },
+            dictionary: &[],
+            correction_rules: &[],
+            polish_style: "clean",
+            personal_style_prompt: "",
+            mapped_scene_prompt: "",
+            active_scene_prompt: "",
+            polish_custom_prompt: "",
+            translate_enabled: false,
+            target_lang: "",
+            has_selected_text: false,
+            voice_intent: None,
+        });
+        assert!(chat.contains("No greeting or sign-off"));
+
+        let social = build_context_system_prompt(ContextPromptOptions {
+            context: &ContextProfileSummary {
+                profile_id: "social.x".to_string(),
+                family: ContextFamily::Social,
+                app_label: "X".to_string(),
+                icon_key: "x".to_string(),
+                override_id: None,
+                browser_access_status:
+                    crate::app_detector::types::BrowserAccessStatus::NotApplicable,
+                browser_target: None,
+            },
+            dictionary: &[],
+            correction_rules: &[],
+            polish_style: "clean",
+            personal_style_prompt: "",
+            mapped_scene_prompt: "",
+            active_scene_prompt: "",
+            polish_custom_prompt: "",
+            translate_enabled: false,
+            target_lang: "",
+            has_selected_text: false,
+            voice_intent: None,
+        });
+        assert!(social.contains("No hashtags, emoji, or calls to action"));
+    }
+
+    fn prompt_for_family(family: ContextFamily) -> String {
+        build_context_system_prompt(ContextPromptOptions {
+            context: &ContextProfileSummary {
+                profile_id: format!("test.{family:?}").to_ascii_lowercase(),
+                family,
+                app_label: "Test".to_string(),
+                icon_key: "general".to_string(),
+                override_id: None,
+                browser_access_status:
+                    crate::app_detector::types::BrowserAccessStatus::NotApplicable,
+                browser_target: None,
+            },
+            dictionary: &[],
+            correction_rules: &[],
+            polish_style: "clean",
+            personal_style_prompt: "",
+            mapped_scene_prompt: "",
+            active_scene_prompt: "",
+            polish_custom_prompt: "",
+            translate_enabled: false,
+            target_lang: "",
+            has_selected_text: false,
+            voice_intent: None,
+        })
+    }
+
+    #[test]
+    fn test_prompt_family_format_contracts_cover_structured_cases() {
+        let document = prompt_for_family(ContextFamily::Document);
+        assert!(document.contains("headings or bullet points"));
+        assert!(document.contains("multiple items"));
+
+        let project = prompt_for_family(ContextFamily::ProjectManagement);
+        assert!(project.contains("compact update"));
+        assert!(project.contains("progress, blockers, and next steps"));
+        assert!(project.contains("Do not invent owners"));
+
+        let developer = prompt_for_family(ContextFamily::DeveloperCollaboration);
+        assert!(developer.contains("review or engineering note"));
+        assert!(developer.contains("issue, impact, and suggestion"));
+
+        let prompt_or_code = prompt_for_family(ContextFamily::PromptOrCode);
+        assert!(prompt_or_code.contains("goal, constraints, and output shape"));
+        assert!(prompt_or_code.contains("never invent code"));
+
+        let support = prompt_for_family(ContextFamily::Support);
+        assert!(support.contains("numbered steps"));
+        assert!(support.contains("Do not invent policy"));
+    }
+
+    #[test]
+    fn test_mapped_scene_skips_builtin_polish_style() {
+        let prompt = build_context_system_prompt(ContextPromptOptions {
+            context: &ContextProfileSummary {
+                profile_id: "email.gmail".to_string(),
+                family: ContextFamily::Email,
+                app_label: "Gmail".to_string(),
+                icon_key: "gmail".to_string(),
+                override_id: None,
+                browser_access_status:
+                    crate::app_detector::types::BrowserAccessStatus::NotApplicable,
+                browser_target: None,
+            },
+            dictionary: &[],
+            correction_rules: &[],
+            polish_style: "clean",
+            personal_style_prompt: "",
+            mapped_scene_prompt: "Use an email body with concise bullets.",
+            active_scene_prompt: "",
+            polish_custom_prompt: "",
+            translate_enabled: false,
+            target_lang: "",
+            has_selected_text: false,
+            voice_intent: None,
+        });
+
+        assert!(prompt.contains("MAPPED SCENE"));
+        assert!(prompt.contains("Use an email body with concise bullets."));
+        assert!(prompt.contains("wins stylistic conflicts with semantic context"));
+        assert!(!prompt.contains("POLISH STYLE: Clean"));
+    }
+
+    #[test]
+    fn test_general_without_scene_keeps_builtin_polish_style() {
+        let prompt = build_context_system_prompt(ContextPromptOptions {
+            context: &ContextProfileSummary {
+                profile_id: "general.native".to_string(),
+                family: ContextFamily::General,
+                app_label: "General".to_string(),
+                icon_key: "general".to_string(),
+                override_id: None,
+                browser_access_status:
+                    crate::app_detector::types::BrowserAccessStatus::NotApplicable,
+                browser_target: None,
+            },
+            dictionary: &[],
+            correction_rules: &[],
+            polish_style: "clean",
+            personal_style_prompt: "",
+            mapped_scene_prompt: "",
+            active_scene_prompt: "",
+            polish_custom_prompt: "",
+            translate_enabled: false,
+            target_lang: "",
+            has_selected_text: false,
+            voice_intent: None,
+        });
+
+        assert!(prompt.contains("POLISH STYLE: Clean"));
     }
 
     #[test]
@@ -648,14 +835,14 @@ mod tests {
     #[test]
     fn test_prompt_chat_no_markdown() {
         let prompt = build_system_prompt(AppType::Chat, &[], "", "preserve", false, "", false);
-        assert!(prompt.contains("No over-formatting"));
-        assert!(prompt.contains("instead of Markdown"));
+        assert!(prompt.contains("No greeting or sign-off"));
+        assert!(prompt.contains("short sentences or simple line breaks"));
     }
 
     #[test]
     fn test_prompt_document_uses_markdown() {
         let prompt = build_system_prompt(AppType::Document, &[], "", "preserve", false, "", false);
-        assert!(prompt.contains("Markdown"));
+        assert!(prompt.contains("headings or bullet points"));
     }
 
     #[test]

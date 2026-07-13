@@ -363,6 +363,8 @@ mod tests {
             app_label: "Gmail private label".to_string(),
             icon_key: "gmail".to_string(),
             override_id: Some("gmail".to_string()),
+            browser_access_status: crate::app_detector::types::BrowserAccessStatus::NotApplicable,
+            browser_target: None,
         });
 
         assert_eq!(metadata["profileId"], "email.gmail");

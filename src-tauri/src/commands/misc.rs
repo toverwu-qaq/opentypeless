@@ -1,3 +1,5 @@
+use crate::app_detector::types::{BrowserAccessStatus, BrowserTarget};
+use crate::app_detector::ContextDetectorHandle;
 use crate::hotkey::{HotkeySupervisor, HotkeySupervisorSnapshot, HotkeySupervisorState};
 use crate::native_hotkey::{NativeHotkeyBinding, NativeHotkeyRuntime};
 use crate::pipeline;
@@ -11,6 +13,16 @@ use serde::Serialize;
 use std::sync::Arc;
 use tauri::Manager;
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
+
+#[tauri::command]
+pub fn request_browser_access(
+    detector: tauri::State<'_, ContextDetectorHandle>,
+    target: BrowserTarget,
+) -> BrowserAccessStatus {
+    let status = crate::app_detector::platform::request_browser_access(target);
+    detector.notify_focus_changed();
+    status
+}
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -273,15 +285,19 @@ fn hotkey_capability_for(caps: &platform::PlatformCapabilities) -> HotkeyCapabil
     }
 }
 
+struct HotkeyRoleStatusContext<'a> {
+    validation_error: Option<&'a crate::hotkey::HotkeyPairError>,
+    registration_error: Option<&'a str>,
+    supervisor: Option<&'a HotkeySupervisorSnapshot>,
+    capability: &'a HotkeyCapability,
+}
+
 fn hotkey_role_status(
     role: &str,
     index: usize,
     binding: Option<&storage::ShortcutBinding>,
     conflict_with: Option<HotkeyConflictRef>,
-    validation_error: Option<&crate::hotkey::HotkeyPairError>,
-    registration_error: Option<&str>,
-    supervisor: Option<&HotkeySupervisorSnapshot>,
-    capability: &HotkeyCapability,
+    context: &HotkeyRoleStatusContext<'_>,
 ) -> HotkeyRoleStatus {
     let Some(binding) = binding else {
         return HotkeyRoleStatus {
@@ -305,7 +321,7 @@ fn hotkey_role_status(
     let display = binding
         .to_hotkey_string()
         .unwrap_or_else(|| binding.primary.clone());
-    let valid = crate::hotkey::binding_is_valid_for_platform(binding, &capability.platform)
+    let valid = crate::hotkey::binding_is_valid_for_platform(binding, &context.capability.platform)
         && conflict_with.is_none();
     let status = |adapter: &str,
                   state: &str,
@@ -323,7 +339,7 @@ fn hotkey_role_status(
         last_error,
     };
 
-    if let Some(error) = validation_error {
+    if let Some(error) = context.validation_error {
         return status(
             adapter,
             "failed",
@@ -351,7 +367,7 @@ fn hotkey_role_status(
         );
     }
 
-    if let Some(snapshot) = supervisor {
+    if let Some(snapshot) = context.supervisor {
         if snapshot.state == HotkeySupervisorState::Starting {
             return status(
                 adapter,
@@ -369,7 +385,7 @@ fn hotkey_role_status(
         }
     }
 
-    if let Some(error) = registration_error {
+    if let Some(error) = context.registration_error {
         return status(
             adapter,
             "failed",
@@ -381,7 +397,12 @@ fn hotkey_role_status(
         );
     }
 
-    status(adapter, "installed", capability.status_hint.clone(), None)
+    status(
+        adapter,
+        "installed",
+        context.capability.status_hint.clone(),
+        None,
+    )
 }
 
 #[cfg(test)]
@@ -418,6 +439,12 @@ fn hotkey_status_for_with_capability_and_supervisor(
     let effective_registration_error = registration_error.or(supervisor_error);
     let registration_error_ref = effective_registration_error.as_deref();
     let supervisor_ref = supervisor.as_ref();
+    let role_context = HotkeyRoleStatusContext {
+        validation_error,
+        registration_error: registration_error_ref,
+        supervisor: supervisor_ref,
+        capability: &capability,
+    };
     let mut role_bindings: Vec<(&str, usize, Option<&storage::ShortcutBinding>)> = Vec::new();
     role_bindings.extend(
         hotkeys
@@ -504,16 +531,7 @@ fn hotkey_status_for_with_capability_and_supervisor(
                     },
                 )
             });
-            hotkey_role_status(
-                role,
-                *index,
-                *binding,
-                conflict_with,
-                validation_error,
-                registration_error_ref,
-                supervisor_ref,
-                &capability,
-            )
+            hotkey_role_status(role, *index, *binding, conflict_with, &role_context)
         })
         .collect();
 
@@ -1222,8 +1240,10 @@ mod tests {
 
     #[test]
     fn hotkey_status_reports_indexed_core_binding_entries() {
-        let mut config = storage::AppConfig::default();
-        config.hotkeys = storage::HotkeyConfig::from_legacy("Ctrl+/", "Ctrl+.", "hold");
+        let mut config = storage::AppConfig {
+            hotkeys: storage::HotkeyConfig::from_legacy("Ctrl+/", "Ctrl+.", "hold"),
+            ..Default::default()
+        };
         config
             .hotkeys
             .dictation_bindings

@@ -25,18 +25,15 @@ vi.mock('../../lib/api', () => ({
   getSubscriptionStatus: vi.fn(),
 }))
 
-vi.mock('../../components/Toast', () => ({
+vi.mock('../../components/toast-service', () => ({
   toast: vi.fn(),
 }))
 
 import { invoke } from '@tauri-apps/api/core'
 import { authClient } from '../../lib/auth-client'
-import {
-  requestOpenTypelessPasswordReset,
-  setOpenTypelessPassword,
-} from '../../lib/auth-client'
+import { requestOpenTypelessPasswordReset, setOpenTypelessPassword } from '../../lib/auth-client'
 import { getSubscriptionStatus } from '../../lib/api'
-import { toast } from '../../components/Toast'
+import { toast } from '../../components/toast-service'
 
 function getState() {
   return useAuthStore.getState()
@@ -400,11 +397,14 @@ describe('authStore', () => {
 
       await getState().changePassword('old-password', 'new-password')
 
-      expect(authClient.changePassword).toHaveBeenCalledWith({
-        currentPassword: 'old-password',
-        newPassword: 'new-password',
-        revokeOtherSessions: true,
-      }, expect.objectContaining({ onSuccess: expect.any(Function) }))
+      expect(authClient.changePassword).toHaveBeenCalledWith(
+        {
+          currentPassword: 'old-password',
+          newPassword: 'new-password',
+          revokeOtherSessions: true,
+        },
+        expect.objectContaining({ onSuccess: expect.any(Function) }),
+      )
       expect(localStorage.getItem('session_token')).toBe('rotated-token')
       expect(invoke).toHaveBeenCalledWith('set_session_token', { token: 'rotated-token' })
       expect(vi.mocked(invoke).mock.invocationCallOrder[0]).toBeLessThan(

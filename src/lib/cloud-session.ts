@@ -17,9 +17,7 @@ export async function persistSessionToken(token: string | null): Promise<void> {
   }
 }
 
-export function registerCloudSessionInvalidation(
-  handler: () => Promise<void>,
-): () => void {
+export function registerCloudSessionInvalidation(handler: () => Promise<void>): () => void {
   invalidationHandler = handler
   return () => {
     if (invalidationHandler === handler) invalidationHandler = null

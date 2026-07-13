@@ -101,7 +101,8 @@
       "apiKeyPlaceholder": "Entrez votre clé API",
       "testButton": "Tester la connexion",
       "connectionOk": "Connexion réussie",
-      "connectionFail": "Échec de la connexion"
+      "connectionFail": "Échec de la connexion",
+      "customWhisperConfigured": "Custom Whisper"
     },
     "llm": {
       "serviceLabel": "Service d'amélioration IA",
@@ -127,6 +128,8 @@
       "speechRecognitionSub": "Configurez votre service STT",
       "aiPolish": "Amélioration IA",
       "aiPolishSub": "Configurez votre service LLM",
+      "permissions": "Autorisations",
+      "permissionsSub": "Autorisez seulement ce que votre configuration utilise",
       "howItWorks": "Comment ça marche",
       "howItWorksSub": "Essayez un rapide test d'enregistrement",
       "setupComplete": "Configuration terminée",
@@ -180,7 +183,26 @@
       "accessibilityRequired": "L'autorisation d'accessibilité est requise pour la sortie texte",
       "grantPermission": "Accorder l'autorisation",
       "grantLater": "Accorder plus tard",
-      "accessibilityGranted": "Autorisation d'accessibilité accordée"
+      "accessibilityGranted": "Autorisation d'accessibilité accordée",
+      "appWritingModes": "Modes de redaction par app",
+      "appWritingModesSub": "Modifiez dans Scenes les modes par defaut pour e-mail, chat, documents et autres formats."
+    },
+    "permissions": {
+      "subtitle": "OpenTypeless demande l’accès seulement quand une fonction en a besoin.",
+      "microphone": "Microphone",
+      "microphoneDesc": "Capturer votre voix.",
+      "textOutput": "Sortie texte",
+      "textOutputDesc": "Écrire dans l’app utilisée.",
+      "browserApps": "Apps navigateur",
+      "browserAppsDesc": "Utiliser les modes Gmail, Docs et Slack Web.",
+      "appleSpeech": "Apple Speech",
+      "appleSpeechDesc": "Utiliser la transcription locale macOS.",
+      "fix": "Corriger",
+      "status": {
+        "ready": "Prêt",
+        "needed": "Requis",
+        "later": "Plus tard"
+      }
     },
     "mode": {
       "cloud": "Cloud",
@@ -318,9 +340,9 @@
     "volcengineResourceSeedAsr": "SeedASR 2.0",
     "volcengineResourceBigAsr": "BigASR 1.0",
     "customSttConnectionFailed": "Local STT server is not reachable. Check that it is running and the port is correct.",
-    "llmSignInHint": "Connectez-vous pour utiliser l’IA cloud.",
-    "llmUpgradeHint": "Pro requis.",
-    "llmProActive": "Pro actif.",
+    "llmSignInHint": "Connectez-vous et abonnez-vous a Pro pour utiliser la reecriture IA dans le cloud. Aucune cle API requise.",
+    "llmUpgradeHint": "Passez a Pro pour la reecriture IA dans le cloud et un quota mensuel. Aucune cle API requise.",
+    "llmProActive": "Pro est actif - la reecriture IA dans le cloud est prete. Aucune cle API requise.",
     "apiKey": "Clé API",
     "enterApiKey": "Entrez la clé API...",
     "test": "Tester",
@@ -341,6 +363,8 @@
     "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
     "contextAdaptationApps": "Applications adaptées au contexte",
     "lastDictationContext": "Last dictation context",
+    "browserAccessHint": "Autorisez l’accès au navigateur pour utiliser Gmail, Docs et Slack Web.",
+    "allowBrowserAccess": "Autoriser",
     "generalContext": "General",
     "polishStyle": "Style de réécriture",
     "polishStyleMinimal": "Minimal",
@@ -426,12 +450,8 @@
     "mappingFamily": "Context family",
     "mappingScene": "Writing scene",
     "mappingNoScene": "Automatic",
-    "mappingScope": "Apply to",
-    "mappingScopeApp": "This app",
-    "mappingScopeFamily": "All apps in this context family",
     "mappingSave": "Save",
     "mappingCancel": "Cancel",
-    "mappingFamilyRequiresScene": "Choose a writing scene",
     "manageAppMappingsTitle": "Manage app mappings",
     "mappingEnabled": "Enabled",
     "mappingEdit": "Edit",
@@ -439,7 +459,8 @@
     "mappingReset": "Reset to automatic",
     "mappingResetConfirm": "Delete all device-only app mappings?",
     "mappingResetConfirmAction": "Reset mappings",
-    "mappingNoMappings": "No custom app mappings"
+    "mappingNoMappings": "No custom app mappings",
+    "dictationMode": "Mode de dictee"
   },
   "contextFamilies": {
     "email": "Email",
@@ -521,11 +542,6 @@
     "refresh": "Refresh",
     "noCloudPacks": "No cloud scene packs available yet. You can still create local custom scenes above.",
     "failedToSave": "Failed to save scene.",
-    "assignAppTypes": "Attribuer des types d’app",
-    "assignedExactApps": "Règles d’app spécifiques",
-    "noExactApps": "Aucune règle d’app spécifique",
-    "assignmentSaveFailed": "Impossible d’enregistrer les attributions d’apps.",
-    "exactAppsCount": "{{count}} apps",
     "export": "Export",
     "import": "Import",
     "importedScenes": "Imported {{count}} scenes",
@@ -575,7 +591,34 @@
         "name": "Product Spec Notes",
         "description": "Shape dictation into goals, requirements, and open questions."
       }
-    }
+    },
+    "appWritingModes": "Modes de redaction par app",
+    "appWritingModesDesc": "Chaque type d app a un mode de redaction par defaut. Vous pouvez le remplacer par une scene personnalisee.",
+    "appWritingScene": "Scene de redaction",
+    "appModeDescriptions": {
+      "email": "Apps e-mail comme Gmail, Outlook et Mail.",
+      "work_chat": "Chats de travail comme Slack, Lark, Teams et DingTalk.",
+      "personal_chat": "Chats personnels comme WeChat, Messages et WhatsApp.",
+      "document": "Documents et notes comme Google Docs, Notion, Word et Yuque.",
+      "project_management": "Outils projet comme Linear, Jira et Confluence.",
+      "developer_collaboration": "Collaboration developpeur comme GitHub et GitLab.",
+      "prompt_or_code": "Outils de prompt et de code comme Cursor, VS Code et JetBrains.",
+      "support": "Outils de support comme Zendesk et Intercom.",
+      "social": "Apps sociales comme X et LinkedIn."
+    },
+    "systemModes": {
+      "email": "Format e-mail",
+      "work_chat": "Chat de travail",
+      "personal_chat": "Chat personnel",
+      "document": "Notes de document",
+      "project_management": "Mise a jour projet",
+      "developer_collaboration": "Note d ingenierie",
+      "prompt_or_code": "Demande prompt / code",
+      "support": "Reponse support",
+      "social": "Publication sociale"
+    },
+    "systemSceneDescription": "Mode de redaction par defaut. Vous pouvez le modifier ou le reinitialiser.",
+    "resetSystemScene": "Reinitialiser par defaut"
   },
   "history": {
     "title": "Historique",
@@ -588,6 +631,7 @@
     "copied": "Copié",
     "clearAll": "Effacer tout l'historique",
     "clearConfirm": "Voulez-vous vraiment effacer tout l'historique ? Cette action est irréversible.",
+    "confirmClear": "Effacer",
     "failedToCopy": "Impossible de copier dans le presse-papiers",
     "failedToClear": "Impossible d'effacer l'historique",
     "moreActions": "Plus d'actions",
@@ -595,6 +639,7 @@
     "saveCorrection": "Enregistrer la correction",
     "correctionCreated": "Correction créée",
     "failedToCreateCorrection": "Impossible de créer la correction",
+    "needsBrowserAccess": "accès navigateur requis",
     "providers": {
       "managed_cloud": "Cloud",
       "byok": "BYOK",
@@ -743,6 +788,7 @@
     "close": "Fermer",
     "saving": "Enregistrement...",
     "cancel": "Annuler",
+    "reset": "Réinitialiser",
     "connectionFail": "Échec de la connexion"
   },
   "providers": {

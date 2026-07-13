@@ -2,7 +2,7 @@ use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 
 use super::ContextSignalSource;
-use crate::app_detector::types::{ContextSignals, TargetAppGuard};
+use crate::app_detector::types::{BrowserAccessStatus, ContextSignals, TargetAppGuard};
 
 pub struct WindowsContextSource;
 
@@ -93,6 +93,8 @@ unsafe fn collect_foreground_context() -> Option<ContextSignals> {
         window_title,
         browser_host: None,
         is_supported_browser: supported_browser,
+        browser_access_status: BrowserAccessStatus::for_unavailable_url_adapter(supported_browser),
+        browser_target: None,
     })
 }
 

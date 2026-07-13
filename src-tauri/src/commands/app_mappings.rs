@@ -218,11 +218,13 @@ mod tests {
 
     #[test]
     fn family_assignment_update_is_unique_and_supports_clear() {
-        let mut config = AppConfig::default();
-        config.family_scene_assignments = vec![FamilySceneAssignment {
-            family: ContextFamily::Email,
-            scene_id: "builtin_clean_dictation".to_string(),
-        }];
+        let mut config = AppConfig {
+            family_scene_assignments: vec![FamilySceneAssignment {
+                family: ContextFamily::Email,
+                scene_id: "builtin_clean_dictation".to_string(),
+            }],
+            ..Default::default()
+        };
 
         set_family_assignment_value(
             &mut config,
@@ -244,13 +246,15 @@ mod tests {
 
     #[test]
     fn manual_scene_does_not_block_saving_an_automatic_assignment() {
-        let mut config = AppConfig::default();
-        config.active_scene = Some(ActiveScene {
-            id: "builtin_meeting_notes".to_string(),
-            source: "builtin".to_string(),
-            name: "Meeting Notes".to_string(),
-            prompt_template: "Manual scene wins at runtime.".to_string(),
-        });
+        let mut config = AppConfig {
+            active_scene: Some(ActiveScene {
+                id: "builtin_meeting_notes".to_string(),
+                source: "builtin".to_string(),
+                name: "Meeting Notes".to_string(),
+                prompt_template: "Manual scene wins at runtime.".to_string(),
+            }),
+            ..Default::default()
+        };
 
         set_family_assignment_value(
             &mut config,

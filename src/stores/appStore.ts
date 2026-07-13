@@ -64,6 +64,8 @@ export type ContextFamily =
   | 'support'
   | 'social'
   | 'general'
+export type BrowserAccessStatus = 'available' | 'needs_permission' | 'not_applicable' | 'unknown'
+export type BrowserTarget = 'safari' | 'chrome' | 'edge' | 'brave' | 'arc'
 
 export interface ShortcutBinding {
   primary: string
@@ -98,6 +100,7 @@ export interface HistoryEntry {
   context_label: string
   context_icon_key: string
   context_family: ContextFamily
+  browser_access_status: BrowserAccessStatus
   provider_kind: 'managed_cloud' | 'byok' | 'local'
   raw_text: string
   polished_text: string
@@ -118,6 +121,8 @@ export interface ContextProfileSummary {
   appLabel: string
   iconKey: string
   overrideId: string | null
+  browserAccessStatus?: BrowserAccessStatus
+  browserTarget?: BrowserTarget | null
 }
 
 export interface InsertResult {
@@ -149,6 +154,11 @@ export interface CustomScene {
   prompt_template: string
   created_at: string
   updated_at: string
+}
+
+export interface SystemSceneOverride {
+  id: string
+  prompt_template: string
 }
 
 export interface ActiveScene {
@@ -195,6 +205,7 @@ export interface AppConfig {
   polish_custom_prompt: string
   polish_chinese_script: PolishChineseScript
   custom_scenes: CustomScene[]
+  system_scene_overrides: SystemSceneOverride[]
   active_scene: ActiveScene | null
   family_scene_assignments: FamilySceneAssignment[]
   translate_enabled: boolean
@@ -332,24 +343,21 @@ export const isWindowsPlatform = () =>
 
 function defaultDictationHotkey(): string {
   if (isMacPlatform()) return 'Fn'
-  if (isWindowsPlatform()) return 'RightAlt'
   return 'Ctrl+/'
 }
 
 function defaultDictationHotkeyMode(): HotkeyMode {
-  return isMacPlatform() || isWindowsPlatform() ? 'toggle' : 'hold'
+  return isMacPlatform() ? 'toggle' : 'hold'
 }
 
 function defaultAskHotkey(): string {
   if (isMacPlatform()) return 'Fn+Space'
-  if (isWindowsPlatform()) return 'RightAlt+Space'
   return 'Ctrl+.'
 }
 
 function defaultTranslateHotkey(): string | null {
   if (isMacPlatform()) return 'Fn+LeftShift'
-  if (isWindowsPlatform()) return 'RightAlt+LeftShift'
-  return null
+  return 'Ctrl+Shift+/'
 }
 
 const modifierOrder = ['Fn', 'RightAlt', 'Command', 'Super', 'Ctrl', 'Option', 'Alt', 'Shift']
@@ -524,11 +532,7 @@ function normalizeHotkeyConfig(config: AppConfig, hotkeysValue: HotkeyConfig): H
   )
   const hasTranslateList = Array.isArray(hotkeys.translateBindings)
   const translateBindings = normalizeBindingList(
-    hasTranslateList
-      ? hotkeys.translateBindings
-      : hotkeys.translate
-        ? [hotkeys.translate]
-        : [],
+    hasTranslateList ? hotkeys.translateBindings : hotkeys.translate ? [hotkeys.translate] : [],
   )
 
   return {
@@ -557,7 +561,8 @@ function hotkeyConfigFromLegacy(config: AppConfig): HotkeyConfig {
   const ask = config.ask_hotkey.trim()
     ? (bindingFromHotkey(config.ask_hotkey) ?? bindingFromHotkey(defaultAskHotkey()))
     : null
-  const existingTranslate = config.hotkeys?.translate ??
+  const existingTranslate =
+    config.hotkeys?.translate ??
     (defaultTranslateHotkey() ? bindingFromHotkey(defaultTranslateHotkey()!) : null)
   const translateBindings = normalizeBindingList(
     config.hotkeys?.translateBindings?.length
@@ -723,6 +728,7 @@ const defaultConfig: AppConfig = {
   polish_custom_prompt: '',
   polish_chinese_script: 'preserve',
   custom_scenes: [],
+  system_scene_overrides: [],
   active_scene: null,
   family_scene_assignments: [],
   translate_enabled: false,

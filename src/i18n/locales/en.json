@@ -101,7 +101,8 @@
       "apiKeyPlaceholder": "Enter your API key",
       "testButton": "Test Connection",
       "connectionOk": "Connection successful",
-      "connectionFail": "Connection failed"
+      "connectionFail": "Connection failed",
+      "customWhisperConfigured": "Custom Whisper"
     },
     "llm": {
       "serviceLabel": "AI Polish Service",
@@ -127,6 +128,8 @@
       "speechRecognitionSub": "Configure your STT service",
       "aiPolish": "AI Polish",
       "aiPolishSub": "Configure your LLM service",
+      "permissions": "Permissions",
+      "permissionsSub": "Allow only what your setup needs",
       "howItWorks": "How It Works",
       "howItWorksSub": "Try a quick recording test",
       "setupComplete": "Setup Complete",
@@ -180,7 +183,26 @@
       "accessibilityRequired": "Accessibility permission is required for text output",
       "grantPermission": "Grant Permission",
       "grantLater": "Grant Later",
-      "accessibilityGranted": "Accessibility permission granted"
+      "accessibilityGranted": "Accessibility permission granted",
+      "appWritingModes": "App writing modes",
+      "appWritingModesSub": "Edit default email, chat, document, and other writing modes in Scenes."
+    },
+    "permissions": {
+      "subtitle": "OpenTypeless asks for access only when a feature needs it.",
+      "microphone": "Microphone",
+      "microphoneDesc": "Capture your voice.",
+      "textOutput": "Text output",
+      "textOutputDesc": "Type into the app you are using.",
+      "browserApps": "Browser apps",
+      "browserAppsDesc": "Use Gmail, Docs, and Slack Web modes.",
+      "appleSpeech": "Apple Speech",
+      "appleSpeechDesc": "Use local macOS transcription.",
+      "fix": "Fix",
+      "status": {
+        "ready": "Ready",
+        "needed": "Needed",
+        "later": "Later"
+      }
     },
     "mode": {
       "cloud": "Cloud",
@@ -316,9 +338,9 @@
     "volcengineResourceSeedAsr": "SeedASR 2.0",
     "volcengineResourceBigAsr": "BigASR 1.0",
     "customSttConnectionFailed": "Local STT server is not reachable. Check that it is running and the port is correct.",
-    "llmSignInHint": "Sign in to use cloud AI.",
-    "llmUpgradeHint": "Pro required.",
-    "llmProActive": "Pro active.",
+    "llmSignInHint": "Sign in and subscribe to Pro to use cloud AI polish. No API key needed.",
+    "llmUpgradeHint": "Upgrade to Pro for cloud AI polish and monthly usage. No API key needed.",
+    "llmProActive": "Pro active — cloud AI polish is ready. No API key needed.",
     "apiKey": "API Key",
     "enterApiKey": "Enter API Key...",
     "test": "Test",
@@ -339,6 +361,8 @@
     "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
     "contextAdaptationApps": "Apps adapted by context",
     "lastDictationContext": "Last dictation context",
+    "browserAccessHint": "Allow browser access to use Gmail, Docs, and Slack Web modes.",
+    "allowBrowserAccess": "Allow",
     "generalContext": "General",
     "polishStyle": "Polish style",
     "polishStyleMinimal": "Minimal",
@@ -426,12 +450,8 @@
     "mappingFamily": "Context family",
     "mappingScene": "Writing scene",
     "mappingNoScene": "Automatic",
-    "mappingScope": "Apply to",
-    "mappingScopeApp": "This app",
-    "mappingScopeFamily": "All apps in this context family",
     "mappingSave": "Save",
     "mappingCancel": "Cancel",
-    "mappingFamilyRequiresScene": "Choose a writing scene",
     "manageAppMappingsTitle": "Manage app mappings",
     "mappingEnabled": "Enabled",
     "mappingEdit": "Edit",
@@ -439,7 +459,8 @@
     "mappingReset": "Reset to automatic",
     "mappingResetConfirm": "Delete all device-only app mappings?",
     "mappingResetConfirmAction": "Reset mappings",
-    "mappingNoMappings": "No custom app mappings"
+    "mappingNoMappings": "No custom app mappings",
+    "dictationMode": "Dictation mode"
   },
   "contextFamilies": {
     "email": "Email",
@@ -521,11 +542,6 @@
     "refresh": "Refresh",
     "noCloudPacks": "No cloud scene packs available yet. You can still create local custom scenes above.",
     "failedToSave": "Failed to save scene.",
-    "assignAppTypes": "Assign app types",
-    "assignedExactApps": "Exact app overrides",
-    "noExactApps": "No exact app overrides",
-    "assignmentSaveFailed": "Failed to save app assignments.",
-    "exactAppsCount": "{{count}} apps",
     "export": "Export",
     "import": "Import",
     "importedScenes": "Imported {{count}} scenes",
@@ -575,7 +591,34 @@
         "name": "Product Spec Notes",
         "description": "Shape dictation into goals, requirements, and open questions."
       }
-    }
+    },
+    "appWritingModes": "App Writing Modes",
+    "appWritingModesDesc": "Each app type has a default writing mode. You can switch it to a custom scene.",
+    "appWritingScene": "Writing scene",
+    "appModeDescriptions": {
+      "email": "Email apps like Gmail, Outlook, and Mail.",
+      "work_chat": "Work chats like Slack, Lark, Teams, and DingTalk.",
+      "personal_chat": "Personal chats like WeChat, Messages, and WhatsApp.",
+      "document": "Docs and notes like Google Docs, Notion, Word, and Yuque.",
+      "project_management": "Project tools like Linear, Jira, and Confluence.",
+      "developer_collaboration": "Developer collaboration like GitHub and GitLab.",
+      "prompt_or_code": "Prompt and code tools like Cursor, VS Code, and JetBrains.",
+      "support": "Support tools like Zendesk and Intercom.",
+      "social": "Social apps like X and LinkedIn."
+    },
+    "systemModes": {
+      "email": "Email Format",
+      "work_chat": "Work Chat",
+      "personal_chat": "Personal Chat",
+      "document": "Document Notes",
+      "project_management": "Project Update",
+      "developer_collaboration": "Engineering Note",
+      "prompt_or_code": "Prompt / Code Request",
+      "support": "Support Reply",
+      "social": "Social Post"
+    },
+    "systemSceneDescription": "Default writing mode. You can edit it or reset to default.",
+    "resetSystemScene": "Reset to default"
   },
   "history": {
     "title": "History",
@@ -588,6 +631,7 @@
     "copied": "Copied",
     "clearAll": "Clear All History",
     "clearConfirm": "Are you sure you want to clear all history? This cannot be undone.",
+    "confirmClear": "Clear",
     "failedToCopy": "Failed to copy to clipboard",
     "failedToClear": "Failed to clear history",
     "moreActions": "More actions",
@@ -595,6 +639,7 @@
     "saveCorrection": "Save correction",
     "correctionCreated": "Correction created",
     "failedToCreateCorrection": "Failed to create correction",
+    "needsBrowserAccess": "needs browser access",
     "providers": {
       "managed_cloud": "Cloud",
       "byok": "BYOK",
@@ -743,6 +788,7 @@
     "close": "Close",
     "saving": "Saving...",
     "cancel": "Cancel",
+    "reset": "Reset",
     "connectionFail": "Connection failed"
   },
   "providers": {

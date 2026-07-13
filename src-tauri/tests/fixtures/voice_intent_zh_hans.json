@@ -4902,6 +4902,44 @@
     "destructiveBlocker": true
   },
   {
+    "id": "zh-hans-263-draft-email-natural-object",
+    "mode": "dictate",
+    "locale": "zh-Hans",
+    "utterance": "写一份给 Sara 的邮件麻烦她帮我订一下会议室",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "draft_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": "给 Sara 的邮件麻烦她帮我订一下会议室",
+    "expectedFallbackReason": null,
+    "destructiveBlocker": false
+  },
+  {
+    "id": "zh-hans-264-draft-email-natural-recipient-first-person",
+    "mode": "dictate",
+    "locale": "zh-Hans",
+    "utterance": "我想写一份给 Sara 的邮件我们这周的会议在下午五点",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "draft_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": "给 Sara 的邮件我们这周的会议在下午五点",
+    "expectedFallbackReason": null,
+    "destructiveBlocker": false
+  },
+  {
     "id": "zh-hans-259-draft-disabled",
     "mode": "dictate",
     "locale": "zh-Hans",
@@ -4975,6 +5013,25 @@
     "expectedProvider": null,
     "expectedPayload": null,
     "expectedFallbackReason": "feature_disabled",
+    "destructiveBlocker": true
+  },
+  {
+    "id": "zh-hans-265-information-security-dictation",
+    "mode": "dictate",
+    "locale": "zh-Hans",
+    "utterance": "我想写一份信息安全方案",
+    "hasSelection": false,
+    "flags": {
+      "draft_insert": true,
+      "rewrite_selection": true,
+      "translate_selection": true,
+      "search": true
+    },
+    "expectedKind": "dictate_insert",
+    "expectedPlacement": "insert_at_cursor",
+    "expectedProvider": null,
+    "expectedPayload": null,
+    "expectedFallbackReason": null,
     "destructiveBlocker": true
   }
 ]

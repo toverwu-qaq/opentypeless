@@ -29,7 +29,7 @@ vi.mock('../../lib/tauri', () => ({
   getHistory: vi.fn().mockResolvedValue([]),
 }))
 
-vi.mock('../../components/Toast', () => ({
+vi.mock('../../components/toast-service', () => ({
   toast: vi.fn(),
 }))
 

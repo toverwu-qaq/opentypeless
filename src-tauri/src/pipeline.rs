@@ -515,19 +515,21 @@ fn spawn_streaming_insert_worker(
 ) -> StreamingInsertWorker {
     let (sender, receiver) = mpsc::unbounded_channel();
     let handle = tokio::spawn(run_streaming_insert_worker(
-        app_handle,
-        abort_flag,
-        context_detector,
-        strategy,
-        windows_sendinput_options,
-        expected_target_guard,
-        expected_target_label,
+        StreamingInsertWorkerContext {
+            app_handle,
+            abort_flag,
+            context_detector,
+            strategy,
+            windows_sendinput_options,
+            expected_target_guard,
+            expected_target_label,
+        },
         receiver,
     ));
     StreamingInsertWorker { sender, handle }
 }
 
-async fn run_streaming_insert_worker(
+struct StreamingInsertWorkerContext {
     app_handle: tauri::AppHandle,
     abort_flag: Arc<AtomicBool>,
     context_detector: app_detector::ContextDetectorHandle,
@@ -535,8 +537,21 @@ async fn run_streaming_insert_worker(
     windows_sendinput_options: output::windows_sendinput::WindowsSendInputOptions,
     expected_target_guard: TargetAppGuard,
     expected_target_label: String,
+}
+
+async fn run_streaming_insert_worker(
+    context: StreamingInsertWorkerContext,
     mut receiver: mpsc::UnboundedReceiver<String>,
 ) -> StreamingInsertReport {
+    let StreamingInsertWorkerContext {
+        app_handle,
+        abort_flag,
+        context_detector,
+        strategy,
+        windows_sendinput_options,
+        expected_target_guard,
+        expected_target_label,
+    } = context;
     let mut report = StreamingInsertReport::new(strategy);
 
     while let Some(chunk) = receiver.recv().await {
@@ -1796,9 +1811,7 @@ impl PipelineHandle {
             }),
         );
 
-        let _ = self
-            .app_handle
-            .emit("pipeline:context", app_ctx.profile.summary());
+        let _ = self.app_handle.emit("pipeline:context", app_ctx.summary());
 
         // Save to history
         self.save_history(
@@ -1922,7 +1935,10 @@ impl PipelineHandle {
         };
 
         // Check if polish is enabled and API key / token is available
-        if !config.polish_enabled || (llm_api_key.is_empty() && config.llm_provider != "cloud") {
+        if !config.polish_enabled
+            || (config.llm_provider != "cloud"
+                && !llm::has_usable_provider_credentials(&config.llm_provider, &llm_api_key))
+        {
             if selected_text_command_requires_llm(selected_text.as_deref())
                 || voice_intent_requires_generated_output(voice_intent.kind)
             {
@@ -1974,6 +1990,7 @@ impl PipelineHandle {
         let llm_start = std::time::Instant::now();
 
         let llm_config = LlmConfig {
+            provider: config.llm_provider.clone(),
             api_key: llm_api_key,
             model: config.llm_model.clone(),
             base_url: config.llm_base_url.clone(),
@@ -2018,14 +2035,14 @@ impl PipelineHandle {
 
         let selected_text_for_execution = selected_text.clone();
         let mapped_scene_prompt = storage::automatic_scene_prompt(
-            &config,
+            config,
             app_ctx.profile.family,
             app_ctx.mapped_scene_id.as_deref(),
         )
         .unwrap_or_default();
         let req = PolishRequest {
             raw_text: provider_text.to_string(),
-            context: app_ctx.profile.summary(),
+            context: app_ctx.summary(),
             dictionary: dictionary_words,
             correction_rules,
             polish_style: config.polish_style.clone(),
@@ -2467,6 +2484,7 @@ impl PipelineHandle {
             context_label: app_ctx.profile.app_label.clone(),
             context_icon_key: app_ctx.profile.icon_key.clone(),
             context_family: app_ctx.profile.family,
+            browser_access_status: app_ctx.browser_access_status,
             provider_kind: history_provider_kind(config),
             raw_text: raw_text.to_string(),
             polished_text: final_text.to_string(),
@@ -3244,9 +3262,11 @@ mod tests {
 
     #[test]
     fn history_provider_kind_uses_only_provider_classification() {
-        let mut config = storage::AppConfig::default();
-        config.polish_enabled = true;
-        config.llm_provider = "cloud".to_string();
+        let mut config = storage::AppConfig {
+            polish_enabled: true,
+            llm_provider: "cloud".to_string(),
+            ..Default::default()
+        };
         assert_eq!(
             history_provider_kind(&config),
             storage::HistoryProviderKind::ManagedCloud

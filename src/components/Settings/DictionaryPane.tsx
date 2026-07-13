@@ -30,7 +30,7 @@ import {
   type DictionaryImportFormat,
   type DictionaryImportReport,
 } from '../../lib/tauri'
-import { toast } from '../Toast'
+import { toast } from '../toast-service'
 import { DictionaryImportDialog } from './DictionaryImportDialog'
 import { SegmentedControl } from './shared/SegmentedControl'
 
@@ -361,7 +361,7 @@ export function DictionaryPane() {
 
       {activeSection === 'words' && (
         <>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <div className="grid grid-cols-1 gap-2 min-[840px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             <input
               value={word}
               onChange={(event) => setWord(event.target.value)}
@@ -483,7 +483,7 @@ export function DictionaryPane() {
 
       {activeSection === 'corrections' && (
         <div className="space-y-3">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <div className="grid grid-cols-1 gap-2 min-[840px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             <input
               value={pattern}
               onChange={(event) => setPattern(event.target.value)}

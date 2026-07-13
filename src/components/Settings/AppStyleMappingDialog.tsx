@@ -1,17 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type {
-  AppConfig,
-  ContextFamily,
-  ContextProfileSummary,
-} from '../../stores/appStore'
-import {
-  saveCustomAppMapping,
-  setFamilySceneAssignment,
-  updateCustomAppMapping,
-} from '../../lib/tauri'
+import type { AppConfig, ContextFamily, ContextProfileSummary } from '../../stores/appStore'
+import { saveCustomAppMapping, updateCustomAppMapping } from '../../lib/tauri'
 import type { CustomAppMappingView, MappingCandidateView } from '../../lib/tauri'
-import { BUILTIN_SCENES } from '../../lib/scenes/builtinScenes'
 import { AppLogo } from '../AppLogo'
 
 const CONTEXT_FAMILIES: ContextFamily[] = [
@@ -28,7 +19,6 @@ const CONTEXT_FAMILIES: ContextFamily[] = [
 ]
 
 type MappingConfig = Pick<AppConfig, 'custom_scenes' | 'family_scene_assignments'>
-type Scope = 'app' | 'family'
 
 interface AppStyleMappingDialogProps {
   candidate: MappingCandidateView | null
@@ -53,15 +43,17 @@ export function AppStyleMappingDialog({
 }: AppStyleMappingDialogProps) {
   const { t } = useTranslation()
   const editing = Boolean(mapping)
-  const [scope, setScope] = useState<Scope>(candidate || mapping ? 'app' : 'family')
-  const [label, setLabel] = useState(mapping?.label ?? candidate?.suggestedLabel ?? context.appLabel)
+  const [label, setLabel] = useState(
+    mapping?.label ?? candidate?.suggestedLabel ?? context.appLabel,
+  )
   const [family, setFamily] = useState<ContextFamily>(
     mapping?.family ?? candidate?.currentFamily ?? context.family,
   )
-  const existingFamilyScene = config.family_scene_assignments.find(
-    (assignment) => assignment.family === (mapping?.family ?? candidate?.currentFamily ?? context.family),
-  )?.scene_id
-  const [sceneId, setSceneId] = useState(mapping?.sceneId ?? existingFamilyScene ?? '')
+  const [sceneId, setSceneId] = useState(
+    mapping?.sceneId && config.custom_scenes.some((scene) => scene.id === mapping.sceneId)
+      ? mapping.sceneId
+      : '',
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const labelRef = useRef<HTMLInputElement>(null)
@@ -69,19 +61,11 @@ export function AppStyleMappingDialog({
   const displayValue = mapping?.displayValue ?? candidate?.displayValue ?? context.appLabel
   const iconKey = mapping?.iconKey ?? candidate?.iconKey ?? context.iconKey
   const matcherType = mapping?.matcherType ?? candidate?.matcherType
-  const canSave =
-    !saving &&
-    (scope === 'family' ? Boolean(sceneId) : Boolean(label.trim()) && Boolean(mapping || candidate))
+  const canSave = !saving && Boolean(label.trim()) && Boolean(mapping || candidate)
 
   const sceneOptions = useMemo(
-    () => [
-      ...BUILTIN_SCENES.map((scene) => ({
-        id: scene.id,
-        label: t(scene.nameKey),
-      })),
-      ...config.custom_scenes.map((scene) => ({ id: scene.id, label: scene.name })),
-    ],
-    [config.custom_scenes, t],
+    () => config.custom_scenes.map((scene) => ({ id: scene.id, label: scene.name })),
+    [config.custom_scenes],
   )
 
   useEffect(() => {
@@ -103,9 +87,7 @@ export function AppStyleMappingDialog({
     setSaving(true)
     setError(null)
     try {
-      if (scope === 'family') {
-        await setFamilySceneAssignment(family, sceneId)
-      } else if (mapping) {
+      if (mapping) {
         await updateCustomAppMapping({
           id: mapping.id,
           label: label.trim(),
@@ -161,50 +143,15 @@ export function AppStyleMappingDialog({
             </div>
           </div>
 
-          {!editing && (
-            <div>
-              <p className="mb-1 text-[11px] text-text-secondary">{t('settings.mappingScope')}</p>
-              <div className="grid grid-cols-2 rounded-[8px] border border-border bg-bg-secondary p-0.5">
-                <button
-                  type="button"
-                  aria-pressed={scope === 'app'}
-                  disabled={!candidate}
-                  onClick={() => setScope('app')}
-                  className={`min-h-8 rounded-[6px] px-2 text-[11px] transition-colors disabled:opacity-40 ${
-                    scope === 'app'
-                      ? 'bg-bg-primary text-text-primary shadow-sm'
-                      : 'bg-transparent text-text-tertiary'
-                  }`}
-                >
-                  {t('settings.mappingScopeApp')}
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={scope === 'family'}
-                  onClick={() => setScope('family')}
-                  className={`min-h-8 rounded-[6px] px-2 text-[11px] transition-colors ${
-                    scope === 'family'
-                      ? 'bg-bg-primary text-text-primary shadow-sm'
-                      : 'bg-transparent text-text-tertiary'
-                  }`}
-                >
-                  {t('settings.mappingScopeFamily')}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {scope === 'app' && (
-            <label className="block text-[11px] text-text-secondary">
-              {t('settings.mappingLabel')}
-              <input
-                ref={labelRef}
-                value={label}
-                onChange={(event) => setLabel(clampLabel(event.target.value))}
-                className="mt-1 w-full rounded-[8px] border border-border bg-bg-secondary px-3 py-2 text-[13px] text-text-primary outline-none focus:border-border-focus"
-              />
-            </label>
-          )}
+          <label className="block text-[11px] text-text-secondary">
+            {t('settings.mappingLabel')}
+            <input
+              ref={labelRef}
+              value={label}
+              onChange={(event) => setLabel(clampLabel(event.target.value))}
+              className="mt-1 w-full rounded-[8px] border border-border bg-bg-secondary px-3 py-2 text-[13px] text-text-primary outline-none focus:border-border-focus"
+            />
+          </label>
 
           <label className="block text-[11px] text-text-secondary">
             {t('settings.mappingFamily')}
@@ -228,11 +175,7 @@ export function AppStyleMappingDialog({
               onChange={(event) => setSceneId(event.target.value)}
               className="mt-1 w-full rounded-[8px] border border-border bg-bg-secondary px-3 py-2 text-[13px] text-text-primary outline-none focus:border-border-focus"
             >
-              <option value="">
-                {scope === 'family'
-                  ? t('settings.mappingFamilyRequiresScene')
-                  : t('settings.mappingNoScene')}
-              </option>
+              <option value="">{t('settings.mappingNoScene')}</option>
               {sceneOptions.map((scene) => (
                 <option key={scene.id} value={scene.id}>
                   {scene.label}

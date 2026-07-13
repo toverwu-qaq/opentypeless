@@ -5,7 +5,7 @@ import { Search, Copy, Trash2, MoreHorizontal } from 'lucide-react'
 import { spring } from '../../lib/animations'
 import { useAppStore, type HistoryEntry } from '../../stores/appStore'
 import { addCorrectionRule, clearHistory, getCorrectionRules } from '../../lib/tauri'
-import { toast } from '../Toast'
+import { toast } from '../toast-service'
 import { AppContextMeta } from './AppContextMeta'
 import { CreateCorrectionDialog } from './CreateCorrectionDialog'
 
@@ -18,6 +18,7 @@ export function History() {
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [menuEntryId, setMenuEntryId] = useState<number | null>(null)
   const [correctionEntry, setCorrectionEntry] = useState<HistoryEntry | null>(null)
+  const [confirmingClear, setConfirmingClear] = useState(false)
   const menuTriggerEntryId = useRef<number | null>(null)
 
   const closeEntryMenu = useCallback(() => {
@@ -66,10 +67,10 @@ export function History() {
   }
 
   const handleClear = async () => {
-    if (!window.confirm(t('history.clearConfirm'))) return
     try {
       await clearHistory()
       setHistory([])
+      setConfirmingClear(false)
     } catch (e) {
       console.error('Failed to clear history:', e)
       toast.error(t('history.failedToClear'))
@@ -180,6 +181,7 @@ export function History() {
                           label={entry.context_label}
                           time={entry.created_at.split('T')[1]?.slice(0, 5) || ''}
                           providerKind={entry.provider_kind}
+                          browserAccessStatus={entry.browser_access_status}
                         />
                         {entry.output_status && outputStatusLabel(entry.output_status) && (
                           <p className="text-[11px] text-warning mt-1 leading-snug break-words">
@@ -252,13 +254,36 @@ export function History() {
 
       {/* Clear button — jelly */}
       {history.length > 0 && (
-        <div className="px-5 py-3 border-t border-border">
+        <div className="space-y-2 border-t border-border px-5 py-3">
+          {confirmingClear && (
+            <div className="rounded-[10px] border border-error/20 bg-error/10 px-3 py-2">
+              <p className="text-[12px] leading-relaxed text-text-secondary">
+                {t('history.clearConfirm')}
+              </p>
+              <div className="mt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmingClear(false)}
+                  className="rounded-[7px] border border-border bg-transparent px-2.5 py-1 text-[11px] text-text-secondary hover:text-text-primary"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="rounded-[7px] border border-error/30 bg-error/15 px-2.5 py-1 text-[11px] font-medium text-error hover:bg-error/20"
+                >
+                  {t('history.confirmClear')}
+                </button>
+              </div>
+            </div>
+          )}
           <motion.button
-            onClick={handleClear}
+            onClick={() => setConfirmingClear(true)}
             whileHover={{ scale: 1.04 }}
             whileTap={{ scaleX: 1.06, scaleY: 0.94 }}
             transition={spring.jellyGentle}
-            className="flex items-center justify-center gap-1.5 w-full py-2 text-[12px] text-text-tertiary hover:text-error rounded-[10px] cursor-pointer transition-colors jelly-btn"
+            className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-[10px] py-2 text-[12px] text-text-tertiary transition-colors hover:text-error jelly-btn"
           >
             <Trash2 size={12} />
             {t('history.clearAll')}

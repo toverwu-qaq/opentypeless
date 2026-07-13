@@ -16,7 +16,7 @@ Make the existing P0/P1 desktop capabilities feel quiet, obvious, and native to 
 - One system condition has one primary call to action.
 - App adaptation remains a restrained feature signal, not an app gallery.
 - Existing routes, tokens, spacing, typography, 10px-or-smaller radii, local logos, and compact dialogs remain authoritative.
-- No password, account, cloud, quota, detector, prompt, intent, dictionary, shortcut persistence, or backup contract changes.
+- This UI-only spec does not independently redefine password, account, cloud, quota, detector, prompt, intent, dictionary, shortcut, or backup contracts. Companion specs cover prompt, permission, and local-provider hardening; cloud-restore behavior is recorded in the branch handoff and implementation tests rather than defined by this UI spec.
 
 ## 3. General Settings
 
@@ -59,14 +59,19 @@ Make the existing P0/P1 desktop capabilities feel quiet, obvious, and native to 
 
 ## 6. Scenes And App Context
 
-- Reuse the existing `family_scene_assignments` and exact detected-app mappings. Do not add a second mapping store.
-- Scenes becomes the primary place to understand which contexts use a scene.
-- Each built-in or custom scene row shows a compact usage summary when assigned.
-- Expanded scene details expose an `Assign app types` action for the nine semantic app families.
-- The assignment dialog uses existing localized family names and persists through `setFamilySceneAssignment`.
-- Existing exact app mappings remain manageable and appear as local app logos/counts in the Scenes assignment surface.
-- Creating a new exact matcher still requires a recent local detection candidate; this work does not expose matcher values or create a 71-app settings gallery.
-- AI Polish retains the last-context shortcut for creating an exact app override.
+- Scenes must show how AI Polish adapts to app types. The top section is `App Writing Modes`, organized by semantic app family rather than by a 71-app gallery.
+- Each app-family row shows representative local app logos, the family label, a short example description, and a compact Scene selector.
+- The selector's default option is a concrete default mode name such as `Email Format` or `Work Chat`, not `Automatic`.
+- Built-in default modes live in the app-family rows and are not repeated as a separate built-in Scene library below.
+- Built-in default modes also appear in `My Scenes` as editable default scenes with a `Reset to default` action.
+- Selecting a custom Scene stores a family assignment and replaces the system mode for that app family.
+- Editing a default scene stores only that scene's prompt override and immediately changes the default behavior for its app family.
+- Existing `family_scene_assignments` is the backing store and runtime input for app-family Scene choices.
+- Exact app overrides remain the user-owned path for a specific unknown/custom app or a specific app writing style.
+- Custom Scenes remain reusable presets that can be assigned to app families. The UI no longer exposes global Scene activation.
+- Legacy `active_scene` data remains runtime-compatible, but new UI should not encourage global Scene overrides.
+- AI Polish retains the last-detected-app path for creating an exact app override when there is a safe local detection candidate or an existing user mapping.
+- Exact app override UI does not show raw bundle IDs, URLs, titles, matcher material, or a 71-app gallery.
 
 ## 7. Dictionary
 
@@ -97,7 +102,7 @@ Make the existing P0/P1 desktop capabilities feel quiet, obvious, and native to 
 - Existing 36-file / 320-test frontend suite remains green.
 - Existing 434 Rust tests remain green.
 - `npm run lint`, `npm run build`, and the debug macOS app bundle must pass.
-- Packaged-app QA covers General, AI Polish enabled/disabled states, Translation single/multiple states, Dictionary segments, Scenes assignments, and password focus cycling.
+- Packaged-app QA covers General, AI Polish enabled/disabled states, App Writing Modes with concrete default mode names, exact app override reachability, Translation single/multiple states, Dictionary segments, Scene activation/clearing, and password focus cycling.
 - No real password is submitted and no macOS permission is changed during QA.
 
 ## 11. Definition Of Done
@@ -107,7 +112,10 @@ Make the existing P0/P1 desktop capabilities feel quiet, obvious, and native to 
 - AI Polish default copy is materially shorter.
 - Context logos accurately reflect the context-adaptation toggle.
 - Translation is compact for the common one-language case.
-- Scene rows expose existing family/app usage without a persistent app gallery.
+- Scenes shows app-family writing modes with representative app logos and editable Scene choices.
+- Family/default scene prompts change runtime Scene selection when no legacy active Scene or exact app override is set.
+- Polish Style is skipped when an app/default/custom scene prompt owns the output shape.
+- Exact custom app overrides remain available only from safe detected context or existing user mappings.
 - Dictionary shows one maintenance mode at a time.
 - Password focus cannot escape behind the modal.
 - Focused, full frontend, Rust, lint, build, and packaged visual gates pass.

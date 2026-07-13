@@ -98,11 +98,11 @@ impl LlmProvider for OpenAiProvider {
         let mut attempt = 0u32;
 
         loop {
-            match self
+            let request = self
                 .client
                 .post(format!("{}/chat/completions", config.base_url))
-                .header("Authorization", format!("Bearer {}", config.api_key))
-                .header("Content-Type", "application/json")
+                .header("Content-Type", "application/json");
+            match super::apply_provider_auth_header(request, &config.provider, &config.api_key)
                 .json(&body)
                 .timeout(std::time::Duration::from_secs(15))
                 .send()

@@ -67,6 +67,8 @@ impl ContextProfile {
             app_label: self.app_label.clone(),
             icon_key: self.icon_key.clone(),
             override_id: self.override_id.clone(),
+            browser_access_status: BrowserAccessStatus::NotApplicable,
+            browser_target: None,
         }
     }
 }
@@ -85,6 +87,9 @@ pub struct ContextProfileSummary {
     pub app_label: String,
     pub icon_key: String,
     pub override_id: Option<String>,
+    pub browser_access_status: BrowserAccessStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub browser_target: Option<BrowserTarget>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -95,6 +100,8 @@ pub(crate) struct ContextSignals {
     pub(crate) window_title: Option<String>,
     pub(crate) browser_host: Option<String>,
     pub(crate) is_supported_browser: bool,
+    pub(crate) browser_access_status: BrowserAccessStatus,
+    pub(crate) browser_target: Option<BrowserTarget>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -144,6 +151,83 @@ pub struct RecordingContext {
     pub profile: ContextProfile,
     pub target_guard: TargetAppGuard,
     pub mapped_scene_id: Option<String>,
+    pub browser_access_status: BrowserAccessStatus,
+    pub browser_target: Option<BrowserTarget>,
+}
+
+impl RecordingContext {
+    pub fn summary(&self) -> ContextProfileSummary {
+        let mut summary = self.profile.summary();
+        summary.browser_access_status = self.browser_access_status;
+        summary.browser_target = self.browser_target;
+        summary
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BrowserTarget {
+    Safari,
+    Chrome,
+    Edge,
+    Brave,
+    Arc,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BrowserAccessStatus {
+    Available,
+    NeedsPermission,
+    #[default]
+    NotApplicable,
+    Unknown,
+}
+
+impl BrowserAccessStatus {
+    #[cfg(any(target_os = "windows", target_os = "linux", test))]
+    pub(crate) fn for_unavailable_url_adapter(is_supported_browser: bool) -> Self {
+        if is_supported_browser {
+            Self::Unknown
+        } else {
+            Self::NotApplicable
+        }
+    }
+
+    pub fn as_history_value(self) -> Option<&'static str> {
+        match self {
+            Self::Available => Some("available"),
+            Self::NeedsPermission => Some("needs_permission"),
+            Self::Unknown => Some("unknown"),
+            Self::NotApplicable => None,
+        }
+    }
+
+    pub fn from_history_value(value: Option<&str>) -> Self {
+        match value {
+            Some("available") => Self::Available,
+            Some("needs_permission") => Self::NeedsPermission,
+            Some("unknown") => Self::Unknown,
+            _ => Self::NotApplicable,
+        }
+    }
+}
+
+#[cfg(test)]
+mod browser_access_status_tests {
+    use super::*;
+
+    #[test]
+    fn unavailable_url_adapters_report_supported_browsers_as_unknown() {
+        assert_eq!(
+            BrowserAccessStatus::for_unavailable_url_adapter(true),
+            BrowserAccessStatus::Unknown
+        );
+        assert_eq!(
+            BrowserAccessStatus::for_unavailable_url_adapter(false),
+            BrowserAccessStatus::NotApplicable
+        );
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

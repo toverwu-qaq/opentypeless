@@ -609,7 +609,7 @@ fn should_use_byok(config: &storage::AppConfig, llm_api_key: &str) -> bool {
     if config.llm_base_url.trim().is_empty() || config.llm_model.trim().is_empty() {
         return false;
     }
-    !llm_api_key.trim().is_empty() || config.llm_provider == "ollama"
+    crate::llm::has_usable_provider_credentials(&config.llm_provider, llm_api_key)
 }
 
 fn should_use_cloud(config: &storage::AppConfig) -> bool {

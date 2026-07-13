@@ -53,21 +53,13 @@ describe('appStore', () => {
       const isWindows =
         typeof navigator !== 'undefined' && navigator.platform.toUpperCase().includes('WIN')
       expect(config.theme).toBe('system')
-      expect(config.hotkey).toBe(isMac ? 'Fn' : isWindows ? 'RightAlt' : 'Ctrl+/')
-      expect(config.ask_hotkey).toBe(isMac ? 'Fn+Space' : isWindows ? 'RightAlt+Space' : 'Ctrl+.')
+      expect(config.hotkey).toBe(isMac ? 'Fn' : 'Ctrl+/')
+      expect(config.ask_hotkey).toBe(isMac ? 'Fn+Space' : 'Ctrl+.')
       expect(config.hotkeys.dictation).toEqual(
-        isMac
-          ? { primary: 'Fn', modifiers: [] }
-          : isWindows
-            ? { primary: 'RightAlt', modifiers: [] }
-            : { primary: '/', modifiers: ['Ctrl'] },
+        isMac ? { primary: 'Fn', modifiers: [] } : { primary: '/', modifiers: ['Ctrl'] },
       )
       expect(config.hotkeys.ask).toEqual(
-        isMac
-          ? { primary: 'Space', modifiers: ['Fn'] }
-          : isWindows
-            ? { primary: 'Space', modifiers: ['RightAlt'] }
-            : { primary: '.', modifiers: ['Ctrl'] },
+        isMac ? { primary: 'Space', modifiers: ['Fn'] } : { primary: '.', modifiers: ['Ctrl'] },
       )
       expect(config.hotkeys.dictationBindings).toEqual([config.hotkeys.dictation])
       expect(config.hotkeys.askBindings).toEqual([config.hotkeys.ask])
@@ -204,9 +196,7 @@ describe('appStore', () => {
       })
 
       const { hotkeys } = getState().config
-      expect(hotkeys.dictationBindings).toEqual([
-        { primary: ';', modifiers: ['Ctrl', 'Shift'] },
-      ])
+      expect(hotkeys.dictationBindings).toEqual([{ primary: ';', modifiers: ['Ctrl', 'Shift'] }])
       expect(hotkeys.askBindings).toEqual([])
       expect(hotkeys.dictationMode).toBe('toggle')
     })
@@ -246,6 +236,7 @@ describe('appStore', () => {
           context_label: 'General',
           context_icon_key: 'general',
           context_family: 'general',
+          browser_access_status: 'not_applicable',
           provider_kind: 'local',
           raw_text: 'hello',
           polished_text: 'Hello.',

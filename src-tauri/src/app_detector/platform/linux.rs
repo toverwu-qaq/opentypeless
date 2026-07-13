@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use super::ContextSignalSource;
-use crate::app_detector::types::{ContextSignals, TargetAppGuard};
+use crate::app_detector::types::{BrowserAccessStatus, ContextSignals, TargetAppGuard};
 
 pub struct LinuxContextSource;
 
@@ -61,6 +61,10 @@ impl ContextSignalSource for LinuxContextSource {
             window_title,
             browser_host: None,
             is_supported_browser,
+            browser_access_status: BrowserAccessStatus::for_unavailable_url_adapter(
+                is_supported_browser,
+            ),
+            browser_target: None,
         })
     }
 }

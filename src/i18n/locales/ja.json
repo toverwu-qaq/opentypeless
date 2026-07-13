@@ -101,7 +101,8 @@
       "apiKeyPlaceholder": "APIキーを入力してください",
       "testButton": "接続テスト",
       "connectionOk": "接続に成功しました",
-      "connectionFail": "接続に失敗しました"
+      "connectionFail": "接続に失敗しました",
+      "customWhisperConfigured": "Custom Whisper"
     },
     "llm": {
       "serviceLabel": "AI整形サービス",
@@ -127,6 +128,8 @@
       "speechRecognitionSub": "STTサービスを設定します",
       "aiPolish": "AI整形",
       "aiPolishSub": "LLMサービスを設定します",
+      "permissions": "権限",
+      "permissionsSub": "この設定に必要なものだけを許可",
       "howItWorks": "使い方",
       "howItWorksSub": "簡単な録音テストを試しましょう",
       "setupComplete": "セットアップ完了",
@@ -180,7 +183,26 @@
       "accessibilityRequired": "テキスト出力にはアクセシビリティ権限が必要です",
       "grantPermission": "権限を付与",
       "grantLater": "後で付与",
-      "accessibilityGranted": "アクセシビリティ権限が付与されました"
+      "accessibilityGranted": "アクセシビリティ権限が付与されました",
+      "appWritingModes": "アプリ別の書き方",
+      "appWritingModesSub": "Scenesでメール、チャット、ドキュメントなどの既定の書き方を編集できます。"
+    },
+    "permissions": {
+      "subtitle": "OpenTypelessは機能に必要なときだけアクセスを求めます。",
+      "microphone": "マイク",
+      "microphoneDesc": "音声を録音します。",
+      "textOutput": "テキスト出力",
+      "textOutputDesc": "使用中のアプリに入力します。",
+      "browserApps": "ブラウザアプリ",
+      "browserAppsDesc": "Gmail、Docs、Slack Webのモードを使います。",
+      "appleSpeech": "Apple Speech",
+      "appleSpeechDesc": "macOSのローカル文字起こしを使います。",
+      "fix": "設定",
+      "status": {
+        "ready": "準備済み",
+        "needed": "必要",
+        "later": "後で"
+      }
     },
     "mode": {
       "cloud": "クラウド",
@@ -318,9 +340,9 @@
     "volcengineResourceSeedAsr": "SeedASR 2.0",
     "volcengineResourceBigAsr": "BigASR 1.0",
     "customSttConnectionFailed": "Local STT server is not reachable. Check that it is running and the port is correct.",
-    "llmSignInHint": "サインインしてクラウドAIを使用。",
-    "llmUpgradeHint": "Proが必要です。",
-    "llmProActive": "Proは有効です。",
+    "llmSignInHint": "サインインしてProに登録すると、クラウドAI整形を利用できます。APIキーは不要です。",
+    "llmUpgradeHint": "Proにアップグレードすると、クラウドAI整形と月間利用枠を利用できます。APIキーは不要です。",
+    "llmProActive": "Proが有効です。クラウドAI整形を利用できます。APIキーは不要です。",
     "apiKey": "APIキー",
     "enterApiKey": "APIキーを入力...",
     "test": "テスト",
@@ -341,6 +363,8 @@
     "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
     "contextAdaptationApps": "コンテキストに適応するアプリ",
     "lastDictationContext": "Last dictation context",
+    "browserAccessHint": "ブラウザアクセスを許可すると、Gmail、Docs、Slack Webの書き方を使えます。",
+    "allowBrowserAccess": "許可",
     "generalContext": "General",
     "polishStyle": "整形スタイル",
     "polishStyleMinimal": "最小",
@@ -426,12 +450,8 @@
     "mappingFamily": "Context family",
     "mappingScene": "Writing scene",
     "mappingNoScene": "Automatic",
-    "mappingScope": "Apply to",
-    "mappingScopeApp": "This app",
-    "mappingScopeFamily": "All apps in this context family",
     "mappingSave": "Save",
     "mappingCancel": "Cancel",
-    "mappingFamilyRequiresScene": "Choose a writing scene",
     "manageAppMappingsTitle": "Manage app mappings",
     "mappingEnabled": "Enabled",
     "mappingEdit": "Edit",
@@ -439,7 +459,8 @@
     "mappingReset": "Reset to automatic",
     "mappingResetConfirm": "Delete all device-only app mappings?",
     "mappingResetConfirmAction": "Reset mappings",
-    "mappingNoMappings": "No custom app mappings"
+    "mappingNoMappings": "No custom app mappings",
+    "dictationMode": "ディクテーションモード"
   },
   "contextFamilies": {
     "email": "Email",
@@ -521,11 +542,6 @@
     "refresh": "Refresh",
     "noCloudPacks": "No cloud scene packs available yet. You can still create local custom scenes above.",
     "failedToSave": "Failed to save scene.",
-    "assignAppTypes": "アプリ種別を割り当て",
-    "assignedExactApps": "アプリ別の上書き",
-    "noExactApps": "アプリ別の上書きなし",
-    "assignmentSaveFailed": "アプリの割り当てを保存できませんでした。",
-    "exactAppsCount": "{{count}} 個のアプリ",
     "export": "Export",
     "import": "Import",
     "importedScenes": "Imported {{count}} scenes",
@@ -575,7 +591,34 @@
         "name": "Product Spec Notes",
         "description": "Shape dictation into goals, requirements, and open questions."
       }
-    }
+    },
+    "appWritingModes": "アプリ別の書き方",
+    "appWritingModesDesc": "アプリの種類ごとに既定の書き方があります。カスタムシーンに切り替えることもできます。",
+    "appWritingScene": "書き方シーン",
+    "appModeDescriptions": {
+      "email": "Gmail、Outlook、Mail などのメールアプリ。",
+      "work_chat": "Slack、Lark、Teams、DingTalk などの仕事チャット。",
+      "personal_chat": "WeChat、Messages、WhatsApp などの個人チャット。",
+      "document": "Google Docs、Notion、Word、Yuque などの文書とメモ。",
+      "project_management": "Linear、Jira、Confluence などのプロジェクトツール。",
+      "developer_collaboration": "GitHub、GitLab などの開発コラボレーション。",
+      "prompt_or_code": "Cursor、VS Code、JetBrains などのプロンプト/コードツール。",
+      "support": "Zendesk、Intercom などのサポートツール。",
+      "social": "X、LinkedIn などのソーシャルアプリ。"
+    },
+    "systemModes": {
+      "email": "メール形式",
+      "work_chat": "仕事チャット",
+      "personal_chat": "個人チャット",
+      "document": "ドキュメントメモ",
+      "project_management": "プロジェクト更新",
+      "developer_collaboration": "エンジニアリングメモ",
+      "prompt_or_code": "プロンプト / コード依頼",
+      "support": "サポート返信",
+      "social": "ソーシャル投稿"
+    },
+    "systemSceneDescription": "既定の書き方です。編集したり既定値に戻したりできます。",
+    "resetSystemScene": "既定値に戻す"
   },
   "history": {
     "title": "履歴",
@@ -588,6 +631,7 @@
     "copied": "コピーしました",
     "clearAll": "履歴をすべて消去",
     "clearConfirm": "すべての履歴を消去してもよろしいですか？この操作は元に戻せません。",
+    "confirmClear": "消去",
     "failedToCopy": "クリップボードへのコピーに失敗しました",
     "failedToClear": "履歴の消去に失敗しました",
     "moreActions": "その他の操作",
@@ -595,6 +639,7 @@
     "saveCorrection": "修正を保存",
     "correctionCreated": "修正ルールを作成しました",
     "failedToCreateCorrection": "修正ルールの作成に失敗しました",
+    "needsBrowserAccess": "ブラウザアクセスが必要",
     "providers": {
       "managed_cloud": "Cloud",
       "byok": "BYOK",
@@ -743,6 +788,7 @@
     "close": "閉じる",
     "saving": "保存中...",
     "cancel": "キャンセル",
+    "reset": "リセット",
     "connectionFail": "接続に失敗しました"
   },
   "providers": {

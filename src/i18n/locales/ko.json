@@ -101,7 +101,8 @@
       "apiKeyPlaceholder": "API 키를 입력하세요",
       "testButton": "연결 테스트",
       "connectionOk": "연결에 성공했습니다",
-      "connectionFail": "연결에 실패했습니다"
+      "connectionFail": "연결에 실패했습니다",
+      "customWhisperConfigured": "Custom Whisper"
     },
     "llm": {
       "serviceLabel": "AI 다듬기 서비스",
@@ -127,6 +128,8 @@
       "speechRecognitionSub": "STT 서비스를 설정하세요",
       "aiPolish": "AI 다듬기",
       "aiPolishSub": "LLM 서비스를 설정하세요",
+      "permissions": "권한",
+      "permissionsSub": "현재 설정에 필요한 권한만 허용",
       "howItWorks": "사용 방법",
       "howItWorksSub": "빠른 녹음 테스트를 해보세요",
       "setupComplete": "설정 완료",
@@ -180,7 +183,26 @@
       "accessibilityRequired": "텍스트 출력을 위해 접근성 권한이 필요합니다",
       "grantPermission": "권한 부여",
       "grantLater": "나중에 부여",
-      "accessibilityGranted": "접근성 권한이 부여되었습니다"
+      "accessibilityGranted": "접근성 권한이 부여되었습니다",
+      "appWritingModes": "앱별 글쓰기 모드",
+      "appWritingModesSub": "Scenes에서 이메일, 채팅, 문서 등 기본 글쓰기 방식을 편집하세요."
+    },
+    "permissions": {
+      "subtitle": "OpenTypeless는 기능에 필요할 때만 접근 권한을 요청합니다.",
+      "microphone": "마이크",
+      "microphoneDesc": "음성을 녹음합니다.",
+      "textOutput": "텍스트 출력",
+      "textOutputDesc": "사용 중인 앱에 입력합니다.",
+      "browserApps": "브라우저 앱",
+      "browserAppsDesc": "Gmail, Docs, Slack Web 모드를 사용합니다.",
+      "appleSpeech": "Apple Speech",
+      "appleSpeechDesc": "macOS 로컬 전사를 사용합니다.",
+      "fix": "수정",
+      "status": {
+        "ready": "준비됨",
+        "needed": "필요",
+        "later": "나중에"
+      }
     },
     "mode": {
       "cloud": "클라우드",
@@ -318,9 +340,9 @@
     "volcengineResourceSeedAsr": "SeedASR 2.0",
     "volcengineResourceBigAsr": "BigASR 1.0",
     "customSttConnectionFailed": "Local STT server is not reachable. Check that it is running and the port is correct.",
-    "llmSignInHint": "로그인하여 클라우드 AI를 사용하세요.",
-    "llmUpgradeHint": "Pro가 필요합니다.",
-    "llmProActive": "Pro가 활성화되었습니다.",
+    "llmSignInHint": "로그인하고 Pro를 구독하면 클라우드 AI 다듬기를 사용할 수 있습니다. API 키가 필요 없습니다.",
+    "llmUpgradeHint": "Pro로 업그레이드하면 클라우드 AI 다듬기와 월간 사용량을 사용할 수 있습니다. API 키가 필요 없습니다.",
+    "llmProActive": "Pro 활성화됨 - 클라우드 AI 다듬기를 사용할 수 있습니다. API 키가 필요 없습니다.",
     "apiKey": "API 키",
     "enterApiKey": "API 키를 입력하세요...",
     "test": "테스트",
@@ -341,6 +363,8 @@
     "contextAdaptationHint": "Uses a private local app category to shape the writing style.",
     "contextAdaptationApps": "컨텍스트에 맞게 조정되는 앱",
     "lastDictationContext": "Last dictation context",
+    "browserAccessHint": "브라우저 접근을 허용하면 Gmail, Docs, Slack Web 모드를 사용할 수 있습니다.",
+    "allowBrowserAccess": "허용",
     "generalContext": "General",
     "polishStyle": "다듬기 스타일",
     "polishStyleMinimal": "최소",
@@ -426,12 +450,8 @@
     "mappingFamily": "Context family",
     "mappingScene": "Writing scene",
     "mappingNoScene": "Automatic",
-    "mappingScope": "Apply to",
-    "mappingScopeApp": "This app",
-    "mappingScopeFamily": "All apps in this context family",
     "mappingSave": "Save",
     "mappingCancel": "Cancel",
-    "mappingFamilyRequiresScene": "Choose a writing scene",
     "manageAppMappingsTitle": "Manage app mappings",
     "mappingEnabled": "Enabled",
     "mappingEdit": "Edit",
@@ -439,7 +459,8 @@
     "mappingReset": "Reset to automatic",
     "mappingResetConfirm": "Delete all device-only app mappings?",
     "mappingResetConfirmAction": "Reset mappings",
-    "mappingNoMappings": "No custom app mappings"
+    "mappingNoMappings": "No custom app mappings",
+    "dictationMode": "받아쓰기 모드"
   },
   "contextFamilies": {
     "email": "Email",
@@ -521,11 +542,6 @@
     "refresh": "Refresh",
     "noCloudPacks": "No cloud scene packs available yet. You can still create local custom scenes above.",
     "failedToSave": "Failed to save scene.",
-    "assignAppTypes": "앱 유형 할당",
-    "assignedExactApps": "앱별 재정의",
-    "noExactApps": "앱별 재정의 없음",
-    "assignmentSaveFailed": "앱 할당을 저장하지 못했습니다.",
-    "exactAppsCount": "앱 {{count}}개",
     "export": "Export",
     "import": "Import",
     "importedScenes": "Imported {{count}} scenes",
@@ -575,7 +591,34 @@
         "name": "Product Spec Notes",
         "description": "Shape dictation into goals, requirements, and open questions."
       }
-    }
+    },
+    "appWritingModes": "앱별 글쓰기 모드",
+    "appWritingModesDesc": "앱 유형마다 기본 글쓰기 모드가 있습니다. 사용자 지정 Scene으로 바꿀 수 있습니다.",
+    "appWritingScene": "글쓰기 Scene",
+    "appModeDescriptions": {
+      "email": "Gmail, Outlook, Mail 같은 이메일 앱.",
+      "work_chat": "Slack, Lark, Teams, DingTalk 같은 업무 채팅.",
+      "personal_chat": "WeChat, Messages, WhatsApp 같은 개인 채팅.",
+      "document": "Google Docs, Notion, Word, Yuque 같은 문서와 노트.",
+      "project_management": "Linear, Jira, Confluence 같은 프로젝트 도구.",
+      "developer_collaboration": "GitHub, GitLab 같은 개발 협업.",
+      "prompt_or_code": "Cursor, VS Code, JetBrains 같은 프롬프트와 코드 도구.",
+      "support": "Zendesk, Intercom 같은 지원 도구.",
+      "social": "X, LinkedIn 같은 소셜 앱."
+    },
+    "systemModes": {
+      "email": "이메일 형식",
+      "work_chat": "업무 채팅",
+      "personal_chat": "개인 채팅",
+      "document": "문서 노트",
+      "project_management": "프로젝트 업데이트",
+      "developer_collaboration": "엔지니어링 노트",
+      "prompt_or_code": "프롬프트 / 코드 요청",
+      "support": "지원 답변",
+      "social": "소셜 게시글"
+    },
+    "systemSceneDescription": "기본 글쓰기 모드입니다. 편집하거나 기본값으로 되돌릴 수 있습니다.",
+    "resetSystemScene": "기본값으로 재설정"
   },
   "history": {
     "title": "기록",
@@ -588,6 +631,7 @@
     "copied": "복사됨",
     "clearAll": "모든 기록 삭제",
     "clearConfirm": "모든 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "confirmClear": "삭제",
     "failedToCopy": "클립보드 복사에 실패했습니다",
     "failedToClear": "기록 삭제에 실패했습니다",
     "moreActions": "추가 작업",
@@ -595,6 +639,7 @@
     "saveCorrection": "교정 저장",
     "correctionCreated": "교정 규칙을 만들었습니다",
     "failedToCreateCorrection": "교정 규칙을 만들지 못했습니다",
+    "needsBrowserAccess": "브라우저 접근 필요",
     "providers": {
       "managed_cloud": "Cloud",
       "byok": "BYOK",
@@ -743,6 +788,7 @@
     "close": "닫기",
     "saving": "저장 중...",
     "cancel": "취소",
+    "reset": "재설정",
     "connectionFail": "연결에 실패했습니다"
   },
   "providers": {

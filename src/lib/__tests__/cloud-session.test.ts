@@ -36,7 +36,9 @@ describe('cloud session coordinator', () => {
 
   it('shares one invalidation across concurrent managed-cloud failures', async () => {
     let release!: () => void
-    const pending = new Promise<void>((resolve) => { release = resolve })
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
     const handler = vi.fn(() => pending)
     registerCloudSessionInvalidation(handler)
 

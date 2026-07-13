@@ -17,7 +17,7 @@ import {
   type SubscriptionSource,
 } from '../lib/api'
 import { isActiveCloudPlan } from '../lib/constants'
-import { toast } from '../components/Toast'
+import { toast } from '../components/toast-service'
 import i18n from '../i18n'
 
 let sttWarningShown = false

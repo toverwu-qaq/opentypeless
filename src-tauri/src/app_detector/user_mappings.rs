@@ -233,9 +233,7 @@ impl UserAppMappingCollection {
             .native_identity
             .as_deref()
             .or(signals.process_alias.as_deref());
-        let Some(identity) = identity else {
-            return None;
-        };
+        let identity = identity?;
         self.mappings.iter().find(|mapping| {
             if !mapping.enabled {
                 return false;

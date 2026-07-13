@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MoreHorizontal, Plus, X } from 'lucide-react'
-import {
-  bindingFromHotkey,
-  hotkeyFromBinding,
-  isMacPlatform,
-} from '../../stores/appStore'
+import { bindingFromHotkey, hotkeyFromBinding, isMacPlatform } from '../../stores/appStore'
 import type { HotkeyRole } from '../../lib/tauri'
 import type { ShortcutBinding } from '../../stores/appStore'
 import { pauseHotkey, resumeHotkey } from '../../lib/tauri'
@@ -69,6 +65,7 @@ export function HotkeyRecorder({
   const [error, setError] = useState<string | null>(null)
   const autoConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoStarted = useRef(false)
+  const recordingRef = useRef(false)
 
   const clearTimer = useCallback(() => {
     if (!autoConfirmTimer.current) return
@@ -79,6 +76,7 @@ export function HotkeyRecorder({
   const confirmHotkey = useCallback(
     (hotkey: string) => {
       clearTimer()
+      recordingRef.current = false
       setRecording(false)
       setModifierHint(null)
       setPending(null)
@@ -97,6 +95,7 @@ export function HotkeyRecorder({
 
   const cancelRecording = useCallback(() => {
     clearTimer()
+    recordingRef.current = false
     setRecording(false)
     setPending(null)
     setModifierHint(null)
@@ -108,11 +107,20 @@ export function HotkeyRecorder({
   const startRecording = useCallback(() => {
     if (disabled) return
     pauseHotkey().catch(() => {})
+    recordingRef.current = true
     setRecording(true)
     setPending(null)
     setModifierHint(null)
     setError(null)
   }, [disabled])
+
+  useEffect(() => {
+    return () => {
+      if (!recordingRef.current) return
+      recordingRef.current = false
+      resumeHotkey().catch(() => {})
+    }
+  }, [])
 
   useEffect(() => {
     if (!autoStart || autoStarted.current) return
@@ -345,7 +353,10 @@ export function ShortcutBindingList({
 
       <div className="space-y-1.5">
         {bindings.map((binding, index) => (
-          <div key={`${bindingIdentity(binding)}-${index}`} className="flex min-w-0 items-start gap-1">
+          <div
+            key={`${bindingIdentity(binding)}-${index}`}
+            className="flex min-w-0 items-start gap-1"
+          >
             <div className="min-w-0 flex-1">
               <HotkeyRecorder
                 value={hotkeyFromBinding(binding)}
@@ -428,7 +439,9 @@ export function ShortcutBindingList({
         )}
       </div>
 
-      {atLimit && <p className="mt-1 text-[10px] text-text-tertiary">{t('settings.shortcutMax')}</p>}
+      {atLimit && (
+        <p className="mt-1 text-[10px] text-text-tertiary">{t('settings.shortcutMax')}</p>
+      )}
     </div>
   )
 }

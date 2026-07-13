@@ -25,12 +25,13 @@ async function openTypelessAuthRequest(path: string, body: unknown): Promise<voi
   })
   if (response.ok) return
 
-  const result = await response.json().catch(() => null) as {
+  const result = (await response.json().catch(() => null)) as {
     error?: string | { message?: string }
   } | null
-  const message = typeof result?.error === 'string'
-    ? result.error
-    : result?.error?.message ?? response.statusText
+  const message =
+    typeof result?.error === 'string'
+      ? result.error
+      : (result?.error?.message ?? response.statusText)
   throw new Error(message || 'Authentication request failed')
 }
 

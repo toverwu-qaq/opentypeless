@@ -73,7 +73,9 @@ describe('ShortcutBindingList', () => {
     expect(screen.queryByRole('button', { name: '—' })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    expect(screen.queryByRole('button', { name: 'Press a key combination...' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Press a key combination...' }),
+    ).not.toBeInTheDocument()
   })
 
   it('adds bindings up to three and disables a fourth', () => {
@@ -170,6 +172,27 @@ describe('ShortcutBindingList', () => {
 
     expect(screen.getByText('Shortcut conflict')).toBeInTheDocument()
     expect(onChange).not.toHaveBeenCalled()
+    expect(tauri.resumeHotkey).toHaveBeenCalled()
+  })
+
+  it('resumes global hotkeys when capture is abandoned by unmounting', () => {
+    const { unmount } = render(
+      <ShortcutBindingList
+        role="dictation"
+        label="Dictate"
+        bindings={[ctrlSlash]}
+        otherBindings={[]}
+        required
+        specialOptions={[]}
+        onChange={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ctrl+/' }))
+    expect(tauri.pauseHotkey).toHaveBeenCalled()
+
+    unmount()
+
     expect(tauri.resumeHotkey).toHaveBeenCalled()
   })
 })

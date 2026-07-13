@@ -5,11 +5,13 @@ import { AppContextMeta } from '../AppContextMeta'
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => ({
-      'history.providers.managed_cloud': 'Cloud',
-      'history.providers.byok': 'BYOK',
-      'history.providers.local': 'Local',
-    })[key] ?? key,
+    t: (key: string) =>
+      ({
+        'history.providers.managed_cloud': 'Cloud',
+        'history.providers.byok': 'BYOK',
+        'history.providers.local': 'Local',
+        'history.needsBrowserAccess': 'needs browser access',
+      })[key] ?? key,
   }),
 }))
 
@@ -47,5 +49,20 @@ describe('AppContextMeta', () => {
 
     expect(container.querySelector('svg')).not.toBeNull()
     expect(screen.getByText('Self-hosted Git')).toHaveClass('min-w-0', 'truncate')
+  })
+
+  it('adds a browser access hint only for Browser entries that need URL access', () => {
+    render(
+      <AppContextMeta
+        iconKey="general"
+        family="general"
+        label="Browser"
+        time="10:10"
+        providerKind="local"
+        browserAccessStatus="needs_permission"
+      />,
+    )
+
+    expect(screen.getByText('needs browser access')).toBeInTheDocument()
   })
 })

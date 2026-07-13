@@ -29,7 +29,9 @@ describe('TranslationTargets', () => {
     expect(screen.getByRole('combobox', { name: 'settings.targetLanguage' })).toHaveValue('en')
     expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /moveTranslationTarget/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /removeTranslationTarget/ })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /removeTranslationTarget/ }),
+    ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'settings.manageTranslationTargets' }),
     ).not.toBeInTheDocument()

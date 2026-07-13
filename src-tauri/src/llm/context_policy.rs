@@ -31,7 +31,7 @@ impl ContextPolicy {
                 list_behavior: NumberWhenExplicit,
                 sentence_completeness: true,
                 preserve_technical_tokens: true,
-                forbidden_additions: &["greeting", "sign-off", "subject line"],
+                forbidden_additions: &["subject line", "recipient not spoken"],
             },
             ContextFamily::WorkChat => Self {
                 artifact_kind: Message,
@@ -138,31 +138,31 @@ impl ContextPolicy {
     pub fn render_family_rules(&self, family: ContextFamily) -> String {
         let family_rule = match family {
             ContextFamily::Email => {
-                "Email: use a formal tone and complete sentences. Preserve any spoken greeting or sign-off, but never invent one."
+                "Email: produce an email body when there is enough content. Use a greeting when the recipient is spoken, concise body paragraphs, and a light closing when appropriate. Do not generate a subject unless explicitly requested."
             }
             ContextFamily::WorkChat => {
-                "Work chat: keep it casual and concise while preserving the user's tone. Use simple line breaks instead of Markdown when a list is truly needed. No over-formatting."
+                "Work chat: keep it casual and concise while preserving the user's tone. Use short sentences or simple line breaks when helpful. No greeting or sign-off."
             }
             ContextFamily::PersonalChat => {
                 "Personal chat: keep the user's casual voice and short-message rhythm; do not turn it into a status report."
             }
             ContextFamily::Document => {
-                "Document: use coherent paragraphs. Markdown headings or lists are allowed only when the spoken structure supports them."
+                "Document: use coherent paragraphs. Use short headings or bullet points when the spoken structure has sections, takeaways, or multiple items."
             }
             ContextFamily::ProjectManagement => {
-                "Project management: surface spoken blocker, owner, and date information without inventing ticket fields."
+                "Project management: format as a compact update with bullets for progress, blockers, and next steps when spoken. Do not invent owners, deadlines, or ticket fields."
             }
             ContextFamily::DeveloperCollaboration => {
-                "Developer collaboration: preserve technical identifiers, API names, versions, paths, and error tokens exactly."
+                "Developer collaboration: format as a concise review or engineering note. Use bullets for issue, impact, and suggestion when helpful. Preserve technical identifiers, API names, versions, paths, and error tokens exactly."
             }
             ContextFamily::PromptOrCode => {
-                "Prompt or code surface: make the spoken request explicit and usable, but never invent code or unstated requirements. Preserve technical identifiers."
+                "Prompt or code surface: make the spoken request explicit and usable. Use compact bullets for goal, constraints, and output shape when implied, but never invent code or unstated requirements."
             }
             ContextFamily::Support => {
-                "Support: be clear and empathetic without inventing policy, entitlement, refund, or resolution claims."
+                "Support: write a clear, empathetic reply. Use short paragraphs or numbered steps when next actions are spoken. Do not invent policy, entitlement, refund, or resolution claims."
             }
             ContextFamily::Social => {
-                "Social: keep the user's voice and make it readable; never add hashtags, emoji, or calls to action."
+                "Social: keep the user's voice and make it readable as a short post. No hashtags, emoji, or calls to action unless spoken."
             }
             ContextFamily::General => {
                 "General: lightly polish into directly usable prose without assuming an artifact type."

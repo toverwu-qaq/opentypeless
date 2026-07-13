@@ -47,9 +47,7 @@ export function ManageAppMappingsDialog({
     try {
       await setCustomAppMappingEnabled(mapping.id, !mapping.enabled)
       setRows((current) =>
-        current.map((row) =>
-          row.id === mapping.id ? { ...row, enabled: !mapping.enabled } : row,
-        ),
+        current.map((row) => (row.id === mapping.id ? { ...row, enabled: !mapping.enabled } : row)),
       )
       await onChanged()
     } catch (actionError) {
@@ -128,9 +126,7 @@ export function ManageAppMappingsDialog({
                   <p className="truncate text-[12px] font-medium text-text-primary">
                     {mapping.label}
                   </p>
-                  <p className="truncate text-[11px] text-text-tertiary">
-                    {mapping.displayValue}
-                  </p>
+                  <p className="truncate text-[11px] text-text-tertiary">{mapping.displayValue}</p>
                 </div>
                 <button
                   type="button"

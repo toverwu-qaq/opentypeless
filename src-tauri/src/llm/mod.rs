@@ -12,6 +12,7 @@ use crate::error::AppError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LlmConfig {
+    pub provider: String,
     pub api_key: String,
     pub model: String,
     pub base_url: String,
@@ -22,6 +23,7 @@ pub struct LlmConfig {
 impl Default for LlmConfig {
     fn default() -> Self {
         Self {
+            provider: "zhipu".to_string(),
             api_key: String::new(),
             model: "glm-4.7".to_string(),
             base_url: "https://open.bigmodel.cn/api/paas/v4".to_string(),
@@ -86,6 +88,27 @@ pub trait LlmProvider: Send + Sync {
     fn name(&self) -> &str;
 }
 
+pub fn provider_requires_api_key(provider: &str) -> bool {
+    !matches!(provider.trim().to_ascii_lowercase().as_str(), "ollama")
+}
+
+pub fn has_usable_provider_credentials(provider: &str, api_key: &str) -> bool {
+    !provider_requires_api_key(provider) || !api_key.trim().is_empty()
+}
+
+pub fn apply_provider_auth_header(
+    request: reqwest::RequestBuilder,
+    provider: &str,
+    api_key: &str,
+) -> reqwest::RequestBuilder {
+    let api_key = api_key.trim();
+    if provider_requires_api_key(provider) || !api_key.is_empty() {
+        request.header("Authorization", format!("Bearer {}", api_key))
+    } else {
+        request
+    }
+}
+
 pub fn create_provider(
     provider_name: &str,
     client: Option<reqwest::Client>,
@@ -95,6 +118,28 @@ pub fn create_provider(
         ("cloud", None) => Box::new(cloud::CloudLlmProvider::new()),
         (_, Some(c)) => Box::new(openai::OpenAiProvider::with_client(c)),
         (_, None) => Box::new(openai::OpenAiProvider::new()),
+    }
+}
+
+#[cfg(test)]
+mod provider_capability_tests {
+    use super::*;
+
+    #[test]
+    fn ollama_is_keyless_and_remote_providers_require_keys() {
+        assert!(!provider_requires_api_key("ollama"));
+        assert!(!provider_requires_api_key(" Ollama "));
+        assert!(provider_requires_api_key("openai"));
+        assert!(provider_requires_api_key("custom-openai-compatible"));
+    }
+
+    #[test]
+    fn usable_credentials_are_consistent_for_keyless_and_keyed_providers() {
+        assert!(has_usable_provider_credentials("ollama", ""));
+        assert!(has_usable_provider_credentials("ollama", "   "));
+        assert!(!has_usable_provider_credentials("openai", ""));
+        assert!(!has_usable_provider_credentials("openai", "   "));
+        assert!(has_usable_provider_credentials("openai", "sk-test"));
     }
 }
 
@@ -110,6 +155,8 @@ mod context_prompt_contract_tests {
             app_label: "Safe label".to_string(),
             icon_key: "general".to_string(),
             override_id: override_id.map(str::to_string),
+            browser_access_status: crate::app_detector::types::BrowserAccessStatus::NotApplicable,
+            browser_target: None,
         }
     }
 
@@ -165,7 +212,7 @@ mod context_prompt_contract_tests {
             Some("github"),
         ));
 
-        assert!(email.contains("complete sentences"));
+        assert!(email.contains("email body"));
         assert!(chat.contains("concise"));
         assert!(code.contains("technical identifiers"));
         for prompt in [email, chat, code] {

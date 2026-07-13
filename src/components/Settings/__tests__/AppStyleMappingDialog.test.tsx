@@ -18,12 +18,8 @@ vi.mock('react-i18next', () => ({
         'settings.mappingFamily': 'Context family',
         'settings.mappingScene': 'Writing scene',
         'settings.mappingNoScene': 'Automatic',
-        'settings.mappingScope': 'Apply to',
-        'settings.mappingScopeApp': 'This app',
-        'settings.mappingScopeFamily': 'All apps in this context family',
         'settings.mappingSave': 'Save',
         'settings.mappingCancel': 'Cancel',
-        'settings.mappingFamilyRequiresScene': 'Choose a writing scene',
         'settings.manageAppMappingsTitle': 'Manage app mappings',
         'settings.mappingEnabled': 'Enabled',
         'settings.mappingEdit': 'Edit',
@@ -96,7 +92,6 @@ describe('AppStyleMappingDialog', () => {
       enabled: true,
       iconKey: 'general',
     })
-    vi.mocked(tauri.setFamilySceneAssignment).mockResolvedValue([])
   })
 
   afterEach(cleanup)
@@ -148,7 +143,7 @@ describe('AppStyleMappingDialog', () => {
     expect(onSaved).toHaveBeenCalled()
   })
 
-  it('assigns a scene to the whole family without persisting the candidate matcher', async () => {
+  it('does not expose family-wide scene assignment from the exact-app override dialog', async () => {
     render(
       <AppStyleMappingDialog
         candidate={candidate}
@@ -159,19 +154,62 @@ describe('AppStyleMappingDialog', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'All apps in this context family' }))
+    expect(
+      screen.queryByRole('button', { name: 'All apps in this context family' }),
+    ).not.toBeInTheDocument()
+
+    expect(screen.queryByRole('option', { name: 'Clean Dictation' })).not.toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Writing scene'), {
-      target: { value: 'builtin_clean_dictation' },
+      target: { value: 'custom_focus' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() =>
-      expect(tauri.setFamilySceneAssignment).toHaveBeenCalledWith(
-        'document',
-        'builtin_clean_dictation',
-      ),
+      expect(tauri.saveCustomAppMapping).toHaveBeenCalledWith({
+        candidateGeneration: 9,
+        label: 'docs.example.com',
+        family: 'document',
+        sceneId: 'custom_focus',
+      }),
     )
-    expect(tauri.saveCustomAppMapping).not.toHaveBeenCalled()
+    expect(tauri.setFamilySceneAssignment).not.toHaveBeenCalled()
+  })
+
+  it('falls back to automatic when an edited mapping references a deleted scene', async () => {
+    const staleMapping: tauri.CustomAppMappingView = {
+      id: 'mapping-stale',
+      label: 'Old Docs',
+      matcherType: 'exact_web_host',
+      displayValue: 'docs.example.com',
+      family: 'document',
+      sceneId: 'custom_deleted',
+      enabled: true,
+      iconKey: 'general',
+    }
+
+    render(
+      <AppStyleMappingDialog
+        candidate={null}
+        mapping={staleMapping}
+        context={context}
+        config={config}
+        onCancel={vi.fn()}
+        onSaved={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByLabelText('Writing scene')).toHaveValue('')
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() =>
+      expect(tauri.updateCustomAppMapping).toHaveBeenCalledWith({
+        id: 'mapping-stale',
+        label: 'Old Docs',
+        family: 'document',
+        sceneId: null,
+        enabled: true,
+      }),
+    )
   })
 })
 

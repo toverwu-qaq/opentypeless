@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Reduce default Settings density while preserving all P0/P1 behavior, expose existing Scene/context assignments, and close two packaged-desktop accessibility/state gaps.
+**Goal:** Reduce default Settings density while preserving all P0/P1 behavior, make Scenes the place where app-family writing modes are visible and configurable, and close two packaged-desktop accessibility/state gaps.
 
-**Architecture:** Keep existing panes and stores. Simplify each component through progressive disclosure, reuse persisted `family_scene_assignments` and exact app mappings, and add no new backend data model. Component behavior is frozen with focused Vitest tests before each production edit.
+**Architecture:** Keep existing panes and stores. Simplify each component through progressive disclosure, reuse persisted `family_scene_assignments` for app-family Scene choices, preserve exact app mappings as user-owned overrides, and add only the minimal persisted `system_scene_overrides` config field rather than a second mapping store. Component behavior is frozen with focused Vitest tests before each production edit.
 
 **Tech Stack:** React 19, TypeScript 5.8, Tailwind CSS 4, react-i18next, Zustand, Tauri 2, Vitest 4, Testing Library, existing Lucide and dialog/menu patterns.
 
@@ -14,6 +14,8 @@
 - Preserve Settings route, six pane destinations, current design tokens, and 10px-or-smaller radii.
 - Preserve password APIs, account semantics, cloud/quota behavior, app detection, prompt composition, intent routing, shortcut persistence, translation persistence, dictionary transactions, and backup privacy.
 - Do not add a 71-app settings gallery or persist raw process, bundle, executable, host, title, URL, page, dictated, or selected-text material.
+- Expose supported app-family writing modes in Scenes, with representative app logos and compact Scene selectors.
+- Keep exact app override creation reachable only from a safe detected context or existing user mapping.
 - Use existing local app marks and Lucide icons only.
 - Every new icon-only action has an accessible name and tooltip.
 - Use TDD: every production behavior change follows a focused failing test.
@@ -160,48 +162,56 @@ Add local `activeSection: 'words' | 'corrections'`, reuse `SegmentedControl`, ke
 
 Run the focused Dictionary suite and confirm import/export/edit tests still pass.
 
-### Task 4: Expose Existing Scene/Context Assignments
+### Task 4: Add App Writing Modes To Scenes
 
 **Files:**
-- Create: `src/components/Settings/SceneAssignmentsDialog.tsx`
-- Create: `src/components/Settings/__tests__/SceneAssignmentsDialog.test.tsx`
 - Modify: `src/components/Settings/ScenesPane.tsx`
 - Modify: `src/components/Settings/__tests__/Settings.test.tsx`
+- Modify: `src/stores/appStore.ts`
+- Modify: `src-tauri/src/storage/mod.rs`
 - Modify: `src/i18n/locales/{de,en,es,fr,it,ja,ko,pt,ru,zh}.json`
 
 **Interfaces:**
-- Consumes: `family_scene_assignments`, `setFamilySceneAssignment`, existing `listCustomAppMappings`, existing scene IDs, localized context family labels.
-- Produces: `SceneAssignmentsDialog({ sceneId, sceneName, assignments, appMappings, onCancel, onSaved })` and compact per-scene usage summaries.
+- Consumes: existing automatic `ContextPolicy` family rules, explicit `active_scene`, exact app `mapped_scene_id`, serialized `family_scene_assignments`, and exact app override commands.
+- Produces: `App Writing Modes` in Scenes with representative app logos, concrete default mode names, editable default scenes in `My Scenes`, custom Scene override selectors, exact app mapped Scene prompts still resolving, no global Scene activation UI, and `family_scene_assignments` affecting runtime Scene selection when there is no legacy active Scene or exact app override.
 
-- [ ] **Step 1: Add failing dialog tests**
+- [ ] **Step 1: Add failing App Writing Modes tests**
 
-Assert the dialog preselects assigned families, lists exact assigned app mappings with local app labels/icons, saves only changed family assignments, supports unassignment with `sceneId: null`, closes on Escape, and restores no raw matcher material.
+Assert Scenes shows `App Writing Modes`, semantic app-family rows, representative app logos such as Gmail/Apple Mail and Slack/Lark, and one selector per family. The default selector label must be a concrete default mode name, not `Automatic`. Default scenes must appear in `My Scenes`, support edit/reset, and existing `family_scene_assignments` must preselect the chosen custom Scene.
 
 - [ ] **Step 2: Verify RED**
 
 Run:
 
 ```bash
-npx vitest run src/components/Settings/__tests__/SceneAssignmentsDialog.test.tsx --reporter=verbose
+npx vitest run src/components/Settings/__tests__/Settings.test.tsx --reporter=verbose
 ```
 
-Expected: module missing.
+Expected: failure because the old Scene cards still expose assignment summaries and setup.
 
-- [ ] **Step 3: Implement the compact assignment dialog**
+- [ ] **Step 3: Implement App Writing Modes UI**
 
-Use a 420px existing-style dialog. Render nine family checkboxes in a responsive two-column grid and a restrained exact-app summary. On save, call `setFamilySceneAssignment` for changed families, keep the last returned assignment list, and return it through `onSaved`.
+Add a top Scenes section that lists app families, local app logos, descriptions, and compact selectors. Use concrete default mode names as the default option. Put default modes in `My Scenes` as editable/resettable default scenes instead of a separate built-in library. Keep the 71-app gallery out of the UI.
 
-- [ ] **Step 4: Add failing Scenes integration tests**
+- [ ] **Step 4: Add failing persistence tests**
 
-Assert assigned scene cards show localized family usage, exact app logos/counts, and `Assign app types`; saving updates both `config` and `savedConfig` through `applyPersistedConfigPatch` without showing the Settings dirty bar.
+Changing a family selector calls `setFamilySceneAssignment`, updates both `config` and `savedConfig` through `applyPersistedConfigPatch`, and does not leave the Settings dirty bar visible.
 
-- [ ] **Step 5: Verify RED, then integrate into ScenesPane**
+- [ ] **Step 5: Verify RED, then wire persistence**
 
-Load exact mappings once, compute usage by `scene_id`, pass summaries/actions into `LocalSceneCard`, open the dialog from expanded cards, and refresh mapping data after changes. Keep creation of exact app mappings in the last-context flow.
+Use existing `setFamilySceneAssignment` and `family_scene_assignments`; do not add a second mapping store. Keep exact app override creation in the last-context flow.
 
-- [ ] **Step 6: Verify GREEN**
+- [ ] **Step 6: Add failing Rust runtime test**
 
-Run the assignment and Settings suites.
+Assert `automatic_scene_prompt` still returns prompts for an exact app `mapped_scene_id`, still returns `None` when legacy active Scene data is set, and returns the family-assigned/default Scene when only `family_scene_assignments` or a default app mode matches the current family.
+
+- [ ] **Step 7: Verify RED, then restore family Scene runtime fallback**
+
+Keep `family_scene_assignments` serialization, sanitization, and command/API compatibility. Resolve automatic Scene prompt by exact app mapping first, then family assignment/default app mode, unless legacy active Scene data is set. Skip Polish Style when a scene prompt owns the output shape.
+
+- [ ] **Step 8: Verify GREEN**
+
+Run the focused Settings and Rust storage tests.
 
 ### Task 5: Trap Password Dialog Focus
 
@@ -265,7 +275,7 @@ npm run tauri -- build --debug --bundles app --config '{"bundle":{"createUpdater
 
 - [ ] **Step 4: Run packaged UI QA**
 
-At 900x700 and 720x480, capture and inspect General single/multiple shortcut states, AI/context on/off, single/multiple translation targets, both Dictionary segments, Scene assignment dialog/summary, and the password Tab/Shift+Tab cycle. Do not submit a password or change macOS permission.
+At 900x700 and 720x480, capture and inspect General single/multiple shortcut states, AI/context on/off, App Writing Modes with representative app logos and concrete default mode names, exact app override reachability, single/multiple translation targets, both Dictionary segments, Scene activation/clearing, and the password Tab/Shift+Tab cycle. Do not submit a password, save test mappings, or change macOS permission.
 
 - [ ] **Step 5: Update verification record and final diff checks**
 

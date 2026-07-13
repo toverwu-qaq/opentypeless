@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AppConfig } from '../../stores/appStore'
-import { createBackupSettings } from '../backup-settings'
+import { useAppStore } from '../../stores/appStore'
+import { createBackupSettings, mergeBackupSettings } from '../backup-settings'
 
 describe('createBackupSettings', () => {
   it('uses an explicit allow list and keeps only sync-safe family scene assignments', () => {
@@ -15,10 +16,9 @@ describe('createBackupSettings', () => {
       llm_base_url: 'https://example.com/v1',
       context_adaptation_enabled: true,
       custom_scenes: [],
+      system_scene_overrides: [{ id: 'system_email', prompt_template: 'Use a warm email body.' }],
       active_scene: null,
-      family_scene_assignments: [
-        { family: 'email', scene_id: 'builtin_professional_email' },
-      ],
+      family_scene_assignments: [{ family: 'email', scene_id: 'builtin_professional_email' }],
       custom_app_mappings: [{ matcher: { exactWebHost: 'private.example.com' } }],
       customAppMappings: [{ nativeBundleId: 'com.private.writer' }],
       matcher: { executable: 'private.exe' },
@@ -33,6 +33,9 @@ describe('createBackupSettings', () => {
       { family: 'email', scene_id: 'builtin_professional_email' },
     ])
     expect(settings.context_adaptation_enabled).toBe(true)
+    expect(settings.system_scene_overrides).toEqual([
+      { id: 'system_email', prompt_template: 'Use a warm email body.' },
+    ])
     for (const forbidden of [
       'stt-secret',
       'custom-secret',
@@ -51,5 +54,29 @@ describe('createBackupSettings', () => {
     ]) {
       expect(serialized).not.toContain(forbidden)
     }
+  })
+
+  it('merges only allow-listed settings and preserves local credentials and app matchers', () => {
+    const current = {
+      ...useAppStore.getState().config,
+      llm_api_key: 'local-secret',
+      stt_api_key: 'local-stt-secret',
+    }
+
+    const merged = mergeBackupSettings(current, {
+      polish_enabled: false,
+      system_scene_overrides: [{ id: 'system_email', prompt_template: 'Use concise paragraphs.' }],
+      llm_api_key: 'cloud-secret',
+      stt_api_key: 'cloud-stt-secret',
+      custom_app_mappings: [{ matcher: 'private.example.com' }],
+    })
+
+    expect(merged.polish_enabled).toBe(false)
+    expect(merged.system_scene_overrides).toEqual([
+      { id: 'system_email', prompt_template: 'Use concise paragraphs.' },
+    ])
+    expect(merged.llm_api_key).toBe('local-secret')
+    expect(merged.stt_api_key).toBe('local-stt-secret')
+    expect(merged).not.toHaveProperty('custom_app_mappings')
   })
 })

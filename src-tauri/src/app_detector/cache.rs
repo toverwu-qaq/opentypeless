@@ -8,7 +8,8 @@ use super::platform::{default_source, ContextSignalSource};
 #[cfg(test)]
 use super::registry::AppRegistry;
 use super::types::{
-    ContextProfile, ContextSnapshot, ContextSource, RecordingContext, TargetAppGuard,
+    BrowserAccessStatus, BrowserTarget, ContextProfile, ContextSnapshot, ContextSource,
+    RecordingContext, TargetAppGuard,
 };
 use super::user_mappings::{
     candidate_from_signals, MappingCandidate, MappingCandidateView, UserAppMappingStore,
@@ -30,6 +31,8 @@ struct CachedContext {
     target_guard: TargetAppGuard,
     mapped_scene_id: Option<String>,
     candidate_template: Option<MappingCandidate>,
+    browser_access_status: BrowserAccessStatus,
+    browser_target: Option<BrowserTarget>,
 }
 
 struct DetectorRuntime {
@@ -116,6 +119,8 @@ impl ContextDetectorHandle {
             target_guard: TargetAppGuard::default(),
             mapped_scene_id: None,
             candidate_template: None,
+            browser_access_status: BrowserAccessStatus::NotApplicable,
+            browser_target: None,
         }));
         let (refresh_tx, refresh_rx) = mpsc::sync_channel(1);
         let shutdown = Arc::new(AtomicBool::new(false));
@@ -183,6 +188,16 @@ impl ContextDetectorHandle {
         } else {
             cached.candidate_template.clone()
         };
+        let browser_access_status = if enabled && !stale {
+            cached.browser_access_status
+        } else {
+            BrowserAccessStatus::NotApplicable
+        };
+        let browser_target = if enabled && !stale {
+            cached.browser_target
+        } else {
+            None
+        };
         drop(cached);
 
         let generation = self.candidate_generation.fetch_add(1, Ordering::SeqCst) + 1;
@@ -202,6 +217,8 @@ impl ContextDetectorHandle {
             profile,
             target_guard,
             mapped_scene_id,
+            browser_access_status,
+            browser_target,
         }
     }
 
@@ -317,6 +334,8 @@ impl ContextDetectorHandle {
             target_guard,
             mapped_scene_id: None,
             candidate_template: None,
+            browser_access_status: BrowserAccessStatus::NotApplicable,
+            browser_target: None,
         };
     }
 
@@ -371,23 +390,36 @@ fn refresh_context(
     mapping_store: &UserAppMappingStore,
     cached: &RwLock<CachedContext>,
 ) {
-    let (profile, target_guard, mapped_scene_id, candidate_template) = match source.collect() {
+    let (
+        profile,
+        target_guard,
+        mapped_scene_id,
+        candidate_template,
+        browser_access_status,
+        browser_target,
+    ) = match source.collect() {
         Some(signals) => {
             let resolved = mapping_store.resolve(&signals);
             let candidate_template = candidate_from_signals(&signals, &resolved.profile, 0)
                 .filter(|_| !mapping_store.has_match(&signals));
             let target_guard = TargetAppGuard::from(&signals);
+            let browser_access_status = signals.browser_access_status;
+            let browser_target = signals.browser_target;
             (
                 resolved.profile,
                 target_guard,
                 resolved.mapped_scene_id,
                 candidate_template,
+                browser_access_status,
+                browser_target,
             )
         }
         None => (
             ContextProfile::general_native(),
             TargetAppGuard::default(),
             None,
+            None,
+            BrowserAccessStatus::NotApplicable,
             None,
         ),
     };
@@ -400,6 +432,8 @@ fn refresh_context(
         target_guard,
         mapped_scene_id,
         candidate_template,
+        browser_access_status,
+        browser_target,
     };
 }
 
@@ -448,6 +482,19 @@ mod tests {
             process_alias: Some("Google Chrome".to_string()),
             browser_host: Some("mail.google.com".to_string()),
             is_supported_browser: true,
+            browser_access_status: BrowserAccessStatus::Available,
+            ..ContextSignals::default()
+        }
+    }
+
+    fn browser_without_url_signals() -> ContextSignals {
+        ContextSignals {
+            process_id: Some(42),
+            native_identity: Some("com.google.Chrome".to_string()),
+            process_alias: Some("Google Chrome".to_string()),
+            is_supported_browser: true,
+            browser_access_status: BrowserAccessStatus::NeedsPermission,
+            browser_target: Some(BrowserTarget::Chrome),
             ..ContextSignals::default()
         }
     }
@@ -510,6 +557,26 @@ mod tests {
         let captured = handle.snapshot_for_recording();
         assert_eq!(captured.profile.id, "general.browser");
         assert_eq!(captured.target_guard.process_id, Some(42));
+    }
+
+    #[test]
+    fn context_snapshot_records_browser_access_failure_for_supported_browser_without_host() {
+        let source = Arc::new(FakeSource::new(Some(browser_without_url_signals())));
+        let handle = detector(source);
+        wait_for_profile(&handle, "general.browser");
+
+        let captured = handle.snapshot_for_recording();
+
+        assert_eq!(captured.profile.id, "general.browser");
+        assert_eq!(
+            captured.browser_access_status,
+            BrowserAccessStatus::NeedsPermission
+        );
+        assert_eq!(captured.browser_target, Some(BrowserTarget::Chrome));
+        assert_eq!(
+            captured.summary().browser_target,
+            Some(BrowserTarget::Chrome)
+        );
     }
 
     #[test]

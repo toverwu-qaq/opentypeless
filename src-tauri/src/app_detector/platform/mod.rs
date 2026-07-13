@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use super::types::ContextSignals;
 use super::types::TargetAppGuard;
+use super::types::{BrowserAccessStatus, BrowserTarget};
 
 #[cfg(target_os = "linux")]
 mod linux;
@@ -50,6 +51,18 @@ pub(crate) fn restore_target_application(target: &TargetAppGuard) -> bool {
     {
         let _ = target;
         false
+    }
+}
+
+pub(crate) fn request_browser_access(target: BrowserTarget) -> BrowserAccessStatus {
+    #[cfg(target_os = "macos")]
+    {
+        macos::request_browser_access(target)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = target;
+        BrowserAccessStatus::NotApplicable
     }
 }
 

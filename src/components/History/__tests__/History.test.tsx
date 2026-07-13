@@ -2,7 +2,7 @@ import React from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAppStore, type HistoryEntry } from '../../../stores/appStore'
-import { addCorrectionRule, getCorrectionRules } from '../../../lib/tauri'
+import { addCorrectionRule, clearHistory, getCorrectionRules } from '../../../lib/tauri'
 import { History } from '../index'
 
 vi.mock('framer-motion', () => ({
@@ -35,6 +35,7 @@ const entry: HistoryEntry = {
   context_label: 'Slack',
   context_icon_key: 'slack',
   context_family: 'work_chat',
+  browser_access_status: 'not_applicable',
   provider_kind: 'local',
   raw_text: 'open type less',
   polished_text: 'OpenTypeless',
@@ -112,5 +113,22 @@ describe('History correction creation', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'history.moreActions' })).toHaveFocus(),
     )
+  })
+
+  it('clears history through an in-app confirmation instead of window.confirm', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm')
+    render(<History />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'history.clearAll' }))
+    expect(confirmSpy).not.toHaveBeenCalled()
+    expect(screen.getByText('history.clearConfirm')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'history.confirmClear' }))
+
+    await waitFor(() => {
+      expect(clearHistory).toHaveBeenCalled()
+      expect(useAppStore.getState().history).toEqual([])
+    })
+    confirmSpy.mockRestore()
   })
 })

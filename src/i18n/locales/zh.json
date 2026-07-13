@@ -101,7 +101,8 @@
       "apiKeyPlaceholder": "输入你的 API 密钥",
       "testButton": "测试连接",
       "connectionOk": "连接成功",
-      "connectionFail": "连接失败"
+      "connectionFail": "连接失败",
+      "customWhisperConfigured": "Custom Whisper"
     },
     "llm": {
       "serviceLabel": "AI 润色服务",
@@ -127,6 +128,8 @@
       "speechRecognitionSub": "配置你的 STT 服务",
       "aiPolish": "AI 润色",
       "aiPolishSub": "配置你的 LLM 服务",
+      "permissions": "权限",
+      "permissionsSub": "只开启当前设置需要的权限",
       "howItWorks": "使用方法",
       "howItWorksSub": "试试快速录音测试",
       "setupComplete": "设置完成",
@@ -180,7 +183,26 @@
       "accessibilityRequired": "需要辅助功能权限才能输出文本",
       "grantPermission": "授予权限",
       "grantLater": "稍后授予",
-      "accessibilityGranted": "已授予辅助功能权限"
+      "accessibilityGranted": "已授予辅助功能权限",
+      "appWritingModes": "按 App 调整写法",
+      "appWritingModesSub": "在 Scenes 里编辑邮件、聊天、文档等默认写法。"
+    },
+    "permissions": {
+      "subtitle": "OpenTypeless 只会在功能需要时请求权限。",
+      "microphone": "麦克风",
+      "microphoneDesc": "用于录下你的语音。",
+      "textOutput": "文本输出",
+      "textOutputDesc": "把结果输入到当前 App。",
+      "browserApps": "浏览器应用",
+      "browserAppsDesc": "识别 Gmail、Docs、Slack Web。",
+      "appleSpeech": "Apple Speech",
+      "appleSpeechDesc": "使用 macOS 本地转写。",
+      "fix": "处理",
+      "status": {
+        "ready": "已就绪",
+        "needed": "需要",
+        "later": "稍后"
+      }
     },
     "mode": {
       "cloud": "云端",
@@ -316,9 +338,9 @@
     "volcengineResourceSeedAsr": "SeedASR 2.0",
     "volcengineResourceBigAsr": "BigASR 1.0",
     "customSttConnectionFailed": "无法连接本地 STT 服务。请确认服务已启动且端口正确。",
-    "llmSignInHint": "登录后使用云端 AI。",
-    "llmUpgradeHint": "需要 Pro。",
-    "llmProActive": "Pro 已启用。",
+    "llmSignInHint": "登录并订阅 Pro，以使用云端 AI 润色。无需 API 密钥。",
+    "llmUpgradeHint": "升级到 Pro，获得云端 AI 润色和月度额度。无需 API 密钥。",
+    "llmProActive": "Pro 已激活 — 云端 AI 润色可用。无需 API 密钥。",
     "apiKey": "API 密钥",
     "enterApiKey": "输入 API 密钥...",
     "test": "测试",
@@ -339,6 +361,8 @@
     "contextAdaptationHint": "只使用本地识别的应用类别来调整表达方式。",
     "contextAdaptationApps": "根据上下文适配的应用",
     "lastDictationContext": "上次听写场景",
+    "browserAccessHint": "允许浏览器访问后，Gmail、Docs、Slack Web 才能使用对应写法。",
+    "allowBrowserAccess": "允许",
     "generalContext": "通用",
     "polishStyle": "润色风格",
     "polishStyleMinimal": "轻改",
@@ -426,12 +450,8 @@
     "mappingFamily": "场景类别",
     "mappingScene": "写作场景",
     "mappingNoScene": "自动",
-    "mappingScope": "应用范围",
-    "mappingScopeApp": "仅此应用",
-    "mappingScopeFamily": "此类别中的所有应用",
     "mappingSave": "保存",
     "mappingCancel": "取消",
-    "mappingFamilyRequiresScene": "选择一个写作场景",
     "manageAppMappingsTitle": "管理应用映射",
     "mappingEnabled": "已启用",
     "mappingEdit": "编辑",
@@ -439,7 +459,8 @@
     "mappingReset": "恢复自动识别",
     "mappingResetConfirm": "删除所有仅保存在本机的应用映射？",
     "mappingResetConfirmAction": "重置映射",
-    "mappingNoMappings": "暂无自定义应用映射"
+    "mappingNoMappings": "暂无自定义应用映射",
+    "dictationMode": "听写触发方式"
   },
   "contextFamilies": {
     "email": "邮件",
@@ -521,11 +542,6 @@
     "refresh": "刷新",
     "noCloudPacks": "暂无云端场景包。你仍然可以在上方创建本地自定义场景。",
     "failedToSave": "保存场景失败。",
-    "assignAppTypes": "分配应用类型",
-    "assignedExactApps": "指定应用覆盖",
-    "noExactApps": "暂无指定应用覆盖",
-    "assignmentSaveFailed": "保存应用分配失败。",
-    "exactAppsCount": "{{count}} 个应用",
     "export": "导出",
     "import": "导入",
     "importedScenes": "已导入 {{count}} 个场景",
@@ -575,7 +591,34 @@
         "name": "产品规格笔记",
         "description": "整理成目标、需求、边界情况和待确认问题。"
       }
-    }
+    },
+    "appWritingModes": "App 写作模式",
+    "appWritingModesDesc": "每类 App 已有默认写法；你也可以改成自定义场景。",
+    "appWritingScene": "写作场景",
+    "appModeDescriptions": {
+      "email": "Gmail、Outlook、Mail 等邮件应用。",
+      "work_chat": "Slack、飞书、Teams、钉钉等工作聊天。",
+      "personal_chat": "微信、Messages、WhatsApp 等个人聊天。",
+      "document": "Google Docs、Notion、Word、语雀等文档笔记。",
+      "project_management": "Linear、Jira、Confluence 等项目工具。",
+      "developer_collaboration": "GitHub、GitLab 等开发协作工具。",
+      "prompt_or_code": "Cursor、VS Code、JetBrains 等提示词和代码工具。",
+      "support": "Zendesk、Intercom 等客服工具。",
+      "social": "X、LinkedIn 等社交应用。"
+    },
+    "systemModes": {
+      "email": "邮件格式",
+      "work_chat": "工作聊天",
+      "personal_chat": "个人聊天",
+      "document": "文档笔记",
+      "project_management": "项目进展",
+      "developer_collaboration": "工程备注",
+      "prompt_or_code": "提示词 / 代码请求",
+      "support": "客服回复",
+      "social": "社交短帖"
+    },
+    "systemSceneDescription": "默认写法，可编辑，也可以恢复默认。",
+    "resetSystemScene": "恢复默认"
   },
   "history": {
     "title": "历史记录",
@@ -588,6 +631,7 @@
     "copied": "已复制",
     "clearAll": "清除所有历史记录",
     "clearConfirm": "确定要清除所有历史记录吗？此操作无法撤销。",
+    "confirmClear": "清除",
     "failedToCopy": "复制到剪贴板失败",
     "failedToClear": "清除历史记录失败",
     "moreActions": "更多操作",
@@ -595,6 +639,7 @@
     "saveCorrection": "保存纠正",
     "correctionCreated": "纠正规则已创建",
     "failedToCreateCorrection": "创建纠正规则失败",
+    "needsBrowserAccess": "需要浏览器访问",
     "providers": {
       "managed_cloud": "云端",
       "byok": "自有模型",
@@ -743,6 +788,7 @@
     "close": "关闭",
     "saving": "保存中...",
     "cancel": "取消",
+    "reset": "重置",
     "connectionFail": "连接失败"
   },
   "providers": {

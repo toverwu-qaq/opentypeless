@@ -12,6 +12,7 @@ vi.mock('react-i18next', () => ({
     t: (key: string, params?: any) => {
       const translations: Record<string, string> = {
         'settings.provider': 'Provider',
+        'nav.upgrade': 'Upgrade',
         'settings.apiKey': 'API Key',
         'settings.model': 'Model',
         'settings.baseUrl': 'Base URL',
@@ -31,6 +32,8 @@ vi.mock('react-i18next', () => ({
         'settings.contextAdaptationHint': 'Uses a private local app category',
         'settings.contextAdaptationApps': 'Apps adapted by context',
         'settings.lastDictationContext': 'Last dictation context',
+        'settings.browserAccessHint':
+          'Allow browser access to use Gmail, Docs, and Slack Web modes.',
         'settings.appStyleMenu': 'App writing style',
         'settings.useDifferentWritingStyle': 'Use a different writing style',
         'settings.manageAppMappings': 'Manage app mappings',
@@ -54,9 +57,11 @@ vi.mock('react-i18next', () => ({
         'settings.targetLanguage': 'Translate to',
         'settings.manageTranslationTargets': 'Manage languages',
         'settings.cloudLlmPro': 'Cloud LLM (Pro)',
-        'settings.llmSignInHint': 'Sign in to use cloud LLM',
-        'settings.llmUpgradeHint': 'Upgrade to Pro to use cloud LLM',
-        'settings.llmProActive': 'Cloud LLM active',
+        'settings.llmSignInHint':
+          'Sign in and subscribe to Pro to use cloud AI polish. No API key needed.',
+        'settings.llmUpgradeHint':
+          'Upgrade to Pro for cloud AI polish and monthly usage. No API key needed.',
+        'settings.llmProActive': 'Pro active — cloud AI polish is ready. No API key needed.',
         'settings.askAnything': 'Ask Anything',
         'settings.askAnythingDesc': 'Voice question, one-shot answer. No chat history.',
         'ask.ready': 'Ready to ask',
@@ -238,8 +243,10 @@ describe('LlmPane', () => {
     it('shows cloud info when provider is cloud and user not signed in', () => {
       mockAppStore.config.llm_provider = 'cloud'
       render(<LlmPane />)
-      expect(screen.getByText('Sign in to use cloud LLM')).toBeInTheDocument()
-      expect(screen.queryByText('Cloud LLM (Pro)')).not.toBeInTheDocument()
+      expect(screen.getByText('Cloud LLM (Pro)')).toBeInTheDocument()
+      expect(
+        screen.getByText('Sign in and subscribe to Pro to use cloud AI polish. No API key needed.'),
+      ).toBeInTheDocument()
     })
 
     it('shows upgrade hint when user is signed in but not pro', () => {
@@ -248,7 +255,14 @@ describe('LlmPane', () => {
       mockAuthStore.plan = 'free'
 
       render(<LlmPane />)
-      expect(screen.getByText('Upgrade to Pro to use cloud LLM')).toBeInTheDocument()
+      expect(screen.getByText('Cloud LLM (Pro)')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'Upgrade to Pro for cloud AI polish and monthly usage. No API key needed.',
+        ),
+      ).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Upgrade' }))
+      expect(window.location.hash).toBe('#/upgrade')
     })
 
     it('shows active status when user is pro', () => {
@@ -257,7 +271,9 @@ describe('LlmPane', () => {
       mockAuthStore.plan = 'pro'
 
       render(<LlmPane />)
-      expect(screen.getByText('Cloud LLM active')).toBeInTheDocument()
+      expect(
+        screen.getByText('Pro active — cloud AI polish is ready. No API key needed.'),
+      ).toBeInTheDocument()
     })
   })
 
@@ -309,6 +325,51 @@ describe('LlmPane', () => {
       render(<LlmPane />)
       const button = screen.getByRole('button', { name: /test/i })
       expect(button).not.toBeDisabled()
+    })
+
+    it('allows testing Ollama without an API key', async () => {
+      vi.mocked(tauri.benchLlmConnection).mockResolvedValue(42)
+      mockAppStore.config.llm_provider = 'ollama'
+      mockAppStore.config.llm_api_key = ''
+      mockAppStore.config.llm_base_url = 'http://localhost:11434/v1'
+      mockAppStore.config.llm_model = 'llama3.2'
+
+      render(<LlmPane />)
+      const button = screen.getByRole('button', { name: /test/i })
+
+      expect(screen.queryByPlaceholderText('Enter API Key')).not.toBeInTheDocument()
+      expect(button).not.toBeDisabled()
+      fireEvent.click(button)
+      await waitFor(() =>
+        expect(tauri.benchLlmConnection).toHaveBeenCalledWith(
+          '',
+          'ollama',
+          'http://localhost:11434/v1',
+          'llama3.2',
+        ),
+      )
+    })
+
+    it('auto-fetches Ollama models without an API key', async () => {
+      vi.useFakeTimers()
+      try {
+        mockAppStore.config.llm_provider = 'ollama'
+        mockAppStore.config.llm_api_key = ''
+        mockAppStore.config.llm_base_url = 'http://localhost:11434/v1'
+
+        render(<LlmPane />)
+        await vi.advanceTimersByTimeAsync(500)
+
+        expect(tauri.fetchLlmModels).toHaveBeenCalledWith('', 'ollama', 'http://localhost:11434/v1')
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('does not fetch keyed-provider models before an API key is entered', () => {
+      render(<LlmPane />)
+
+      expect(screen.getByTitle('Fetch models')).toBeDisabled()
     })
 
     it('shows loading state during test', () => {
@@ -449,7 +510,7 @@ describe('LlmPane', () => {
       expect(screen.queryByText('Chinese output')).not.toBeInTheDocument()
     })
 
-    it('shows and clears the active scene immediately', async () => {
+    it('does not expose legacy global active scenes in AI Polish', () => {
       mockAppStore.config.active_scene = {
         id: 'custom_meeting',
         source: 'custom',
@@ -459,20 +520,8 @@ describe('LlmPane', () => {
 
       render(<LlmPane />)
 
-      expect(screen.getByText('Active scene: Meeting Notes')).toBeInTheDocument()
-      fireEvent.click(screen.getByText('Clear scene'))
-
-      await waitFor(() => {
-        expect(tauri.updateConfig).toHaveBeenCalledWith(
-          expect.objectContaining({ active_scene: null }),
-        )
-      })
-      expect(mockAppStore.setConfig).toHaveBeenCalledWith(
-        expect.objectContaining({ active_scene: null }),
-      )
-      expect(mockAppStore.setSavedConfig).toHaveBeenCalledWith(
-        expect.objectContaining({ active_scene: null }),
-      )
+      expect(screen.queryByText('Active scene: Meeting Notes')).not.toBeInTheDocument()
+      expect(screen.queryByText('Clear scene')).not.toBeInTheDocument()
     })
   })
 
@@ -573,9 +622,15 @@ describe('LlmPane', () => {
         expect(within(coverage).getByLabelText(name)).toBeInTheDocument()
       }
       expect(within(coverage).getByText('+63')).toBeInTheDocument()
+      expect(within(coverage).getByText('+65')).toHaveClass('context-app-count--compact')
+      expect(within(coverage).getByLabelText('Lark')).toHaveClass('context-app--compact-duplicate')
+      expect(within(coverage).getByLabelText('Notion')).toHaveClass(
+        'context-app--compact-duplicate',
+      )
       expect(within(coverage).queryByRole('button')).not.toBeInTheDocument()
       expect(within(coverage).queryByRole('link')).not.toBeInTheDocument()
       expect(coverage).toHaveAttribute('aria-disabled', 'false')
+      expect(coverage).toHaveClass('gap-1')
     })
 
     it('dims representative apps whenever app adaptation is not active', () => {
@@ -610,12 +665,30 @@ describe('LlmPane', () => {
         appLabel: 'Slack',
         iconKey: 'slack',
         overrideId: 'slack',
+        browserAccessStatus: 'available',
       }
       render(<LlmPane />)
 
       expect(screen.getByText('Last dictation context')).toBeInTheDocument()
       expect(screen.getByText('Slack')).toBeInTheDocument()
       expect(screen.queryByText(/window|host|confidence/i)).not.toBeInTheDocument()
+    })
+
+    it('shows a short browser access hint when browser context needs URL access', () => {
+      mockAppStore.lastContext = {
+        profileId: 'general.browser',
+        family: 'general',
+        appLabel: 'Browser',
+        iconKey: 'general',
+        overrideId: null,
+        browserAccessStatus: 'needs_permission',
+      }
+
+      render(<LlmPane />)
+
+      expect(
+        screen.getByText('Allow browser access to use Gmail, Docs, and Slack Web modes.'),
+      ).toBeInTheDocument()
     })
 
     it('keeps the app-style overflow hidden without a live candidate or user mappings', async () => {
@@ -625,6 +698,7 @@ describe('LlmPane', () => {
         appLabel: 'Slack',
         iconKey: 'slack',
         overrideId: 'slack',
+        browserAccessStatus: 'available',
       }
 
       render(<LlmPane />)
@@ -640,6 +714,7 @@ describe('LlmPane', () => {
         appLabel: 'Example',
         iconKey: 'general',
         overrideId: null,
+        browserAccessStatus: 'available',
       }
       vi.mocked(tauri.getLatestMappingCandidate).mockResolvedValue({
         generation: 7,
@@ -668,6 +743,7 @@ describe('LlmPane', () => {
         appLabel: 'Slack',
         iconKey: 'slack',
         overrideId: 'slack',
+        browserAccessStatus: 'available',
       }
       vi.mocked(tauri.listCustomAppMappings).mockResolvedValue([
         {
@@ -686,6 +762,7 @@ describe('LlmPane', () => {
 
       fireEvent.click(await screen.findByRole('button', { name: 'App writing style' }))
       expect(screen.getByText('Manage app mappings')).toBeInTheDocument()
+      expect(screen.queryByText('Use a different writing style')).not.toBeInTheDocument()
       expect(screen.queryByText('Gmail')).not.toBeInTheDocument()
     })
 

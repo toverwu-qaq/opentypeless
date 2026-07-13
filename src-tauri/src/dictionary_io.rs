@@ -657,7 +657,6 @@ fn safe_csv_cell(value: &str) -> String {
 mod tests {
     use super::*;
     use crate::storage::{CorrectionRule, DictionaryEntry, DictionaryStore};
-    use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn temp_store(name: &str) -> DictionaryStore {
@@ -665,7 +664,7 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let path = PathBuf::from(std::env::temp_dir()).join(format!(
+        let path = std::env::temp_dir().join(format!(
             "opentypeless-dictionary-io-{name}-{}-{nonce}.sqlite",
             std::process::id()
         ));

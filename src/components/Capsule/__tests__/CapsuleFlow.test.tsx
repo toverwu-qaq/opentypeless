@@ -109,6 +109,7 @@ describe('Capsule flow states', () => {
     render(<Capsule />)
 
     expect(screen.getByText('ask.title')).toBeInTheDocument()
+    expect(screen.getByText('ask.title')).toHaveClass('whitespace-nowrap')
     expect(screen.getByText('00:00')).toBeInTheDocument()
 
     const pointerUp = new Event('pointerup', { bubbles: true })
@@ -124,6 +125,7 @@ describe('Capsule flow states', () => {
     render(<Capsule />)
 
     expect(screen.getByText('ask.title')).toBeInTheDocument()
+    expect(screen.getByText('ask.title')).toHaveClass('whitespace-nowrap')
     expect(screen.getByText('ask.thinking')).toBeInTheDocument()
   })
 

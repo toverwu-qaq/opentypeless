@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAppStore } from '../../stores/appStore'
 import type { PolishStyle } from '../../stores/appStore'
 import { hasManagedCloudAccess, useAuthStore } from '../../stores/authStore'
-import { LLM_PROVIDERS, LLM_DEFAULT_CONFIG } from '../../lib/constants'
+import { LLM_PROVIDERS, LLM_DEFAULT_CONFIG, llmProviderRequiresApiKey } from '../../lib/constants'
 import {
   benchLlmConnection,
   fetchLlmModels,
@@ -11,7 +11,6 @@ import {
   listCustomAppMappings,
   readCredential,
   setCredential,
-  updateConfig as persistConfig,
 } from '../../lib/tauri'
 import type { CustomAppMappingView, MappingCandidateView } from '../../lib/tauri'
 import { FormField } from './shared/FormField'
@@ -33,9 +32,7 @@ import { ManageAppMappingsDialog } from './ManageAppMappingsDialog'
 
 export function LlmPane() {
   const config = useAppStore((s) => s.config)
-  const setConfig = useAppStore((s) => s.setConfig)
   const updateConfig = useAppStore((s) => s.updateConfig)
-  const setSavedConfig = useAppStore((s) => s.setSavedConfig)
   const llmTestStatus = useAppStore((s) => s.llmTestStatus)
   const setLlmTestStatus = useAppStore((s) => s.setLlmTestStatus)
   const llmLatencyMs = useAppStore((s) => s.llmLatencyMs)
@@ -46,8 +43,12 @@ export function LlmPane() {
   const { t } = useTranslation()
 
   const isCloud = config.llm_provider === 'cloud'
+  const requiresApiKey = llmProviderRequiresApiKey(config.llm_provider)
   const polishPromptLength = config.polish_custom_prompt.length
   const hasCustomPolishConfig = config.polish_custom_prompt.trim().length > 0
+  const goUpgrade = () => {
+    window.location.hash = '#/upgrade'
+  }
 
   const models = useAppStore((s) => s.llmModels)
   const setModels = useAppStore((s) => s.setLlmModels)
@@ -65,6 +66,12 @@ export function LlmPane() {
   const [manageMappingsOpen, setManageMappingsOpen] = useState(false)
   const [editingMapping, setEditingMapping] = useState<CustomAppMappingView | null>(null)
   const appStyleMenuButtonRef = useRef<HTMLButtonElement>(null)
+  const showBrowserAccessHint = Boolean(
+    config.polish_enabled &&
+    config.context_adaptation_enabled &&
+    lastContext?.profileId === 'general.browser' &&
+    lastContext.browserAccessStatus === 'needs_permission',
+  )
 
   const refreshAppMappings = useCallback(async () => {
     const [candidate, mappings] = await Promise.all([
@@ -119,7 +126,7 @@ export function LlmPane() {
   }, [hasCustomPolishConfig])
 
   useEffect(() => {
-    if (isCloud) {
+    if (isCloud || !requiresApiKey) {
       setLlmApiKey('')
       setCredentialErrorMessage(null)
       return
@@ -138,11 +145,11 @@ export function LlmPane() {
     return () => {
       cancelled = true
     }
-  }, [config.llm_api_key, config.llm_provider, isCloud])
+  }, [config.llm_api_key, config.llm_provider, isCloud, requiresApiKey])
 
   const persistLlmCredential = useCallback(
     (value: string, delayMs = 350) => {
-      if (isCloud) return
+      if (isCloud || !requiresApiKey) return
       if (credentialSaveRef.current) clearTimeout(credentialSaveRef.current)
       credentialSaveRef.current = setTimeout(() => {
         credentialSaveRef.current = null
@@ -155,15 +162,15 @@ export function LlmPane() {
           })
       }, delayMs)
     },
-    [config.llm_provider, isCloud],
+    [config.llm_provider, isCloud, requiresApiKey],
   )
 
   const doFetchModels = useCallback(
-    async (apiKey: string, baseUrl: string) => {
+    async (apiKey: string, provider: string, baseUrl: string) => {
       if (!baseUrl) return
       setFetchingModels(true)
       try {
-        const list = await fetchLlmModels(apiKey, baseUrl)
+        const list = await fetchLlmModels(apiKey, provider, baseUrl)
         setModels(list)
       } catch {
         // Do not clear existing cache on failure — avoids infinite retry loop
@@ -178,11 +185,11 @@ export function LlmPane() {
   // Auto-fetch when API key or base URL changes (debounced); skips if models already cached
   useEffect(() => {
     if (isCloud) return
-    if (!llmApiKey || !config.llm_base_url) return
+    if ((requiresApiKey && !llmApiKey) || !config.llm_base_url) return
     if (models.length > 0) return
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      doFetchModels(llmApiKey, config.llm_base_url)
+      doFetchModels(llmApiKey, config.llm_provider, config.llm_base_url)
     }, 500)
     return () => {
       if (debounceRef.current) {
@@ -190,7 +197,15 @@ export function LlmPane() {
         debounceRef.current = null
       }
     }
-  }, [config.llm_base_url, doFetchModels, isCloud, llmApiKey, models.length])
+  }, [
+    config.llm_base_url,
+    config.llm_provider,
+    doFetchModels,
+    isCloud,
+    llmApiKey,
+    models.length,
+    requiresApiKey,
+  ])
 
   const handleTest = async () => {
     setLlmTestStatus('testing')
@@ -213,17 +228,30 @@ export function LlmPane() {
     }
   }
 
-  const handleClearActiveScene = async () => {
-    const previousConfig = config
-    const nextConfig = { ...config, active_scene: null }
-    setConfig(nextConfig)
-    try {
-      await persistConfig(nextConfig)
-      setSavedConfig(nextConfig)
-    } catch {
-      setConfig(previousConfig)
-    }
-  }
+  const renderConnectionFeedback = (includeCredentialStatus: boolean) => (
+    <>
+      {llmTestStatus === 'success' && (
+        <p className="flex items-center gap-1 text-[12px] text-success mt-2">
+          <CheckCircle2 size={13} />{' '}
+          {llmLatencyMs !== null ? `${llmLatencyMs}ms` : t('settings.connectionSuccess')}
+        </p>
+      )}
+      {(llmTestStatus === 'error' || testErrorMessage) && (
+        <div className="flex items-start gap-1 text-[12px] text-error mt-2">
+          <XCircle size={13} className="mt-[1px] flex-shrink-0" />
+          <span>{testErrorMessage || t('settings.connectionFailed')}</span>
+        </div>
+      )}
+      {includeCredentialStatus &&
+        (credentialErrorMessage ? (
+          <p className="text-[11px] text-error mt-1.5">
+            {t('settings.credentialSaveFailed', { details: credentialErrorMessage })}
+          </p>
+        ) : (
+          <p className="text-[11px] text-text-tertiary mt-1.5">{t('settings.storedLocally')}</p>
+        ))}
+    </>
+  )
 
   return (
     <div className="space-y-4">
@@ -251,68 +279,65 @@ export function LlmPane() {
             </option>
           ))}
         </select>
-        {isCloud && (
-          <div className="mt-2 flex items-center gap-1.5 text-[11px]">
-            <Crown size={12} className="flex-none text-accent" />
-            <span className={hasCloudAccess ? 'text-success' : 'text-text-tertiary'}>
-              {!user
-                ? t('settings.llmSignInHint')
-                : hasCloudAccess
-                  ? t('settings.llmProActive')
-                  : t('settings.llmUpgradeHint')}
-            </span>
-          </div>
-        )}
       </FormField>
+
+      {isCloud && (
+        <div className="border border-border rounded-[10px] px-3 py-3 space-y-2">
+          <div className="flex items-center gap-2 text-[13px]">
+            <Crown size={14} className="text-accent" />
+            <span className="text-text-primary font-medium">{t('settings.cloudLlmPro')}</span>
+          </div>
+          {!user ? (
+            <p className="text-[12px] text-text-secondary">{t('settings.llmSignInHint')}</p>
+          ) : !hasCloudAccess ? (
+            <div className="space-y-2">
+              <p className="text-[12px] text-text-secondary">{t('settings.llmUpgradeHint')}</p>
+              <button
+                type="button"
+                onClick={goUpgrade}
+                className="rounded-[8px] border border-accent bg-accent px-3 py-1.5 text-[12px] font-medium text-white hover:bg-accent-hover"
+              >
+                {t('nav.upgrade')}
+              </button>
+            </div>
+          ) : (
+            <p className="text-[12px] text-green-500">{t('settings.llmProActive')}</p>
+          )}
+        </div>
+      )}
 
       {!isCloud && (
         <>
-          <FormField label={t('settings.apiKey')}>
-            <div className="flex gap-2">
-              <input
-                type="password"
-                value={llmApiKey}
-                onChange={(e) => {
-                  setLlmApiKey(e.target.value)
-                  persistLlmCredential(e.target.value)
-                  setLlmTestStatus('idle')
-                  setLlmLatencyMs(null)
-                  setTestErrorMessage(null)
-                  setCredentialErrorMessage(null)
-                }}
-                onBlur={() => persistLlmCredential(llmApiKey, 0)}
-                placeholder={t('settings.enterApiKey')}
-                className="flex-1 px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
-              />
-              <button
-                onClick={handleTest}
-                disabled={!llmApiKey || llmTestStatus === 'testing'}
-                className="px-4 py-2.5 bg-accent text-white rounded-[10px] text-[13px] border-none cursor-pointer hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
-              >
-                {llmTestStatus === 'testing' && <Loader2 size={14} className="animate-spin" />}
-                {t('settings.test')}
-              </button>
-            </div>
-            {llmTestStatus === 'success' && (
-              <p className="flex items-center gap-1 text-[12px] text-success mt-2">
-                <CheckCircle2 size={13} />{' '}
-                {llmLatencyMs !== null ? `${llmLatencyMs}ms` : t('settings.connectionSuccess')}
-              </p>
-            )}
-            {(llmTestStatus === 'error' || testErrorMessage) && (
-              <div className="flex items-start gap-1 text-[12px] text-error mt-2">
-                <XCircle size={13} className="mt-[1px] flex-shrink-0" />
-                <span>{testErrorMessage || t('settings.connectionFailed')}</span>
+          {requiresApiKey && (
+            <FormField label={t('settings.apiKey')}>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={llmApiKey}
+                  onChange={(e) => {
+                    setLlmApiKey(e.target.value)
+                    persistLlmCredential(e.target.value)
+                    setLlmTestStatus('idle')
+                    setLlmLatencyMs(null)
+                    setTestErrorMessage(null)
+                    setCredentialErrorMessage(null)
+                  }}
+                  onBlur={() => persistLlmCredential(llmApiKey, 0)}
+                  placeholder={t('settings.enterApiKey')}
+                  className="flex-1 px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
+                />
+                <button
+                  onClick={handleTest}
+                  disabled={!llmApiKey || llmTestStatus === 'testing'}
+                  className="px-4 py-2.5 bg-accent text-white rounded-[10px] text-[13px] border-none cursor-pointer hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                >
+                  {llmTestStatus === 'testing' && <Loader2 size={14} className="animate-spin" />}
+                  {t('settings.test')}
+                </button>
               </div>
-            )}
-            {credentialErrorMessage ? (
-              <p className="text-[11px] text-error mt-1.5">
-                {t('settings.credentialSaveFailed', { details: credentialErrorMessage })}
-              </p>
-            ) : (
-              <p className="text-[11px] text-text-tertiary mt-1.5">{t('settings.storedLocally')}</p>
-            )}
-          </FormField>
+              {renderConnectionFeedback(true)}
+            </FormField>
+          )}
 
           <FormField label={t('settings.model')}>
             <div className="flex gap-2">
@@ -335,8 +360,8 @@ export function LlmPane() {
                 </datalist>
               </div>
               <button
-                onClick={() => doFetchModels(llmApiKey, config.llm_base_url)}
-                disabled={fetchingModels || !config.llm_base_url}
+                onClick={() => doFetchModels(llmApiKey, config.llm_provider, config.llm_base_url)}
+                disabled={fetchingModels || !config.llm_base_url || (requiresApiKey && !llmApiKey)}
                 className="px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-secondary cursor-pointer hover:border-border-focus disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
                 title={t('settings.fetchModels')}
               >
@@ -351,19 +376,33 @@ export function LlmPane() {
           </FormField>
 
           <FormField label={t('settings.baseUrl')}>
-            <input
-              value={config.llm_base_url}
-              onChange={(e) => {
-                updateConfig({ llm_base_url: e.target.value })
-                setLlmTestStatus('idle')
-                setLlmLatencyMs(null)
-                setTestErrorMessage(null)
-              }}
-              placeholder={
-                LLM_DEFAULT_CONFIG[config.llm_provider]?.baseUrl ?? 'https://api.openai.com/v1'
-              }
-              className="w-full px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
-            />
+            <div className="flex gap-2">
+              <input
+                value={config.llm_base_url}
+                onChange={(e) => {
+                  updateConfig({ llm_base_url: e.target.value })
+                  setLlmTestStatus('idle')
+                  setLlmLatencyMs(null)
+                  setTestErrorMessage(null)
+                }}
+                placeholder={
+                  LLM_DEFAULT_CONFIG[config.llm_provider]?.baseUrl ?? 'https://api.openai.com/v1'
+                }
+                className="min-w-0 flex-1 px-3 py-2.5 bg-bg-secondary border border-border rounded-[10px] text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
+              />
+              {!requiresApiKey && (
+                <button
+                  type="button"
+                  onClick={handleTest}
+                  disabled={!config.llm_base_url || llmTestStatus === 'testing'}
+                  className="px-4 py-2.5 bg-accent text-white rounded-[10px] text-[13px] border-none cursor-pointer hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                >
+                  {llmTestStatus === 'testing' && <Loader2 size={14} className="animate-spin" />}
+                  {t('settings.test')}
+                </button>
+              )}
+            </div>
+            {!requiresApiKey && renderConnectionFeedback(false)}
           </FormField>
         </>
       )}
@@ -414,17 +453,19 @@ export function LlmPane() {
                           onClick={() => closeAppStyleMenu(true)}
                         />
                         <div className="absolute right-0 top-8 z-40 min-w-[210px] rounded-[8px] border border-border bg-bg-primary py-1 shadow-float">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              closeAppStyleMenu()
-                              setEditingMapping(null)
-                              setAppStyleDialogOpen(true)
-                            }}
-                            className="block w-full px-3 py-2 text-left text-[12px] text-text-secondary hover:bg-bg-hover hover:text-text-primary"
-                          >
-                            {t('settings.useDifferentWritingStyle')}
-                          </button>
+                          {mappingCandidate && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                closeAppStyleMenu()
+                                setEditingMapping(null)
+                                setAppStyleDialogOpen(true)
+                              }}
+                              className="block w-full px-3 py-2 text-left text-[12px] text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+                            >
+                              {t('settings.useDifferentWritingStyle')}
+                            </button>
+                          )}
                           {appMappings.length > 0 && (
                             <button
                               type="button"
@@ -443,6 +484,11 @@ export function LlmPane() {
                   </div>
                 )}
               </div>
+              {showBrowserAccessHint && (
+                <p className="mt-1 text-[11px] leading-relaxed text-amber-600">
+                  {t('settings.browserAccessHint')}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -462,21 +508,6 @@ export function LlmPane() {
           )}
         </div>
       </div>
-
-      {config.active_scene && (
-        <div className="flex items-center justify-between gap-3 rounded-[10px] border border-border bg-bg-secondary px-3 py-2">
-          <span className="text-[12px] text-text-secondary">
-            {t('settings.activeScene', { name: config.active_scene.name })}
-          </span>
-          <button
-            type="button"
-            onClick={handleClearActiveScene}
-            className="text-[12px] text-text-tertiary bg-transparent border-none cursor-pointer hover:text-text-primary transition-colors"
-          >
-            {t('settings.clearActiveScene')}
-          </button>
-        </div>
-      )}
 
       {config.polish_enabled && (
         <FormField label={t('settings.polishStyle')}>

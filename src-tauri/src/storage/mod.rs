@@ -1,5 +1,5 @@
 use crate::app_detector::registry::AppRegistry;
-use crate::app_detector::types::{ContextFamily, ContextProfile};
+use crate::app_detector::types::{BrowserAccessStatus, ContextFamily, ContextProfile};
 use crate::credentials::{migrate_legacy_config_secrets, SystemCredentialVault};
 use anyhow::Result;
 use rusqlite::Connection;
@@ -17,6 +17,8 @@ const SCENE_NAME_MAX_CHARS: usize = 80;
 const SCENE_DESCRIPTION_MAX_CHARS: usize = 240;
 pub(crate) const SCENE_PROMPT_MAX_CHARS: usize = 4000;
 pub const DEFAULT_HISTORY_MAX_ENTRIES: u32 = 5000;
+pub const MAX_BACKUP_DICTIONARY_ENTRIES: usize = 10_000;
+pub const MAX_BACKUP_CORRECTION_RULES: usize = 10_000;
 pub const MAX_HISTORY_RETENTION_DAYS: u32 = 3650;
 pub const MAX_HOTKEY_BINDINGS_PER_ROLE: usize = 3;
 
@@ -54,6 +56,13 @@ impl Default for FamilySceneAssignment {
             scene_id: String::new(),
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(default)]
+pub struct SystemSceneOverride {
+    pub id: String,
+    pub prompt_template: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -178,10 +187,8 @@ impl HotkeyConfig {
         normalize_binding_list(&mut self.ask_bindings);
         normalize_binding_list(&mut self.translate_bindings);
 
-        if !had_dictation_list {
-            if self.dictation.normalize() {
-                self.dictation_bindings.push(self.dictation.clone());
-            }
+        if !had_dictation_list && self.dictation.normalize() {
+            self.dictation_bindings.push(self.dictation.clone());
         }
         if self.dictation_bindings.is_empty() {
             self.dictation_bindings =
@@ -341,6 +348,7 @@ pub struct AppConfig {
     pub polish_custom_prompt: String,
     pub polish_chinese_script: String,
     pub custom_scenes: Vec<CustomScene>,
+    pub system_scene_overrides: Vec<SystemSceneOverride>,
     pub active_scene: Option<ActiveScene>,
     pub family_scene_assignments: Vec<FamilySceneAssignment>,
     pub translate_enabled: bool,
@@ -392,6 +400,7 @@ impl Default for AppConfig {
             polish_custom_prompt: String::new(),
             polish_chinese_script: "preserve".to_string(),
             custom_scenes: Vec::new(),
+            system_scene_overrides: Vec::new(),
             active_scene: None,
             family_scene_assignments: Vec::new(),
             translate_enabled: false,
@@ -441,9 +450,9 @@ impl AppConfig {
             self.hotkey_mode = "toggle".to_string();
         }
         #[cfg(target_os = "windows")]
-        if self.hotkey == "Ctrl+/" && self.hotkey_mode == "hold" {
-            self.hotkey = "RightAlt".to_string();
-            self.hotkey_mode = "toggle".to_string();
+        if self.hotkey == "RightAlt" && self.hotkey_mode == "toggle" {
+            self.hotkey = "Ctrl+/".to_string();
+            self.hotkey_mode = "hold".to_string();
         }
         #[cfg(target_os = "macos")]
         if self.ask_hotkey == "Alt+Shift+/"
@@ -462,15 +471,64 @@ impl AppConfig {
             || self.ask_hotkey == "Control+/"
             || self.ask_hotkey == "Ctrl+."
             || self.ask_hotkey == "Control+."
+            || self.ask_hotkey == "RightAlt+Space"
         {
             self.ask_hotkey = default_ask_hotkey().to_string();
+        }
+        #[cfg(target_os = "windows")]
+        if self
+            .hotkeys
+            .translate
+            .as_ref()
+            .and_then(ShortcutBinding::to_hotkey_string)
+            .as_deref()
+            == Some("RightAlt+LeftShift")
+        {
+            self.hotkeys.translate = None;
+            self.hotkeys.translate_bindings.clear();
         }
     }
 
     fn normalize_hotkey_settings(&mut self) {
+        self.migrate_platform_typed_hotkeys();
         self.hotkeys.dictation_mode =
             normalize_hotkey_mode(&self.hotkeys.dictation_mode).to_string();
         self.sync_legacy_hotkey_fields_from_typed();
+    }
+
+    fn migrate_platform_typed_hotkeys(&mut self) {
+        #[cfg(target_os = "windows")]
+        {
+            if self.hotkeys.dictation.to_hotkey_string().as_deref() == Some("RightAlt") {
+                if let Some(binding) = ShortcutBinding::from_hotkey("Ctrl+/") {
+                    self.hotkeys.dictation = binding.clone();
+                    self.hotkeys.dictation_bindings = vec![binding];
+                }
+                self.hotkeys.dictation_mode = "hold".to_string();
+            }
+            if self
+                .hotkeys
+                .ask
+                .as_ref()
+                .and_then(ShortcutBinding::to_hotkey_string)
+                .as_deref()
+                == Some("RightAlt+Space")
+            {
+                self.hotkeys.ask = ShortcutBinding::from_hotkey("Ctrl+.");
+                self.hotkeys.ask_bindings = self.hotkeys.ask.clone().into_iter().collect();
+            }
+            if self
+                .hotkeys
+                .translate
+                .as_ref()
+                .and_then(ShortcutBinding::to_hotkey_string)
+                .as_deref()
+                == Some("RightAlt+LeftShift")
+            {
+                self.hotkeys.translate = None;
+                self.hotkeys.translate_bindings.clear();
+            }
+        }
     }
 
     fn sync_legacy_hotkey_fields_from_typed(&mut self) {
@@ -494,8 +552,13 @@ impl AppConfig {
         self.polish_custom_prompt = sanitize_polish_custom_prompt(&self.polish_custom_prompt);
         self.polish_chinese_script = "preserve".to_string();
         sanitize_custom_scenes(&mut self.custom_scenes);
+        sanitize_system_scene_overrides(&mut self.system_scene_overrides);
         sanitize_active_scene(&mut self.active_scene);
-        sanitize_family_scene_assignments(&mut self.family_scene_assignments, &self.custom_scenes);
+        sanitize_family_scene_assignments(
+            &mut self.family_scene_assignments,
+            &self.custom_scenes,
+            &self.system_scene_overrides,
+        );
         self.translation.normalize(&self.target_lang);
         self.target_lang = self.translation.active_target.clone();
         self.normalize_insertion_strategy();
@@ -551,6 +614,18 @@ impl AppConfig {
     }
 
     pub fn from_stored_value(value: serde_json::Value) -> Result<Self, serde_json::Error> {
+        let mut value = value;
+        if let Some(object) = value.as_object_mut() {
+            if object
+                .get("system_scene_overrides")
+                .is_some_and(serde_json::Value::is_null)
+            {
+                object.insert(
+                    "system_scene_overrides".to_string(),
+                    serde_json::Value::Array(Vec::new()),
+                );
+            }
+        }
         let has_capsule_auto_hide = value
             .as_object()
             .is_some_and(|object| object.contains_key("capsule_auto_hide"));
@@ -596,22 +671,18 @@ fn default_dictation_hotkey() -> &'static str {
     {
         "Fn"
     }
-    #[cfg(target_os = "windows")]
-    {
-        "RightAlt"
-    }
-    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+    #[cfg(not(target_os = "macos"))]
     {
         "Ctrl+/"
     }
 }
 
 fn default_dictation_hotkey_mode() -> &'static str {
-    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    #[cfg(target_os = "macos")]
     {
         "toggle"
     }
-    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+    #[cfg(not(target_os = "macos"))]
     {
         "hold"
     }
@@ -622,11 +693,7 @@ fn default_ask_hotkey() -> &'static str {
     {
         "Fn+Space"
     }
-    #[cfg(target_os = "windows")]
-    {
-        "RightAlt+Space"
-    }
-    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+    #[cfg(not(target_os = "macos"))]
     {
         "Ctrl+."
     }
@@ -637,13 +704,9 @@ fn default_translate_hotkey() -> Option<&'static str> {
     {
         Some("Fn+LeftShift")
     }
-    #[cfg(target_os = "windows")]
+    #[cfg(not(target_os = "macos"))]
     {
-        Some("RightAlt+LeftShift")
-    }
-    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
-    {
-        None
+        Some("Ctrl+Shift+/")
     }
 }
 
@@ -848,6 +911,52 @@ fn sanitize_custom_scenes(scenes: &mut Vec<CustomScene>) {
     scenes.truncate(CUSTOM_SCENES_MAX_COUNT);
 }
 
+fn system_scene_prompt(scene_id: &str) -> Option<&'static str> {
+    match scene_id {
+        "system_email" => Some(
+            "Email system mode: produce an email body when there is enough content. Use a greeting when the recipient is spoken, concise body paragraphs, and a light closing when appropriate. Do not generate a subject unless explicitly requested.",
+        ),
+        "system_work_chat" => Some(
+            "Work chat system mode: keep it casual and concise. Use short sentences or simple line breaks when helpful. No greeting or sign-off.",
+        ),
+        "system_personal_chat" => Some(
+            "Personal chat system mode: keep the user's casual voice and short-message rhythm; do not turn it into business writing.",
+        ),
+        "system_document" => Some(
+            "Document system mode: use coherent paragraphs. Use short headings or bullet points when the spoken structure has sections, takeaways, or multiple items.",
+        ),
+        "system_project_management" => Some(
+            "Project update system mode: format as a compact update with bullets for progress, blockers, and next steps when spoken. Do not invent owners, deadlines, or ticket fields.",
+        ),
+        "system_developer_collaboration" => Some(
+            "Engineering note system mode: format as a concise review or engineering note. Use bullets for issue, impact, and suggestion when helpful. Preserve technical identifiers exactly.",
+        ),
+        "system_prompt_or_code" => Some(
+            "Prompt/code system mode: make the spoken request explicit and usable. Use compact bullets for goal, constraints, and output shape when implied, but never invent code or unstated requirements.",
+        ),
+        "system_support" => Some(
+            "Support reply system mode: write a clear, empathetic reply. Use short paragraphs or numbered steps when next actions are spoken. Do not invent policy, refund, or resolution claims.",
+        ),
+        "system_social" => Some(
+            "Social post system mode: keep the user's voice and make it readable as a short post. No hashtags, emoji, or calls to action unless spoken.",
+        ),
+        _ => None,
+    }
+}
+
+fn sanitize_system_scene_overrides(overrides: &mut Vec<SystemSceneOverride>) {
+    let mut seen = HashSet::new();
+    for item in overrides.iter_mut() {
+        item.id = sanitize_scene_string(&item.id, SCENE_ID_MAX_CHARS);
+        item.prompt_template = sanitize_scene_string(&item.prompt_template, SCENE_PROMPT_MAX_CHARS);
+    }
+    overrides.retain(|item| {
+        !item.prompt_template.is_empty()
+            && system_scene_prompt(&item.id).is_some()
+            && seen.insert(item.id.clone())
+    });
+}
+
 fn sanitize_active_scene(active_scene: &mut Option<ActiveScene>) {
     if let Some(scene) = active_scene.as_mut() {
         scene.id = sanitize_scene_string(&scene.id, SCENE_ID_MAX_CHARS);
@@ -875,7 +984,7 @@ fn builtin_scene_prompt(scene_id: &str) -> Option<&'static str> {
             "Rewrite the transcript as concise meeting notes with clear bullets, decisions, and action items. Preserve factual content and do not invent details.",
         ),
         "builtin_professional_email" => Some(
-            "Rewrite the transcript as a concise professional email. Keep the tone clear, polite, and direct. Do not add facts that were not spoken.",
+            "Rewrite the transcript as a concise professional email body. Use a greeting when the recipient is spoken, clear body paragraphs, and a light closing when appropriate. Do not add facts or generate a subject unless requested.",
         ),
         "builtin_support_reply" => Some(
             "Rewrite the transcript as a helpful customer support reply. Acknowledge the issue, give clear next steps, and avoid promising anything not stated.",
@@ -895,8 +1004,13 @@ fn builtin_scene_prompt(scene_id: &str) -> Option<&'static str> {
 
 pub(crate) fn scene_prompt_for_id(config: &AppConfig, scene_id: &str) -> Option<String> {
     let scene_id = scene_id.trim();
-    builtin_scene_prompt(scene_id)
-        .map(str::to_string)
+    config
+        .system_scene_overrides
+        .iter()
+        .find(|scene| scene.id == scene_id)
+        .map(|scene| scene.prompt_template.clone())
+        .or_else(|| system_scene_prompt(scene_id).map(str::to_string))
+        .or_else(|| builtin_scene_prompt(scene_id).map(str::to_string))
         .or_else(|| {
             config
                 .custom_scenes
@@ -906,13 +1020,28 @@ pub(crate) fn scene_prompt_for_id(config: &AppConfig, scene_id: &str) -> Option<
         })
 }
 
+fn default_system_scene_id_for_family(family: ContextFamily) -> Option<&'static str> {
+    match family {
+        ContextFamily::Email => Some("system_email"),
+        ContextFamily::WorkChat => Some("system_work_chat"),
+        ContextFamily::PersonalChat => Some("system_personal_chat"),
+        ContextFamily::Document => Some("system_document"),
+        ContextFamily::ProjectManagement => Some("system_project_management"),
+        ContextFamily::DeveloperCollaboration => Some("system_developer_collaboration"),
+        ContextFamily::PromptOrCode => Some("system_prompt_or_code"),
+        ContextFamily::Support => Some("system_support"),
+        ContextFamily::Social => Some("system_social"),
+        ContextFamily::General => None,
+    }
+}
+
 pub(crate) fn family_scene_prompt(config: &AppConfig, family: ContextFamily) -> Option<String> {
     let scene_id = config
         .family_scene_assignments
         .iter()
-        .find(|assignment| assignment.family == family)?
-        .scene_id
-        .as_str();
+        .find(|assignment| assignment.family == family)
+        .map(|assignment| assignment.scene_id.as_str())
+        .or_else(|| default_system_scene_id_for_family(family))?;
     scene_prompt_for_id(config, scene_id)
 }
 
@@ -933,6 +1062,7 @@ pub(crate) fn automatic_scene_prompt(
 fn sanitize_family_scene_assignments(
     assignments: &mut Vec<FamilySceneAssignment>,
     custom_scenes: &[CustomScene],
+    system_scene_overrides: &[SystemSceneOverride],
 ) {
     let valid_custom_ids: HashSet<&str> = custom_scenes
         .iter()
@@ -946,6 +1076,10 @@ fn sanitize_family_scene_assignments(
     assignments.retain(|assignment| {
         !assignment.scene_id.is_empty()
             && (builtin_scene_prompt(&assignment.scene_id).is_some()
+                || system_scene_prompt(&assignment.scene_id).is_some()
+                || system_scene_overrides
+                    .iter()
+                    .any(|scene| scene.id == assignment.scene_id)
                 || valid_custom_ids.contains(assignment.scene_id.as_str()))
             && seen_families.insert(assignment.family)
     });
@@ -1046,6 +1180,7 @@ pub struct HistoryEntry {
     pub context_label: String,
     pub context_icon_key: String,
     pub context_family: ContextFamily,
+    pub browser_access_status: BrowserAccessStatus,
     pub provider_kind: HistoryProviderKind,
     pub raw_text: String,
     pub polished_text: String,
@@ -1122,6 +1257,7 @@ impl HistoryStore {
                 context_label TEXT NOT NULL DEFAULT 'General',
                 context_icon_key TEXT NOT NULL DEFAULT 'general',
                 context_family TEXT NOT NULL DEFAULT 'general',
+                browser_access_status TEXT,
                 provider_kind TEXT NOT NULL DEFAULT 'local',
                 raw_text TEXT NOT NULL DEFAULT '',
                 polished_text TEXT NOT NULL DEFAULT '',
@@ -1169,6 +1305,7 @@ impl HistoryStore {
                     context_label,
                     context_icon_key,
                     context_family,
+                    browser_access_status,
                     provider_kind,
                     raw_text,
                     polished_text,
@@ -1182,13 +1319,14 @@ impl HistoryStore {
                     output_status,
                     output_error
                 )
-             VALUES (?1, '', '', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
+             VALUES (?1, '', '', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
                 rusqlite::params![
                     entry.created_at,
                     entry.context_profile_id,
                     entry.context_label,
                     entry.context_icon_key,
                     context_family_db_value(entry.context_family),
+                    entry.browser_access_status.as_history_value(),
                     entry.provider_kind.as_db_value(),
                     entry.raw_text,
                     entry.polished_text,
@@ -1250,6 +1388,7 @@ impl HistoryStore {
                 context_label,
                 context_icon_key,
                 context_family,
+                browser_access_status,
                 provider_kind,
                 raw_text,
                 polished_text,
@@ -1272,18 +1411,21 @@ impl HistoryStore {
                 context_label: row.get(3)?,
                 context_icon_key: row.get(4)?,
                 context_family: context_family_from_db(&row.get::<_, String>(5)?),
-                provider_kind: HistoryProviderKind::from_db_value(&row.get::<_, String>(6)?),
-                raw_text: row.get(7)?,
-                polished_text: row.get(8)?,
-                language: row.get(9)?,
-                duration_ms: row.get(10)?,
-                active_scene_id: row.get(11)?,
-                active_scene_source: row.get(12)?,
-                active_scene_name: row.get(13)?,
-                active_scene_prompt_chars: row.get(14)?,
-                active_scene_prompt_truncated: row.get(15)?,
-                output_status: row.get(16)?,
-                output_error: row.get(17)?,
+                browser_access_status: BrowserAccessStatus::from_history_value(
+                    row.get::<_, Option<String>>(6)?.as_deref(),
+                ),
+                provider_kind: HistoryProviderKind::from_db_value(&row.get::<_, String>(7)?),
+                raw_text: row.get(8)?,
+                polished_text: row.get(9)?,
+                language: row.get(10)?,
+                duration_ms: row.get(11)?,
+                active_scene_id: row.get(12)?,
+                active_scene_source: row.get(13)?,
+                active_scene_name: row.get(14)?,
+                active_scene_prompt_chars: row.get(15)?,
+                active_scene_prompt_truncated: row.get(16)?,
+                output_status: row.get(17)?,
+                output_error: row.get(18)?,
             })
         })?;
         let mut entries = Vec::new();
@@ -1298,6 +1440,171 @@ impl HistoryStore {
         conn.execute("DELETE FROM history", [])?;
         Ok(())
     }
+
+    /// Restores cloud backup sections in one SQLite transaction. Dictionary and
+    /// correction rows live in the same database, so using the history
+    /// connection here prevents a partially restored local data set.
+    pub async fn restore_backup_data(
+        &self,
+        history: Option<Vec<HistoryEntry>>,
+        dictionary: Option<Vec<DictionaryEntry>>,
+        correction_rules: Option<Vec<CorrectionRule>>,
+        policy: &HistoryRetentionPolicy,
+        now_iso: &str,
+    ) -> Result<()> {
+        if history
+            .as_ref()
+            .is_some_and(|entries| entries.len() > DEFAULT_HISTORY_MAX_ENTRIES as usize)
+        {
+            anyhow::bail!("backup_history_too_large");
+        }
+        let dictionary = dictionary.map(prepare_backup_dictionary).transpose()?;
+        let correction_rules = correction_rules
+            .map(prepare_backup_correction_rules)
+            .transpose()?;
+
+        let mut conn = self.conn.lock().unwrap_or_else(|error| error.into_inner());
+        let transaction = conn.transaction()?;
+
+        if let Some(entries) = history {
+            transaction.execute("DELETE FROM history", [])?;
+            if policy.enabled {
+                let max_entries = policy.max_entries.clamp(1, DEFAULT_HISTORY_MAX_ENTRIES) as usize;
+                let cutoff = if policy.retention_days > 0 {
+                    chrono::NaiveDateTime::parse_from_str(now_iso, "%Y-%m-%dT%H:%M:%S")
+                        .ok()
+                        .map(|now| now - chrono::Duration::days(policy.retention_days as i64))
+                } else {
+                    None
+                };
+                let mut entries = entries
+                    .into_iter()
+                    .filter(|entry| {
+                        cutoff.is_none_or(|cutoff| {
+                            chrono::NaiveDateTime::parse_from_str(
+                                &entry.created_at,
+                                "%Y-%m-%dT%H:%M:%S",
+                            )
+                            .is_ok_and(|created_at| created_at >= cutoff)
+                        })
+                    })
+                    .take(max_entries)
+                    .collect::<Vec<_>>();
+                entries.reverse();
+                for entry in entries {
+                    transaction.execute(
+                        "INSERT INTO history (
+                            created_at,
+                            app_name,
+                            app_type,
+                            context_profile_id,
+                            context_label,
+                            context_icon_key,
+                            context_family,
+                            browser_access_status,
+                            provider_kind,
+                            raw_text,
+                            polished_text,
+                            language,
+                            duration_ms,
+                            active_scene_id,
+                            active_scene_source,
+                            active_scene_name,
+                            active_scene_prompt_chars,
+                            active_scene_prompt_truncated,
+                            output_status,
+                            output_error
+                        ) VALUES (?1, '', '', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
+                        rusqlite::params![
+                            entry.created_at,
+                            entry.context_profile_id,
+                            entry.context_label,
+                            entry.context_icon_key,
+                            context_family_db_value(entry.context_family),
+                            entry.browser_access_status.as_history_value(),
+                            entry.provider_kind.as_db_value(),
+                            entry.raw_text,
+                            entry.polished_text,
+                            entry.language,
+                            entry.duration_ms,
+                            entry.active_scene_id,
+                            entry.active_scene_source,
+                            entry.active_scene_name,
+                            entry.active_scene_prompt_chars,
+                            entry.active_scene_prompt_truncated,
+                            entry.output_status,
+                            entry.output_error,
+                        ],
+                    )?;
+                }
+            }
+        }
+
+        if let Some(entries) = dictionary {
+            transaction.execute("DELETE FROM dictionary", [])?;
+            for (word, pronunciation) in entries {
+                transaction.execute(
+                    "INSERT INTO dictionary (word, pronunciation) VALUES (?1, ?2)",
+                    rusqlite::params![word, pronunciation],
+                )?;
+            }
+        }
+
+        if let Some(rules) = correction_rules {
+            transaction.execute("DELETE FROM correction_rules", [])?;
+            for (pattern, replacement, enabled) in rules {
+                transaction.execute(
+                    "INSERT INTO correction_rules (pattern, replacement, enabled) VALUES (?1, ?2, ?3)",
+                    rusqlite::params![pattern, replacement, if enabled { 1 } else { 0 }],
+                )?;
+            }
+        }
+
+        transaction.commit()?;
+        Ok(())
+    }
+}
+
+fn prepare_backup_dictionary(
+    entries: Vec<DictionaryEntry>,
+) -> Result<Vec<(String, Option<String>)>> {
+    if entries.len() > MAX_BACKUP_DICTIONARY_ENTRIES {
+        anyhow::bail!("backup_dictionary_too_large");
+    }
+    let mut seen = HashSet::new();
+    let mut prepared = Vec::with_capacity(entries.len());
+    for entry in entries {
+        let word = validate_dictionary_text(&entry.word, 100, "dictionary_word")?;
+        let pronunciation = entry
+            .pronunciation
+            .as_deref()
+            .map(|value| validate_dictionary_text(value, 100, "dictionary_pronunciation"))
+            .transpose()?
+            .filter(|value| !value.is_empty());
+        if seen.insert(normalized_dictionary_identity(&word)) {
+            prepared.push((word, pronunciation));
+        }
+    }
+    Ok(prepared)
+}
+
+fn prepare_backup_correction_rules(
+    entries: Vec<CorrectionRule>,
+) -> Result<Vec<(String, String, bool)>> {
+    if entries.len() > MAX_BACKUP_CORRECTION_RULES {
+        anyhow::bail!("backup_corrections_too_large");
+    }
+    let mut seen = HashSet::new();
+    let mut prepared = Vec::with_capacity(entries.len());
+    for entry in entries {
+        let pattern = validate_dictionary_text(&entry.pattern, 120, "correction_pattern")?;
+        let replacement =
+            validate_dictionary_text(&entry.replacement, 120, "correction_replacement")?;
+        if seen.insert(normalized_correction_identity(&pattern, &replacement)) {
+            prepared.push((pattern, replacement, entry.enabled));
+        }
+    }
+    Ok(prepared)
 }
 
 fn ensure_history_optional_columns(conn: &Connection) -> Result<()> {
@@ -1347,6 +1654,10 @@ fn ensure_history_optional_columns(conn: &Connection) -> Result<()> {
         (
             "context_family",
             "ALTER TABLE history ADD COLUMN context_family TEXT NOT NULL DEFAULT 'general'",
+        ),
+        (
+            "browser_access_status",
+            "ALTER TABLE history ADD COLUMN browser_access_status TEXT",
         ),
         (
             "provider_kind",
@@ -2383,7 +2694,7 @@ mod tests {
     }
 
     #[test]
-    fn scene_prompt_resolution_supports_builtins_custom_scenes_and_family_lookup() {
+    fn scene_prompt_resolution_supports_builtins_custom_scenes_and_compat_family_lookup() {
         let mut config = AppConfig::default();
         config.custom_scenes.push(CustomScene {
             id: "custom_focus".to_string(),
@@ -2402,7 +2713,7 @@ mod tests {
         assert_eq!(
             scene_prompt_for_id(&config, "builtin_professional_email").as_deref(),
             Some(
-                "Rewrite the transcript as a concise professional email. Keep the tone clear, polite, and direct. Do not add facts that were not spoken."
+                "Rewrite the transcript as a concise professional email body. Use a greeting when the recipient is spoken, clear body paragraphs, and a light closing when appropriate. Do not add facts or generate a subject unless requested."
             )
         );
         assert_eq!(
@@ -2413,7 +2724,12 @@ mod tests {
             family_scene_prompt(&config, ContextFamily::WorkChat).as_deref(),
             Some("Use short status bullets.")
         );
-        assert_eq!(family_scene_prompt(&config, ContextFamily::Email), None);
+        assert_eq!(
+            family_scene_prompt(&config, ContextFamily::Email).as_deref(),
+            Some(
+                "Email system mode: produce an email body when there is enough content. Use a greeting when the recipient is spoken, concise body paragraphs, and a light closing when appropriate. Do not generate a subject unless explicitly requested."
+            )
+        );
         assert_eq!(scene_prompt_for_id(&config, "missing_scene"), None);
 
         assert_eq!(
@@ -2424,6 +2740,11 @@ mod tests {
             )
             .as_deref(),
             scene_prompt_for_id(&config, "builtin_professional_email").as_deref()
+        );
+        assert_eq!(
+            automatic_scene_prompt(&config, ContextFamily::WorkChat, Some("custom_focus"))
+                .as_deref(),
+            Some("Use short status bullets.")
         );
         assert_eq!(
             automatic_scene_prompt(&config, ContextFamily::WorkChat, None).as_deref(),
@@ -2444,6 +2765,41 @@ mod tests {
             ),
             None
         );
+    }
+
+    #[test]
+    fn system_scene_overrides_replace_default_system_prompts() {
+        let mut config = AppConfig {
+            system_scene_overrides: vec![SystemSceneOverride {
+                id: "system_email".to_string(),
+                prompt_template: "Use a warm email body with concise bullets.".to_string(),
+            }],
+            family_scene_assignments: vec![FamilySceneAssignment {
+                family: ContextFamily::Email,
+                scene_id: "system_email".to_string(),
+            }],
+            ..Default::default()
+        };
+        config.normalize_values();
+
+        assert_eq!(
+            scene_prompt_for_id(&config, "system_email").as_deref(),
+            Some("Use a warm email body with concise bullets.")
+        );
+        assert_eq!(
+            automatic_scene_prompt(&config, ContextFamily::Email, None).as_deref(),
+            Some("Use a warm email body with concise bullets.")
+        );
+    }
+
+    #[test]
+    fn app_config_treats_null_system_scene_overrides_as_empty() {
+        let mut value = serde_json::to_value(AppConfig::default()).unwrap();
+        value["system_scene_overrides"] = serde_json::Value::Null;
+
+        let config = AppConfig::from_stored_value(value).unwrap();
+
+        assert!(config.system_scene_overrides.is_empty());
     }
 
     #[test]
@@ -2549,21 +2905,21 @@ mod tests {
 
     #[cfg(target_os = "windows")]
     #[test]
-    fn app_config_new_install_uses_right_alt_toggle_on_windows() {
+    fn app_config_new_install_keeps_ctrl_slash_on_windows() {
         let config = AppConfig::new_install_default();
-        assert_eq!(config.hotkey, "RightAlt");
-        assert_eq!(config.hotkeys.dictation.primary, "RightAlt");
-        assert_eq!(config.hotkeys.dictation.modifiers, Vec::<String>::new());
-        assert_eq!(config.hotkey_mode, "toggle");
-        assert_eq!(config.hotkeys.dictation_mode, "toggle");
-        assert_eq!(config.ask_hotkey, "RightAlt+Space");
+        assert_eq!(config.hotkey, "Ctrl+/");
+        assert_eq!(config.hotkeys.dictation.primary, "/");
+        assert_eq!(config.hotkeys.dictation.modifiers, vec!["Ctrl".to_string()]);
+        assert_eq!(config.hotkey_mode, "hold");
+        assert_eq!(config.hotkeys.dictation_mode, "hold");
+        assert_eq!(config.ask_hotkey, "Ctrl+.");
         assert_eq!(
             config
                 .hotkeys
                 .ask
                 .as_ref()
                 .and_then(ShortcutBinding::to_hotkey_string),
-            Some("RightAlt+Space".to_string())
+            Some("Ctrl+.".to_string())
         );
         assert_eq!(
             config
@@ -2571,7 +2927,7 @@ mod tests {
                 .translate
                 .as_ref()
                 .and_then(ShortcutBinding::to_hotkey_string),
-            Some("RightAlt+LeftShift".to_string())
+            Some("Ctrl+Shift+/".to_string())
         );
     }
 
@@ -2582,6 +2938,14 @@ mod tests {
         assert_eq!(config.hotkey, "Ctrl+/");
         assert_eq!(config.hotkey_mode, "hold");
         assert_eq!(config.ask_hotkey, "Ctrl+.");
+        assert_eq!(
+            config
+                .hotkeys
+                .translate
+                .as_ref()
+                .and_then(ShortcutBinding::to_hotkey_string),
+            Some("Ctrl+Shift+/".to_string())
+        );
     }
 
     #[cfg(target_os = "macos")]
@@ -2597,24 +2961,6 @@ mod tests {
 
         assert_eq!(config.hotkey, "Fn");
         assert_eq!(config.hotkeys.dictation.primary, "Fn");
-        assert_eq!(config.hotkeys.dictation.modifiers, Vec::<String>::new());
-        assert_eq!(config.hotkey_mode, "toggle");
-        assert_eq!(config.hotkeys.dictation_mode, "toggle");
-    }
-
-    #[cfg(target_os = "windows")]
-    #[test]
-    fn app_config_migrates_old_windows_default_hotkey_to_right_alt() {
-        let value = serde_json::json!({
-            "hotkey": "Ctrl+/",
-            "ask_hotkey": "Ctrl+.",
-            "hotkey_mode": "hold"
-        });
-
-        let config = AppConfig::from_stored_value(value).unwrap();
-
-        assert_eq!(config.hotkey, "RightAlt");
-        assert_eq!(config.hotkeys.dictation.primary, "RightAlt");
         assert_eq!(config.hotkeys.dictation.modifiers, Vec::<String>::new());
         assert_eq!(config.hotkey_mode, "toggle");
         assert_eq!(config.hotkeys.dictation_mode, "toggle");
@@ -2707,10 +3053,7 @@ mod tests {
 
             let config = AppConfig::from_stored_value(value).unwrap();
 
-            #[cfg(target_os = "windows")]
-            assert_eq!(config.ask_hotkey, "RightAlt+Space");
-
-            #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+            #[cfg(not(target_os = "macos"))]
             assert_eq!(config.ask_hotkey, "Ctrl+.");
         }
     }
@@ -2723,6 +3066,7 @@ mod tests {
             context_label: "General".to_string(),
             context_icon_key: "general".to_string(),
             context_family: ContextFamily::General,
+            browser_access_status: BrowserAccessStatus::NotApplicable,
             provider_kind: HistoryProviderKind::Local,
             raw_text: format!("raw {id}"),
             polished_text: format!("polished {id}"),
@@ -2760,6 +3104,20 @@ mod tests {
                 .as_nanos()
         ));
         DictionaryStore::new(path).unwrap()
+    }
+
+    fn temp_backup_stores(name: &str) -> (HistoryStore, DictionaryStore) {
+        let path = std::env::temp_dir().join(format!(
+            "opentypeless-backup-test-{}-{}.sqlite",
+            name,
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let history = HistoryStore::new(path.clone()).unwrap();
+        let dictionary = DictionaryStore::new(path).unwrap();
+        (history, dictionary)
     }
 
     #[tokio::test]
@@ -2832,6 +3190,95 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn backup_restore_replaces_all_requested_data_in_one_transaction() {
+        let (history, dictionary) = temp_backup_stores("replace");
+        history
+            .add(test_history_entry(99, "2026-07-01T00:00:00"))
+            .await
+            .unwrap();
+        dictionary.add("Old word", None).await.unwrap();
+        dictionary
+            .add_correction("old phrase", "Old phrase")
+            .await
+            .unwrap();
+        let policy = HistoryRetentionPolicy {
+            enabled: true,
+            max_entries: 2,
+            retention_days: 0,
+        };
+
+        history
+            .restore_backup_data(
+                Some(vec![
+                    test_history_entry(3, "2026-07-03T00:00:00"),
+                    test_history_entry(2, "2026-07-02T00:00:00"),
+                    test_history_entry(1, "2026-07-01T00:00:00"),
+                ]),
+                Some(vec![
+                    DictionaryEntry {
+                        id: 20,
+                        word: "OpenTypeless".to_string(),
+                        pronunciation: None,
+                    },
+                    DictionaryEntry {
+                        id: 21,
+                        word: " opentypeless ".to_string(),
+                        pronunciation: Some("duplicate".to_string()),
+                    },
+                ]),
+                Some(vec![CorrectionRule {
+                    id: 30,
+                    pattern: "open type less".to_string(),
+                    replacement: "OpenTypeless".to_string(),
+                    enabled: false,
+                }]),
+                &policy,
+                "2026-07-13T00:00:00",
+            )
+            .await
+            .unwrap();
+
+        let restored_history = history.list(10, 0).await.unwrap();
+        assert_eq!(restored_history.len(), 2);
+        assert_eq!(restored_history[0].polished_text, "polished 3");
+        assert_eq!(restored_history[1].polished_text, "polished 2");
+        let restored_dictionary = dictionary.list().await.unwrap();
+        assert_eq!(restored_dictionary.len(), 1);
+        assert_eq!(restored_dictionary[0].word, "OpenTypeless");
+        let restored_rules = dictionary.correction_rules().await.unwrap();
+        assert_eq!(restored_rules.len(), 1);
+        assert!(!restored_rules[0].enabled);
+    }
+
+    #[tokio::test]
+    async fn invalid_backup_dictionary_leaves_existing_data_unchanged() {
+        let (history, dictionary) = temp_backup_stores("validation");
+        history
+            .add(test_history_entry(1, "2026-07-01T00:00:00"))
+            .await
+            .unwrap();
+        dictionary.add("Existing", None).await.unwrap();
+
+        let result = history
+            .restore_backup_data(
+                Some(vec![test_history_entry(2, "2026-07-02T00:00:00")]),
+                Some(vec![DictionaryEntry {
+                    id: 2,
+                    word: "x".repeat(101),
+                    pronunciation: None,
+                }]),
+                None,
+                &HistoryRetentionPolicy::default(),
+                "2026-07-13T00:00:00",
+            )
+            .await;
+
+        assert_eq!(result.unwrap_err().to_string(), "dictionary_word_too_long");
+        assert_eq!(history.list(10, 0).await.unwrap()[0].raw_text, "raw 1");
+        assert_eq!(dictionary.list().await.unwrap()[0].word, "Existing");
+    }
+
+    #[tokio::test]
     async fn history_store_persists_active_scene_diagnostics() {
         let store = temp_history_store("scene-diagnostics");
         let mut entry = test_history_entry(1, "2026-07-01T00:00:00");
@@ -2872,6 +3319,34 @@ mod tests {
             entries[0].output_error.as_deref(),
             Some("LLM failed after partial streaming insert")
         );
+    }
+
+    #[tokio::test]
+    async fn history_store_persists_browser_access_status_without_raw_url() {
+        let store = temp_history_store("browser-access-status");
+        let mut entry = test_history_entry(1, "2026-07-01T00:00:00");
+        entry.context_profile_id = "general.browser".to_string();
+        entry.context_label = "Browser".to_string();
+        entry.browser_access_status = BrowserAccessStatus::NeedsPermission;
+
+        store.add(entry).await.unwrap();
+
+        let entries = store.list(10, 0).await.unwrap();
+        assert_eq!(
+            entries[0].browser_access_status,
+            BrowserAccessStatus::NeedsPermission
+        );
+
+        let conn = store.conn.lock().unwrap();
+        let raw_value: Option<String> = conn
+            .query_row(
+                "SELECT browser_access_status FROM history WHERE id = 1",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(raw_value.as_deref(), Some("needs_permission"));
+        assert_ne!(raw_value.as_deref(), Some("mail.google.com"));
     }
 
     #[tokio::test]
