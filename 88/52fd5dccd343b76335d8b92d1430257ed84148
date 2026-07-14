@@ -1,0 +1,37 @@
+README_de.md
+  s_ce695e6ff1a36d::t_fa789f80f0d793 30,33-47
+README_es.md
+  s_ce695e6ff1a36d::t_62837d2984984c 30,33-47
+README_fr.md
+  s_ce695e6ff1a36d::t_0ffe5c17b455b0 30,33-47
+README_it.md
+  s_ce695e6ff1a36d::t_db9a5277fe74c1 30,33-47
+README_nl.md
+  s_ce695e6ff1a36d::t_bd3fd2ca8fefe7 30,33-47
+README_pl.md
+  s_ce695e6ff1a36d::t_ee5a69fefe6def 30,33-47
+README_pt.md
+  s_ce695e6ff1a36d::t_ef87f9d7f5588a 30,33-47
+README_ru.md
+  s_ce695e6ff1a36d::t_4bdcf75c759566 30,33-47
+README_tr.md
+  s_ce695e6ff1a36d::t_a11bd3af619ae8 30,33-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8852fd5dccd343b76335d8b92d1430257ed84148",
+  "prompts": {},
+  "sessions": {
+    "s_ce695e6ff1a36d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5ec4-f758-7ba3-a2fe-fbc78e6e8cab",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
