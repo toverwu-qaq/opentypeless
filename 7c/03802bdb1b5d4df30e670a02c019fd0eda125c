@@ -1,0 +1,21 @@
+docs/superpowers/specs/2026-07-14-readme-v1.1.49-multilingual-refresh-design.md
+  s_ce695e6ff1a36d::t_994f980e44bfa8 1-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7c03802bdb1b5d4df30e670a02c019fd0eda125c",
+  "prompts": {},
+  "sessions": {
+    "s_ce695e6ff1a36d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5ec4-f758-7ba3-a2fe-fbc78e6e8cab",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
