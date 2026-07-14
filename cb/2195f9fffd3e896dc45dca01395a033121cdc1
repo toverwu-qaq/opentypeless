@@ -1,0 +1,29 @@
+README_ar.md
+  s_ce695e6ff1a36d::t_96b113feb3be6a 30,33-47
+README_hi.md
+  s_ce695e6ff1a36d::t_dcde99ab591cc6 30,33-47
+README_id.md
+  s_ce695e6ff1a36d::t_8eb7a841730ebc 30,33-47
+README_th.md
+  s_ce695e6ff1a36d::t_6d9277bc51e7db 30,33-47
+README_vi.md
+  s_ce695e6ff1a36d::t_07917e205336d1 30,33-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "cb2195f9fffd3e896dc45dca01395a033121cdc1",
+  "prompts": {},
+  "sessions": {
+    "s_ce695e6ff1a36d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5ec4-f758-7ba3-a2fe-fbc78e6e8cab",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
