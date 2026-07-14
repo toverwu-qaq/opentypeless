@@ -1,0 +1,55 @@
+README.md
+  s_ce695e6ff1a36d::t_705de3206cd66a 39-42,82-85
+README_ar.md
+  s_ce695e6ff1a36d::t_5d89a8f922d6a0 33-36
+README_de.md
+  s_ce695e6ff1a36d::t_53961d0e1eb484 33-36
+README_es.md
+  s_ce695e6ff1a36d::t_1fd93d3255b7c9 33-36
+README_fr.md
+  s_ce695e6ff1a36d::t_f700fe8e88208e 33-36
+README_hi.md
+  s_ce695e6ff1a36d::t_ab5f190fadb92b 33-36
+README_id.md
+  s_ce695e6ff1a36d::t_d2a4d6108f453d 33-36
+README_it.md
+  s_ce695e6ff1a36d::t_6bbde1a6642012 33-36
+README_ja.md
+  s_ce695e6ff1a36d::t_67f7649928fc32 33-36
+README_ko.md
+  s_ce695e6ff1a36d::t_941a049b69cbdf 33-36
+README_nl.md
+  s_ce695e6ff1a36d::t_907d7d700ceb66 33-36
+README_pl.md
+  s_ce695e6ff1a36d::t_cab59fb2292b40 33-36
+README_pt.md
+  s_ce695e6ff1a36d::t_2ae39dcc15fe7d 33-36
+README_ru.md
+  s_ce695e6ff1a36d::t_23f56c00bfb766 33-36
+README_th.md
+  s_ce695e6ff1a36d::t_f6d64b819765a1 33-36
+README_tr.md
+  s_ce695e6ff1a36d::t_5e54049db66475 33-36
+README_vi.md
+  s_ce695e6ff1a36d::t_97ce72a9a04a85 33-36
+README_zh.md
+  s_ce695e6ff1a36d::t_325ab5ddab5cc7 41-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f1ff5773de082e090684d5f7aa5cf35ab2bca998",
+  "prompts": {},
+  "sessions": {
+    "s_ce695e6ff1a36d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5ec4-f758-7ba3-a2fe-fbc78e6e8cab",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
