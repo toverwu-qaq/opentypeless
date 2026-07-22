@@ -1,0 +1,25 @@
+.github/scripts/linuxdeploy-exclude-wrapper.rs
+  s_ba8659d6c5ee4c::t_3eced77ab4b917 7,25,73
+.github/scripts/test-linux-appimage-packaging.sh
+  s_ba8659d6c5ee4c::t_01f071483aba90 42
+src/lib/__tests__/releaseVersion.test.ts
+  s_ba8659d6c5ee4c::t_33ec67ca8a433f 63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "025aed0bcec6aff8f9207d0dc33c44ae1fb46d42",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
