@@ -1,0 +1,23 @@
+docs/superpowers/plans/2026-07-22-cloud-usage-efficiency.md
+  s_ba8659d6c5ee4c::t_822bdfceb78715 5,7,13-14,19,21,206-208,280-282,331-333,397-398,400,402,406,424,436,447,464,476,478,488
+docs/superpowers/specs/2026-07-22-issues-81-83-cloud-usage-design.md
+  s_ba8659d6c5ee4c::t_377eb551fe5c1a 4,21,23-24,98,100,125-136,457-458,542-543,623-624,720-721,794-795,840-841,861,873-876,878,918,946-947,961-963,968,977-978,1002,1069-1070,1108-1109,1175,1177,1180,1182-1183,1206,1210,1217,1222,1224-1225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0b9fb54d3c9399eca622dd020937be2de51896b0",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}

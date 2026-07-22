@@ -1,0 +1,49 @@
+.github/workflows/ci.yml
+  s_ba8659d6c5ee4c::t_146dd2830e469f 62-65
+.github/workflows/release-windows-signpath.yml
+  s_ba8659d6c5ee4c::t_cd8d4b5b0c3da4 92-94
+.github/workflows/release.yml
+  s_ba8659d6c5ee4c::t_28f1b372adec17 89,120-123
+src-tauri/Cargo.lock
+  s_ba8659d6c5ee4c::t_3903290ecd4c28 673-681,3336-3344,3424-3425,3458-3475
+src-tauri/Cargo.toml
+  s_ba8659d6c5ee4c::t_a039ceb5a060d0 8,33-34
+src-tauri/src/commands/ask.rs
+  s_ba8659d6c5ee4c::t_85175d584f413a 642-645,1036-1040,1075-1084,1089,1132-1162,1269-1271,1281-1283
+src-tauri/src/commands/stt.rs
+  s_ba8659d6c5ee4c::t_1a567b97d87d61 12-14,16-19,96
+src-tauri/src/pipeline.rs
+  s_ba8659d6c5ee4c::t_0bea4a9d36c33c 1251-1254,1256-1260,1431-1439,1444,1448-1470,1673,1688-1690,1700-1702
+src-tauri/src/recording_deadline.rs
+  s_ba8659d6c5ee4c::t_12ff9f4fce3c29 89-94,157,166,186-208
+src-tauri/src/stt/capabilities.rs
+  s_ba8659d6c5ee4c::t_8cf7dea9516cc6 221-226,230,269-295,303,306-308,579-601
+src-tauri/src/stt/cloud.rs
+  s_ba8659d6c5ee4c::t_09d3cd82377cae 2-4,9-12,21-22,29-167,237-238,248-249,254-340,353-378,390-400,418,423-427,429-432,437-439,461,533-545,552-620
+src-tauri/src/stt/managed_audio.rs
+  s_ba8659d6c5ee4c::t_96c9682d4d66c2 1-678
+src-tauri/src/stt/mod.rs
+  s_ba8659d6c5ee4c::t_75da09231169e7 7,26,38,59-64
+src-tauri/src/stt/volcengine.rs
+  s_ba8659d6c5ee4c::t_41f71419af11d1 581
+src-tauri/src/stt/whisper_compat.rs
+  s_ba8659d6c5ee4c::t_47570040af22c9 275
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7a5cbf720550894641786a30134c89319dc40b6c",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}

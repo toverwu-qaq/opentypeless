@@ -1,0 +1,27 @@
+src-tauri/src/audio/capture.rs
+  s_ba8659d6c5ee4c::t_b2911776b65b50 4-44,49,53-56,77-82,88,96,99-100,104,108-119,127,135-145,202,282,300-346
+src-tauri/src/audio/mod.rs
+  s_ba8659d6c5ee4c::t_793ce5182b2366 4-109
+src-tauri/src/commands/ask.rs
+  s_ba8659d6c5ee4c::t_94faeb8cfdfe37 1035,1037-1053
+src-tauri/src/pipeline.rs
+  s_ba8659d6c5ee4c::t_d81e3661422b16 1224,1280-1282,1284,1311-1350,1611
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f937fb27e45895a7a68c897572ab19e81120b384",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
