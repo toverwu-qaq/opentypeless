@@ -1,0 +1,27 @@
+docs/superpowers/plans/2026-07-22-cloud-usage-efficiency.md
+  s_ba8659d6c5ee4c::t_bb99ed9c208d34 1-485
+docs/superpowers/plans/2026-07-22-issue-83-recording-startup.md
+  s_ba8659d6c5ee4c::t_2f691b4c6532d3 1-251
+docs/superpowers/plans/2026-07-22-provider-recording-limits-managed-upload.md
+  s_ba8659d6c5ee4c::t_5cab2bb4c9eaf4 1-398
+docs/superpowers/specs/2026-07-22-issues-81-83-cloud-usage-design.md
+  s_ba8659d6c5ee4c::t_e07f83c6eab588 4,193-203,632-642,910-911
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f395c59c92d15b5cb4032d0a084195085ec973e8",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
