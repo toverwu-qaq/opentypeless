@@ -1,0 +1,55 @@
+src-tauri/Cargo.lock
+  s_ba8659d6c5ee4c::t_4f1761844c9c72 3447
+src-tauri/Cargo.toml
+  s_ba8659d6c5ee4c::t_5377058c85b525 48
+src-tauri/src/commands/history.rs
+  s_ba8659d6c5ee4c::t_d241508133e5f6 12-18
+src-tauri/src/lib.rs
+  s_ba8659d6c5ee4c::t_47aa33f8c677a9 1094
+src-tauri/src/storage/mod.rs
+  s_ba8659d6c5ee4c::t_dbee4b99123be8 12,1241-1284,1525-1546,3315-3334
+src/components/History/__tests__/History.test.tsx
+  s_ba8659d6c5ee4c::t_15b054a6084709 5-10,34-38,71-75,105-115
+src/components/History/index.tsx
+  s_ba8659d6c5ee4c::t_55fd8de4799b89 7-13,28,31-46,151-165,350-370
+src/i18n/locales/de.json
+  s_ba8659d6c5ee4c::t_e0e97514714721 625-627
+src/i18n/locales/en.json
+  s_ba8659d6c5ee4c::t_69027d45ac6c0f 625-627
+src/i18n/locales/es.json
+  s_ba8659d6c5ee4c::t_857dfc2cd9ce23 625-627
+src/i18n/locales/fr.json
+  s_ba8659d6c5ee4c::t_407ff498e9dff9 625-627
+src/i18n/locales/it.json
+  s_ba8659d6c5ee4c::t_92a76dc6e0ec8a 625-627
+src/i18n/locales/ja.json
+  s_ba8659d6c5ee4c::t_ae1359bf7d3daf 625-627
+src/i18n/locales/ko.json
+  s_ba8659d6c5ee4c::t_53f54adacf029c 625-627
+src/i18n/locales/pt.json
+  s_ba8659d6c5ee4c::t_8b5eb2135db08c 625-627
+src/i18n/locales/ru.json
+  s_ba8659d6c5ee4c::t_40e16c6c80f0a7 625-627
+src/i18n/locales/zh.json
+  s_ba8659d6c5ee4c::t_84a11dae94c9dc 625-627
+src/lib/tauri.ts
+  s_ba8659d6c5ee4c::t_f2ff4010dd90bf 487-496
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8bdba8e85aa4e5a0aaa71eef90027726eb44193d",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
