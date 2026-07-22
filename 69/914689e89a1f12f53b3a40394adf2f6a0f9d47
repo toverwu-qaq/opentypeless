@@ -1,0 +1,41 @@
+src-tauri/Cargo.toml
+  s_ba8659d6c5ee4c::t_ba0788c783d356 32
+src-tauri/src/audio/capture.rs
+  s_ba8659d6c5ee4c::t_833baa45b264e9 7-9,13-14,28,30,42,141,284,286,335-336,338-340
+src-tauri/src/audio/mod.rs
+  s_ba8659d6c5ee4c::t_01d8310e6c27c0 16-22,25,27,33-39,43,45,49,53,77,96,102,114
+src-tauri/src/commands/ask.rs
+  s_ba8659d6c5ee4c::t_11f8fb66741558 16,26,143,1040,1046-1049,1057-1071,1088,1109,1111-1112,1196-1252
+src-tauri/src/lib.rs
+  s_ba8659d6c5ee4c::t_4fc375b55aa632 15
+src-tauri/src/recording_deadline.rs
+  s_ba8659d6c5ee4c::t_72c78e5cf7b8dc 1-218
+src/components/Capsule/CapsuleAskRecording.tsx
+  s_ba8659d6c5ee4c::t_565c2fab969879 5,29
+src/components/Capsule/DurationTimer.tsx
+  s_ba8659d6c5ee4c::t_e2a67ab6afd934 4-9,12,14,16-20
+src/components/Capsule/__tests__/DurationTimer.test.tsx
+  s_ba8659d6c5ee4c::t_78e185653e18aa 1-61
+src/hooks/useTauriEvents.ts
+  s_ba8659d6c5ee4c::t_c41bed663d6e1c 11,37,73-75,91,149
+src/stores/appStore.ts
+  s_ba8659d6c5ee4c::t_c25a6df6e2ed71 242-249,269-270,805-806,878
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "69914689e89a1f12f53b3a40394adf2f6a0f9d47",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
