@@ -1,0 +1,23 @@
+src/components/AccountPage/index.tsx
+  s_ba8659d6c5ee4c::t_fca049f209cae3 593-594
+src/lib/managed-stt-capability.ts
+  s_ba8659d6c5ee4c::t_ebeb341ea4f831 9-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0c61a47d50987fa33a2214a5837afcf7554dbab8",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}

@@ -1,0 +1,29 @@
+.github/scripts/upload-linux-verification-artifacts.sh
+  s_ba8659d6c5ee4c::t_966f7b233e8d77 4,6,11-24,28,38,60-61,63-64,70-72
+.github/workflows/ci.yml
+  s_ba8659d6c5ee4c::t_a3a020a32f1f61 32,35,38,40-42,65
+.github/workflows/release.yml
+  s_ba8659d6c5ee4c::t_da18d5e0d738ba 57,59-64,93,169,216,221
+docs/release-signing.md
+  s_ba8659d6c5ee4c::t_bcde5868e6d45f 113-114
+src/lib/__tests__/releaseVersion.test.ts
+  s_ba8659d6c5ee4c::t_2f9b9e722d2b63 2,4,34-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7200b584d879b0d2dc96da09363c366aaac76960",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}

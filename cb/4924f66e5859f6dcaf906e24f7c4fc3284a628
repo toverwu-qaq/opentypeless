@@ -1,0 +1,21 @@
+.github/workflows/release.yml
+  s_ba8659d6c5ee4c::t_3f49478f41a2a9 177-181
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "cb4924f66e5859f6dcaf906e24f7c4fc3284a628",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}

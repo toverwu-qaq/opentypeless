@@ -1,0 +1,21 @@
+docs/superpowers/specs/2026-07-22-issues-81-83-cloud-usage-design.md
+  s_ba8659d6c5ee4c::t_31ec79360c3173 20,22,82,86,97,107,111-112,144,165,167,175,179-206,254,294,310-334,336-349,353-362,364,369,371-383,388-393,460,462-474,520,538-539,548,552-571,581,810,819-823,830-842,854-859,870,872-875,879-880,888-892,899-900,911,931,936-937,961-969,999-1004,1019-1020,1030,1040-1047,1080-1083,1102,1122,1128,1136,1144-1148,1156,1162
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9cc6b5807b2cd7010297944a55203ea3aa78f743",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
