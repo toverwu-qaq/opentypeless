@@ -1,0 +1,43 @@
+src/components/Settings/SttPane.tsx
+  s_ba8659d6c5ee4c::t_48f8ca85a3599d 27,54,164-173,226-310,610-611,622-629,632-636,638-660,664-665,667,669
+src/components/Settings/__tests__/SttPane.test.tsx
+  s_ba8659d6c5ee4c::t_6763c23248ebbe 23-24,26-30,32-36,40,42,45-49,325,331,353-361,365-384,387-394,396-412,414-421,423-430,437-510,531,554,556
+src/i18n/locales/de.json
+  s_ba8659d6c5ee4c::t_5725c79bbdbde9 394,795,798-806,821
+src/i18n/locales/en.json
+  s_ba8659d6c5ee4c::t_aa38cd7d602936 395,795,798-806,821
+src/i18n/locales/es.json
+  s_ba8659d6c5ee4c::t_60e63298c472f7 394,795,798-806,821
+src/i18n/locales/fr.json
+  s_ba8659d6c5ee4c::t_5841f2de8c7214 394,795,798-806,821
+src/i18n/locales/it.json
+  s_ba8659d6c5ee4c::t_5a7235ecab3e8e 394,795,798-806,821
+src/i18n/locales/ja.json
+  s_ba8659d6c5ee4c::t_c2c83a2815c1e1 394,795,798-806,821
+src/i18n/locales/ko.json
+  s_ba8659d6c5ee4c::t_ff7b36493c6293 394,795,798-806,821
+src/i18n/locales/pt.json
+  s_ba8659d6c5ee4c::t_7aa39c9ab354eb 394,795,798-806,821
+src/i18n/locales/ru.json
+  s_ba8659d6c5ee4c::t_f02dbb12d7d283 394,795,798-806,821
+src/i18n/locales/zh.json
+  s_ba8659d6c5ee4c::t_16d7a64e43ad0b 395,795,798-806,821
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5ce2cf5c62e8ebd0630f4a0118a0cf5b2b8519ba",
+  "prompts": {},
+  "sessions": {
+    "s_ba8659d6c5ee4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87c4-3c10-72c0-a198-01c885f94d16",
+        "model": "unknown"
+      },
+      "human_author": "tover0314-w <tover0314-w@users.noreply.github.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
