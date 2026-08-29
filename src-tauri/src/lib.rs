@@ -282,8 +282,10 @@ mod tests {
 
     #[test]
     fn shared_http_pool_survives_normal_gaps_between_dictations() {
-        assert!(HTTP_POOL_IDLE_TIMEOUT_SECS >= 10 * 60);
-        assert!(HTTP_TCP_KEEPALIVE_SECS <= HTTP_POOL_IDLE_TIMEOUT_SECS);
+        const {
+            assert!(HTTP_POOL_IDLE_TIMEOUT_SECS >= 10 * 60);
+            assert!(HTTP_TCP_KEEPALIVE_SECS <= HTTP_POOL_IDLE_TIMEOUT_SECS);
+        }
         let _client = build_shared_http_client();
     }
 
