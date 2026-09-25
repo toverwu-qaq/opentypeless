@@ -1,155 +1,147 @@
-name: Release
+name: Release macOS and Linux
 
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g. v0.1.14)'
+        description: 'Existing official release tag (for example v1.1.60)'
         required: true
-        default: 'v0.1.14'
+      official_sha:
+        description: 'Full official repository commit SHA for the tag'
+        required: true
+      expected_cicd_sha:
+        description: 'Full CICD main commit SHA to build'
+        required: true
       platform:
         description: 'Platform group to build'
         required: true
-        default: 'all'
+        default: 'macos'
         type: choice
         options:
-          - all
           - macos
           - linux
-          - windows
-      skip_stapling:
-        description: 'macOS only: skip notarization stapling wait (testing only)'
-        required: true
-        default: 'false'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
-      allow_unsigned_windows:
-        description: 'Windows only: explicitly allow publishing unsigned installers'
-        required: true
-        default: 'false'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
+
+concurrency:
+  group: opentypeless-release-${{ inputs.tag }}
+  cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  preflight:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.release-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Verify pinned release sources
+        env:
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+        run: ./.github/scripts/verify-release-source.sh
+
+      - name: Prepare the official prerelease
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+        run: ./.github/scripts/prepare-official-prerelease.sh
+
+      - name: Select release runners
+        id: release-matrix
+        env:
+          PLATFORM: ${{ inputs.platform }}
+        run: |
+          case "$PLATFORM" in
+            macos)
+              matrix='{"include":[{"platform":"macos-latest","platform_group":"macos","rust_targets":"aarch64-apple-darwin,x86_64-apple-darwin","args":"--target universal-apple-darwin","timeout_minutes":60}]}'
+              ;;
+            linux)
+              matrix='{"include":[{"platform":"ubuntu-22.04","platform_group":"linux","rust_targets":"x86_64-unknown-linux-gnu","args":"","linux_arch":"x86_64","timeout_minutes":45},{"platform":"ubuntu-22.04-arm","platform_group":"linux","rust_targets":"aarch64-unknown-linux-gnu","args":"--target aarch64-unknown-linux-gnu","linux_arch":"aarch64","timeout_minutes":60}]}'
+              ;;
+            *)
+              echo "::error::Unsupported platform: $PLATFORM"
+              exit 1
+              ;;
+          esac
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: preflight
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - platform: macos-latest
-            platform_group: macos
-            rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
-            args: '--target universal-apple-darwin'
-            timeout_minutes: 60
-          - platform: ubuntu-22.04
-            platform_group: linux
-            rust_targets: x86_64-unknown-linux-gnu
-            args: ''
-            linux_arch: x86_64
-            timeout_minutes: 45
-          - platform: ubuntu-22.04-arm
-            platform_group: linux
-            rust_targets: aarch64-unknown-linux-gnu
-            args: '--target aarch64-unknown-linux-gnu'
-            linux_arch: aarch64
-            timeout_minutes: 60
-          - platform: windows-latest
-            platform_group: windows
-            rust_targets: x86_64-pc-windows-msvc
-            args: '--target x86_64-pc-windows-msvc'
-            timeout_minutes: 45
-
+      max-parallel: 1
+      matrix: ${{ fromJSON(needs.preflight.outputs.matrix) }}
     runs-on: ${{ matrix.platform }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
     steps:
-      - uses: actions/checkout@v4
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group }}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - name: Sync version from tag
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group }}
+      - name: Verify checked-out source
+        env:
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+        run: ./.github/scripts/verify-release-source.sh
+
+      - name: Verify target is still a prerelease
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: ./.github/scripts/verify-prerelease-release.sh
+
+      - name: Export release version
         shell: bash
+        env:
+          TAG_NAME: ${{ inputs.tag }}
         run: |
-          TAG_VERSION="${{ github.event.inputs.tag || github.ref_name }}"
-          VERSION="${TAG_VERSION#v}"
-          echo "Syncing version: $VERSION"
+          VERSION="${TAG_NAME#v}"
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "VITE_APP_VERSION=v$VERSION" >> "$GITHUB_ENV"
 
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version='$VERSION';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
-
-          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json','utf8'));c.version='$VERSION';fs.writeFileSync('src-tauri/tauri.conf.json',JSON.stringify(c,null,2)+'\n');"
-
-          node -e "const fs=require('fs');let c=fs.readFileSync('src-tauri/Cargo.toml','utf8');c=c.replace(/^version = \".*\"/m,'version = \"$VERSION\"');fs.writeFileSync('src-tauri/Cargo.toml',c);"
-
       - name: Install Linux dependencies
-        if: ${{ matrix.platform_group == 'linux' && (github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group) }}
+        if: ${{ matrix.platform_group == 'linux' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libasound2-dev libxdo-dev libfuse2 gnupg rpm xdg-utils
           command -v xdg-mime >/dev/null
 
-      - name: Verify release publishing token
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group }}
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "::error::RELEASE_TOKEN is required to publish releases to tover0314-w/opentypeless."
-            exit 1
-          fi
-
-          gh api repos/tover0314-w/opentypeless >/dev/null
-
-      - uses: actions/setup-node@v4
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
           cache: 'npm'
 
-      - uses: dtolnay/rust-toolchain@stable
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group }}
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
           targets: ${{ matrix.rust_targets }}
 
-      - uses: swatinem/rust-cache@v2
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group }}
+      - uses: swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           workspaces: src-tauri -> target
 
       - name: Verify bundled Opus build tool
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group }}
         run: cmake --version
 
       - run: npm ci
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group }}
 
       - name: Verify updater signing key
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group }}
         shell: bash
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
-            echo "::error::TAURI_SIGNING_PRIVATE_KEY is required to publish auto-update artifacts."
-            exit 1
-          fi
-          if [ -z "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ]; then
-            echo "::error::TAURI_SIGNING_PRIVATE_KEY_PASSWORD is required because the updater signing key is encrypted."
+          if [[ -z "$TAURI_SIGNING_PRIVATE_KEY" || -z "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ]]; then
+            echo "::error::The encrypted Tauri updater signing key is required."
             exit 1
           fi
 
       - name: Verify Apple signing secrets
-        if: ${{ matrix.platform == 'macos-latest' && (github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group) }}
+        if: ${{ matrix.platform_group == 'macos' }}
         shell: bash
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -160,14 +152,31 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           for name in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
-            if [ -z "${!name}" ]; then
+            if [[ -z "${!name}" ]]; then
               echo "::error::$name is required to sign and notarize macOS release artifacts."
               exit 1
             fi
           done
 
+      - name: Verify release helper scripts match the official commit
+        if: ${{ matrix.platform_group == 'linux' }}
+        shell: bash
+        env:
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+        run: |
+          git diff --exit-code "$OFFICIAL_SHA" HEAD -- \
+            .github/scripts/linuxdeploy-exclude-wrapper.rs \
+            .github/scripts/linuxdeploy-plugin-appimage-exclude-wrapper.sh \
+            .github/scripts/prepare-linuxdeploy-wrapper.sh \
+            .github/scripts/verify-appimage-runtime-libraries.sh
+
+      - name: Prepare Linux AppImage library exclusions
+        if: ${{ matrix.platform_group == 'linux' }}
+        shell: bash
+        run: ./.github/scripts/prepare-linuxdeploy-wrapper.sh "${{ matrix.linux_arch }}"
+
       - name: Import Linux GPG signing key
-        if: ${{ matrix.platform_group == 'linux' && (github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group) }}
+        if: ${{ matrix.platform_group == 'linux' }}
         shell: bash
         env:
           LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
@@ -175,23 +184,7 @@ jobs:
           LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
         run: ./.github/scripts/import-linux-gpg-key.sh
 
-      - name: Prepare Linux AppImage library exclusions
-        if: ${{ matrix.platform_group == 'linux' && (github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group) }}
-        shell: bash
-        run: ./.github/scripts/prepare-linuxdeploy-wrapper.sh "${{ matrix.linux_arch }}"
-
-      - name: Import Windows signing certificate
-        if: ${{ matrix.platform == 'windows-latest' && (github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group) }}
-        shell: pwsh
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-          WINDOWS_TIMESTAMP_URL: ${{ secrets.WINDOWS_TIMESTAMP_URL }}
-          ALLOW_UNSIGNED_WINDOWS: ${{ github.event.inputs.allow_unsigned_windows }}
-        run: ./.github/scripts/import-windows-certificate.ps1
-
-      - uses: tauri-apps/tauri-action@v0
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group }}
+      - uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         id: tauri
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
@@ -206,27 +199,51 @@ jobs:
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
           TAURI_SIGNING_RPM_KEY_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
           LINUXDEPLOY_EXCLUDED_LIBRARIES: libwayland-client.so*
-          WINDOWS_CERTIFICATE_THUMBPRINT: ${{ env.WINDOWS_CERTIFICATE_THUMBPRINT }}
-          WINDOWS_TIMESTAMP_URL: ${{ env.WINDOWS_TIMESTAMP_URL }}
         with:
           owner: tover0314-w
           repo: opentypeless
-          releaseCommitish: main
-          tagName: ${{ github.event.inputs.tag || github.ref_name }}
-          releaseName: 'OpenTypeless ${{ github.event.inputs.tag || github.ref_name }}'
+          releaseCommitish: ${{ inputs.official_sha }}
+          tagName: ${{ inputs.tag }}
+          releaseName: 'OpenTypeless ${{ inputs.tag }}'
           releaseBody: 'See the assets below to download and install.'
           releaseDraft: false
           prerelease: true
-          args: ${{ matrix.args }} ${{ matrix.platform == 'macos-latest' && github.event.inputs.skip_stapling == 'true' && '--skip-stapling' || '' }}
+          includeUpdaterJson: true
+          args: ${{ matrix.args }}
 
-      - name: Upload Linux verification artifacts
-        if: ${{ matrix.platform_group == 'linux' && (github.event_name != 'workflow_dispatch' || github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform_group) }}
+      - name: Publish signed macOS build provenance
+        if: ${{ matrix.platform_group == 'macos' }}
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          TAG_NAME: ${{ github.event.inputs.tag || github.ref_name }}
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+          ARTIFACT_PATHS: ${{ steps.tauri.outputs.artifactPaths }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: ./.github/scripts/publish-macos-release-provenance.sh
+
+      - name: Upload Linux verification artifacts
+        if: ${{ matrix.platform_group == 'linux' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
           LINUX_ARCH: ${{ matrix.linux_arch }}
           LINUX_GPG_KEY_ID: ${{ secrets.LINUX_GPG_KEY_ID }}
           LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
-          TAURI_SIGNING_RPM_KEY: ''
         run: ./.github/scripts/upload-linux-verification-artifacts.sh
+
+      - name: Publish signed Linux build provenance
+        if: ${{ matrix.platform_group == 'linux' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+          LINUX_ARCH: ${{ matrix.linux_arch }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: ./.github/scripts/publish-linux-release-provenance.sh

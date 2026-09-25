@@ -6,26 +6,123 @@ on:
       tag:
         description: 'Release tag to replace, e.g. v1.1.46'
         required: true
+      official_sha:
+        description: 'Full official repository commit SHA for the tag'
+        required: true
+      expected_cicd_sha:
+        description: 'Full CICD main commit SHA used to build the release'
+        required: true
       submission_id:
         description: 'Accepted Apple notarization submission ID'
         required: true
+
+concurrency:
+  group: opentypeless-release-${{ inputs.tag }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
+  verify-input:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tarball_sha256: ${{ steps.tarball-digest.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Verify pinned release sources
+        env:
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+        run: ./.github/scripts/verify-release-source.sh
+
+      - name: Install updater signature verifier
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y minisign
+
+      - name: Download and verify untrusted release inputs
+        id: tarball-digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+        run: |
+          mkdir verified-macos-input
+          gh release download "$TAG_NAME" \
+            --repo tover0314-w/opentypeless \
+            --pattern OpenTypeless_universal.app.tar.gz \
+            --pattern OpenTypeless_universal.app.tar.gz.sig \
+            --pattern "OpenTypeless_${TAG_NAME#v}_universal.dmg" \
+            --pattern OpenTypeless-provenance-macos-universal.json \
+            --pattern OpenTypeless-provenance-macos-universal.json.sig \
+            --pattern latest.json \
+            --dir verified-macos-input
+          ./.github/scripts/verify-updater-file-signature.sh \
+            verified-macos-input/OpenTypeless-provenance-macos-universal.json \
+            verified-macos-input/OpenTypeless-provenance-macos-universal.json.sig
+          node .github/scripts/verify-release-provenance.mjs \
+            macos-universal \
+            verified-macos-input/OpenTypeless-provenance-macos-universal.json \
+            verified-macos-input \
+            OpenTypeless_universal.app.tar.gz \
+            OpenTypeless_universal.app.tar.gz.sig \
+            "OpenTypeless_${TAG_NAME#v}_universal.dmg"
+          if [[ "$(jq -r '.version' verified-macos-input/latest.json)" != "${TAG_NAME#v}" ]]; then
+            echo "::error::latest.json version does not match $TAG_NAME."
+            exit 1
+          fi
+          sha256=$(sha256sum verified-macos-input/OpenTypeless_universal.app.tar.gz | awk '{ print $1 }')
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Preserve verified macOS inputs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: verified-macos-release-input-${{ inputs.tag }}
+          path: |
+            verified-macos-input/OpenTypeless_universal.app.tar.gz
+            verified-macos-input/latest.json
+          if-no-files-found: error
+          retention-days: 1
+
   staple:
+    needs: verify-input
     runs-on: macos-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-node@v4
+      - name: Verify pinned release sources
+        env:
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+        run: ./.github/scripts/verify-release-source.sh
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
           cache: 'npm'
 
       - run: npm ci
+
+      - name: Download verified macOS inputs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: verified-macos-release-input-${{ inputs.tag }}
+          path: ${{ runner.temp }}/staple-macos
+
+      - name: Verify target is still a prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: ./.github/scripts/verify-prerelease-release.sh
 
       - name: Verify secrets and notarization status
         shell: bash
@@ -78,15 +175,18 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security find-identity -v -p codesigning "$KEYCHAIN_PATH"
 
-      - name: Download, staple, sign, and upload macOS assets
+      - name: Staple and sign verified macOS assets
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           TAG: ${{ github.event.inputs.tag }}
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_EXPECTED_SIGNER_SHA256: ${{ secrets.APPLE_EXPECTED_SIGNER_SHA256 }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
@@ -101,17 +201,46 @@ jobs:
           DMG_ROOT="$WORK_DIR/dmg-root"
 
           mkdir -p "$EXTRACT_DIR" "$DMG_ROOT"
-          gh release download "$TAG" \
-            --repo tover0314-w/opentypeless \
-            --pattern "$TARBALL_NAME" \
-            --pattern "$DMG_NAME" \
-            --pattern latest.json \
-            --dir "$WORK_DIR"
+          TARBALL_SHA256="$(shasum -a 256 "$WORK_DIR/$TARBALL_NAME" | awk '{ print $1 }')"
+          if [ "$TARBALL_SHA256" != "${{ needs.verify-input.outputs.tarball_sha256 }}" ]; then
+            echo "::error::The transferred macOS tarball does not match the verified input."
+            exit 1
+          fi
+
+          if [ "$(jq -r '.version' "$WORK_DIR/latest.json")" != "$VERSION" ]; then
+            echo "::error::latest.json version does not match $TAG."
+            exit 1
+          fi
 
           tar -xzf "$WORK_DIR/$TARBALL_NAME" -C "$EXTRACT_DIR"
           APP_PATH="$EXTRACT_DIR/OpenTypeless.app"
+          APP_IDENTIFIER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Contents/Info.plist")"
+          APP_SHORT_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PATH/Contents/Info.plist")"
+          APP_BUILD_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PATH/Contents/Info.plist")"
+          if [ "$APP_IDENTIFIER" != "com.opentypeless.app" ] || [ "$APP_SHORT_VERSION" != "$VERSION" ] || [ "$APP_BUILD_VERSION" != "$VERSION" ]; then
+            echo "::error::The downloaded app bundle identity or version does not match $TAG."
+            exit 1
+          fi
 
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          if [ -z "$APPLE_EXPECTED_SIGNER_SHA256" ]; then
+            echo "::error::APPLE_EXPECTED_SIGNER_SHA256 is required."
+            exit 1
+          fi
+          CERT_PREFIX="$WORK_DIR/app-signer-"
+          codesign -d --extract-certificates="$CERT_PREFIX" "$APP_PATH"
+          APP_SIGNER_SHA256="$(shasum -a 256 "${CERT_PREFIX}0" | awk '{ print $1 }')"
+          EXPECTED_APP_SIGNER_SHA256="$(printf '%s' "$APPLE_EXPECTED_SIGNER_SHA256" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+          if [[ ! "$EXPECTED_APP_SIGNER_SHA256" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::APPLE_EXPECTED_SIGNER_SHA256 must be a full SHA-256 certificate digest."
+            exit 1
+          fi
+          if [ "$APP_SIGNER_SHA256" != "$EXPECTED_APP_SIGNER_SHA256" ]; then
+            echo "::error::The downloaded app was not signed by the expected Apple certificate."
+            exit 1
+          fi
+          requirement="anchor apple generic and identifier \"com.opentypeless.app\" and certificate leaf[subject.OU] = \"$APPLE_TEAM_ID\""
+          codesign --verify --deep --strict -R="$requirement" "$APP_PATH"
           xcrun stapler staple "$APP_PATH"
           xcrun stapler validate "$APP_PATH"
           spctl --assess --type execute --verbose=4 "$APP_PATH"
@@ -121,14 +250,16 @@ jobs:
             COPYFILE_DISABLE=1 tar -czf "$WORK_DIR/$TARBALL_NAME" OpenTypeless.app
           )
 
-          SIGN_OUTPUT="$WORK_DIR/sign-output.txt"
-          npm run -s tauri -- signer sign "$WORK_DIR/$TARBALL_NAME" | tee "$SIGN_OUTPUT"
-          SIGNATURE="$(awk '/Public signature:/{getline; print; exit}' "$SIGN_OUTPUT")"
-          if [ -z "$SIGNATURE" ]; then
-            echo "::error::Failed to extract updater signature."
+          npm run -s tauri -- signer sign "$WORK_DIR/$TARBALL_NAME"
+          if [ ! -f "$WORK_DIR/$TARBALL_SIG_NAME" ] || [ -L "$WORK_DIR/$TARBALL_SIG_NAME" ] || [ ! -s "$WORK_DIR/$TARBALL_SIG_NAME" ]; then
+            echo "::error::Tauri did not create the updater signature."
             exit 1
           fi
-          printf '%s' "$SIGNATURE" > "$WORK_DIR/$TARBALL_SIG_NAME"
+          SIGNATURE="$(tr -d '\r\n' < "$WORK_DIR/$TARBALL_SIG_NAME")"
+          if ! printf '%s' "$SIGNATURE" | base64 --decode >/dev/null; then
+            echo "::error::The updater signature is not valid base64."
+            exit 1
+          fi
 
           ditto "$APP_PATH" "$DMG_ROOT/OpenTypeless.app"
           ln -s /Applications "$DMG_ROOT/Applications"
@@ -140,6 +271,13 @@ jobs:
             "$WORK_DIR/$DMG_NAME"
           codesign --force --sign "$APPLE_SIGNING_IDENTITY" --timestamp "$WORK_DIR/$DMG_NAME"
           codesign --verify --verbose=2 "$WORK_DIR/$DMG_NAME"
+          DMG_CERT_PREFIX="$WORK_DIR/dmg-signer-"
+          codesign -d --extract-certificates="$DMG_CERT_PREFIX" "$WORK_DIR/$DMG_NAME"
+          DMG_SIGNER_SHA256="$(shasum -a 256 "${DMG_CERT_PREFIX}0" | awk '{ print $1 }')"
+          if [ "$DMG_SIGNER_SHA256" != "$EXPECTED_APP_SIGNER_SHA256" ]; then
+            echo "::error::The DMG was not signed by the expected Apple certificate."
+            exit 1
+          fi
           xcrun notarytool submit "$WORK_DIR/$DMG_NAME" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_PASSWORD" \
@@ -164,10 +302,67 @@ jobs:
           ' "$WORK_DIR/latest.json" > "$WORK_DIR/latest.new.json"
           mv "$WORK_DIR/latest.new.json" "$WORK_DIR/latest.json"
 
-          gh release upload "$TAG" \
-            "$WORK_DIR/$DMG_NAME" \
+          PROVENANCE_MANIFEST=OpenTypeless-provenance-macos-universal.json
+          ./.github/scripts/create-signed-release-provenance.sh macos-universal \
             "$WORK_DIR/$TARBALL_NAME" \
             "$WORK_DIR/$TARBALL_SIG_NAME" \
-            "$WORK_DIR/latest.json" \
+            "$WORK_DIR/$DMG_NAME"
+
+          FINAL_DIR="$WORK_DIR/final-release"
+          mkdir -p "$FINAL_DIR"
+          cp "$WORK_DIR/$DMG_NAME" "$FINAL_DIR/$DMG_NAME"
+          cp "$WORK_DIR/$TARBALL_NAME" "$FINAL_DIR/$TARBALL_NAME"
+          cp "$WORK_DIR/$TARBALL_SIG_NAME" "$FINAL_DIR/$TARBALL_SIG_NAME"
+          cp "$WORK_DIR/latest.json" "$FINAL_DIR/latest.json"
+          cp "$PROVENANCE_MANIFEST" "$FINAL_DIR/$PROVENANCE_MANIFEST"
+          cp "${PROVENANCE_MANIFEST}.sig" "$FINAL_DIR/${PROVENANCE_MANIFEST}.sig"
+
+      - name: Preserve final macOS release assets
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: final-macos-release-${{ inputs.tag }}
+          path: ${{ runner.temp }}/staple-macos/final-release/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: staple
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Recheck pinned release sources
+        env:
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+        run: ./.github/scripts/verify-release-source.sh
+
+      - name: Verify target is still a prerelease
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: ./.github/scripts/verify-prerelease-release.sh
+
+      - name: Download final macOS release assets
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: final-macos-release-${{ inputs.tag }}
+          path: final-macos-release
+
+      - name: Publish final macOS release assets
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: |
+          version="${TAG_NAME#v}"
+          gh release upload "$TAG_NAME" \
+            "final-macos-release/OpenTypeless_${version}_universal.dmg" \
+            final-macos-release/OpenTypeless_universal.app.tar.gz \
+            final-macos-release/OpenTypeless_universal.app.tar.gz.sig \
+            final-macos-release/latest.json \
+            final-macos-release/OpenTypeless-provenance-macos-universal.json \
+            final-macos-release/OpenTypeless-provenance-macos-universal.json.sig \
             --repo tover0314-w/opentypeless \
             --clobber

@@ -1,4 +1,4 @@
-name: Release Windows SignPath
+name: Release Windows
 
 on:
   workflow_dispatch:
@@ -7,6 +7,20 @@ on:
         description: 'Release tag (e.g. v0.1.43)'
         required: true
         default: 'v0.1.43'
+      official_sha:
+        description: 'Full official repository commit SHA for the tag'
+        required: true
+      expected_cicd_sha:
+        description: 'Full CICD main commit SHA to build'
+        required: true
+      signing_mode:
+        description: 'Windows publisher identity mode'
+        required: true
+        default: 'signpath'
+        type: choice
+        options:
+          - signpath
+          - unsigned
       publish_release:
         description: 'Publish signed assets to GitHub Releases'
         required: true
@@ -16,52 +30,64 @@ on:
           - 'false'
           - 'true'
 
+concurrency:
+  group: opentypeless-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
 permissions:
   actions: read
   contents: read
 
 jobs:
   build-sign-publish:
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - name: Sync version from tag
+      - name: Verify pinned release sources
         shell: bash
-        run: |
-          TAG_VERSION="${{ github.event.inputs.tag }}"
-          VERSION="${TAG_VERSION#v}"
-          echo "TAG_NAME=$TAG_VERSION" >> "$GITHUB_ENV"
-          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "VITE_APP_VERSION=v$VERSION" >> "$GITHUB_ENV"
+        env:
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+        run: ./.github/scripts/verify-release-source.sh
 
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version='$VERSION';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
-          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json','utf8'));c.version='$VERSION';fs.writeFileSync('src-tauri/tauri.conf.json',JSON.stringify(c,null,2)+'\n');"
-          node -e "const fs=require('fs');let c=fs.readFileSync('src-tauri/Cargo.toml','utf8');c=c.replace(/^version = \".*\"/m,'version = \"$VERSION\"');fs.writeFileSync('src-tauri/Cargo.toml',c);"
+      - name: Export release version
+        shell: bash
+        env:
+          TAG_NAME: ${{ inputs.tag }}
+        run: |
+          echo "APP_VERSION=${TAG_NAME#v}" >> "$GITHUB_ENV"
+          echo "VITE_APP_VERSION=$TAG_NAME" >> "$GITHUB_ENV"
 
       - name: Verify secrets
         shell: pwsh
         env:
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           PUBLISH_RELEASE: ${{ github.event.inputs.publish_release }}
+          WINDOWS_RELEASE_MODE: ${{ inputs.signing_mode }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
           SIGNPATH_ORGANIZATION_ID: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
           SIGNPATH_PROJECT_SLUG: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
           SIGNPATH_SIGNING_POLICY_SLUG: ${{ secrets.SIGNPATH_SIGNING_POLICY_SLUG }}
+          WINDOWS_EXPECTED_SIGNER_THUMBPRINT: ${{ secrets.WINDOWS_EXPECTED_SIGNER_THUMBPRINT }}
         run: |
-          $required = @(
-            'TAURI_SIGNING_PRIVATE_KEY',
-            'TAURI_SIGNING_PRIVATE_KEY_PASSWORD',
-            'SIGNPATH_API_TOKEN',
-            'SIGNPATH_ORGANIZATION_ID',
-            'SIGNPATH_PROJECT_SLUG',
-            'SIGNPATH_SIGNING_POLICY_SLUG'
-          )
+          $required = @('TAURI_SIGNING_PRIVATE_KEY', 'TAURI_SIGNING_PRIVATE_KEY_PASSWORD')
+          if ($env:WINDOWS_RELEASE_MODE -eq 'signpath') {
+            $required += 'SIGNPATH_API_TOKEN', 'SIGNPATH_ORGANIZATION_ID', 'SIGNPATH_PROJECT_SLUG', 'SIGNPATH_SIGNING_POLICY_SLUG'
+          } elseif ($env:WINDOWS_RELEASE_MODE -ne 'unsigned') {
+            Write-Error "Unsupported Windows release mode: $env:WINDOWS_RELEASE_MODE"
+            exit 1
+          }
           if ($env:PUBLISH_RELEASE -eq 'true') {
             $required += 'RELEASE_TOKEN'
+            if ($env:WINDOWS_RELEASE_MODE -eq 'signpath') {
+              $required += 'WINDOWS_EXPECTED_SIGNER_THUMBPRINT'
+            }
           }
           foreach ($name in $required) {
             if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
@@ -70,22 +96,30 @@ jobs:
             }
           }
 
-          $isTestSigning = $env:SIGNPATH_SIGNING_POLICY_SLUG -match '^(?i:test[-_])'
+          $isTestSigning = $env:WINDOWS_RELEASE_MODE -eq 'signpath' -and $env:SIGNPATH_SIGNING_POLICY_SLUG -match '^(?i:test[-_])'
           if ($env:PUBLISH_RELEASE -eq 'true' -and $isTestSigning) {
             Write-Error 'A SignPath test policy cannot publish Windows assets to a production GitHub Release.'
             exit 1
           }
 
-      - uses: actions/setup-node@v4
+      - name: Verify target is still a prerelease
+        if: ${{ inputs.publish_release == 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: ./.github/scripts/verify-prerelease-release.sh
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
           cache: 'npm'
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
           targets: x86_64-pc-windows-msvc
 
-      - uses: swatinem/rust-cache@v2
+      - uses: swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           workspaces: src-tauri -> target
 
@@ -118,14 +152,15 @@ jobs:
 
       - name: Upload unsigned artifact
         id: upload-unsigned-artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: opentypeless-windows-unsigned-${{ github.event.inputs.tag }}
           path: signpath-unsigned/*
           if-no-files-found: error
 
       - name: Submit SignPath signing request
-        uses: signpath/github-action-submit-signing-request@v2
+        if: ${{ inputs.signing_mode == 'signpath' }}
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2.3
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
           organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
@@ -137,10 +172,12 @@ jobs:
           output-artifact-directory: signpath-signed
 
       - name: Verify Authenticode signatures
+        if: ${{ inputs.signing_mode == 'signpath' }}
         shell: pwsh
         env:
           SIGNPATH_SIGNING_POLICY_SLUG: ${{ secrets.SIGNPATH_SIGNING_POLICY_SLUG }}
           PUBLISH_RELEASE: ${{ github.event.inputs.publish_release }}
+          WINDOWS_EXPECTED_SIGNER_THUMBPRINT: ${{ secrets.WINDOWS_EXPECTED_SIGNER_THUMBPRINT }}
         run: |
           $signed = Get-ChildItem -Path signpath-signed -Recurse -File |
             Where-Object { $_.Extension -in '.exe', '.msi' }
@@ -165,16 +202,46 @@ jobs:
               Write-Error "Invalid Authenticode signature for $($file.Name): $($signature.Status)"
               exit 1
             }
+            if ($env:PUBLISH_RELEASE -eq 'true') {
+              $actualThumbprint = $signature.SignerCertificate.Thumbprint -replace '\s', ''
+              $expectedThumbprint = $env:WINDOWS_EXPECTED_SIGNER_THUMBPRINT -replace '\s', ''
+              if ($actualThumbprint -ine $expectedThumbprint) {
+                Write-Error "Unexpected Authenticode signer for $($file.Name)."
+                exit 1
+              }
+            }
             Write-Host "$($file.Name): $($signature.Status); $($signature.SignerCertificate.Subject)"
           }
 
-      - name: Publish signed Windows release assets
+      - name: Verify installers are completely unsigned
+        if: ${{ inputs.signing_mode == 'unsigned' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $unsigned = Get-ChildItem -Path signpath-unsigned -File |
+            Where-Object { $_.Extension -in '.exe', '.msi' }
+          if ($unsigned.Count -ne 2) {
+            throw "Expected exactly two unsigned Windows installers; found $($unsigned.Count)."
+          }
+          foreach ($file in $unsigned) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $file.FullName
+            if ($signature.Status -ne 'NotSigned' -or $signature.SignerCertificate) {
+              throw "Unsigned mode refuses an installer with any Authenticode certificate: $($file.Name) ($($signature.Status))."
+            }
+          }
+
+      - name: Publish verified Windows release assets
         if: ${{ github.event.inputs.publish_release == 'true' }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           TAG_NAME: ${{ github.event.inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
           RELEASE_REPO: tover0314-w/opentypeless
+          WINDOWS_RELEASE_MODE: ${{ inputs.signing_mode }}
+          WINDOWS_ARTIFACT_DIR: ${{ inputs.signing_mode == 'signpath' && 'signpath-signed' || 'signpath-unsigned' }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          WINDOWS_EXPECTED_SIGNER_THUMBPRINT: ${{ secrets.WINDOWS_EXPECTED_SIGNER_THUMBPRINT }}
         run: ./.github/scripts/publish-signpath-windows-release.ps1
