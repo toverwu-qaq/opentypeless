@@ -99,11 +99,7 @@ for package in "${packages[@]}"; do
   verify_gpg_signature "${package}.asc" "$package"
 done
 
-rpm_db="$work_dir/rpmdb"
-mkdir -p "$rpm_db"
-rpm --dbpath "$rpm_db" --initdb
-rpm --dbpath "$rpm_db" --import "${key_files[0]}"
-rpm --define '_pkgverify_level all' --dbpath "$rpm_db" --checksig -v \
+./.github/scripts/verify-rpm-signatures.sh "${key_files[0]}" \
   "$work_dir/OpenTypeless-${version}-1.x86_64.rpm" \
   "$work_dir/OpenTypeless-${version}-1.aarch64.rpm"
 

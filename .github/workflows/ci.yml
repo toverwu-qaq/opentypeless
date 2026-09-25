@@ -8,7 +8,7 @@ on:
 
 jobs:
   check-release-automation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -23,6 +23,32 @@ jobs:
 
       - name: Test release provenance guards
         run: ./.github/scripts/test-release-provenance.sh
+
+      - name: Test RPM verifier with a published signed package
+        env:
+          RPM_X86_64_SHA256: b92fcd554f60543544db26256d7d15317ea8dd60c71ffed37c797c2caba4d036
+          RPM_AARCH64_SHA256: 06740462213fa1c3852ad0343863a31e5d167a943797aa9ecb76c5462d08237c
+          KEY_SHA256: 6b7c69cf0c711768f457dc4bf40b9dcce0c6f59f0896f55ec826e5fd684f812f
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm
+          work_dir="$(mktemp -d "$RUNNER_TEMP/opentypeless-rpm-test.XXXXXX")"
+          rpm_x86_64="$work_dir/OpenTypeless-1.1.59-1.x86_64.rpm"
+          rpm_aarch64="$work_dir/OpenTypeless-1.1.59-1.aarch64.rpm"
+          key_path="$work_dir/OpenTypeless-Linux-x86_64-GPG-KEY.asc"
+          curl --fail --location --retry 3 \
+            --output "$rpm_x86_64" \
+            https://github.com/tover0314-w/opentypeless/releases/download/v1.1.59/OpenTypeless-1.1.59-1.x86_64.rpm
+          curl --fail --location --retry 3 \
+            --output "$rpm_aarch64" \
+            https://github.com/tover0314-w/opentypeless/releases/download/v1.1.59/OpenTypeless-1.1.59-1.aarch64.rpm
+          curl --fail --location --retry 3 \
+            --output "$key_path" \
+            https://github.com/tover0314-w/opentypeless/releases/download/v1.1.59/OpenTypeless-Linux-x86_64-GPG-KEY.asc
+          printf '%s  %s\n' "$RPM_X86_64_SHA256" "$rpm_x86_64" | sha256sum --check --strict
+          printf '%s  %s\n' "$RPM_AARCH64_SHA256" "$rpm_aarch64" | sha256sum --check --strict
+          printf '%s  %s\n' "$KEY_SHA256" "$key_path" | sha256sum --check --strict
+          ./.github/scripts/verify-rpm-signatures.sh "$key_path" "$rpm_x86_64" "$rpm_aarch64"
 
       - name: Check release workflows
         env:

@@ -247,3 +247,36 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: ./.github/scripts/publish-linux-release-provenance.sh
+
+  verify-linux-release:
+    if: ${{ inputs.platform == 'linux' }}
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Verify pinned release sources
+        env:
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+        run: ./.github/scripts/verify-release-source.sh
+
+      - name: Verify target is still a prerelease
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: ./.github/scripts/verify-prerelease-release.sh
+
+      - name: Install Linux verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg rpm
+
+      - name: Verify published Linux assets
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          LINUX_EXPECTED_GPG_FINGERPRINT: ${{ secrets.LINUX_EXPECTED_GPG_FINGERPRINT }}
+        run: ./.github/scripts/verify-linux-release-assets.sh
