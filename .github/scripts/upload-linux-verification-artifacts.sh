@@ -67,16 +67,15 @@ if compgen -G "$bundle_dir/appimage/*.AppImage" >/dev/null; then
       echo "::error::Linux AppImage runtime-library verification failed."
       exit 1
     fi
-    "$appimage" --appimage-signature >/dev/null
   done
 fi
 
 if compgen -G "$bundle_dir/rpm/*.rpm" >/dev/null; then
-  if sudo rpm --import "$public_key_path"; then
-    rpm --checksig -v "$bundle_dir"/rpm/*.rpm
-  else
-    echo "::warning::rpm could not import the exported public key; uploading detached GPG verification artifacts without rpm database verification."
-  fi
+  rpm_db="${RUNNER_TEMP}/opentypeless-rpmdb-${LINUX_ARCH}"
+  mkdir -p "$rpm_db"
+  rpm --dbpath "$rpm_db" --initdb
+  rpm --dbpath "$rpm_db" --import "$public_key_path"
+  rpm --define '_pkgverify_level all' --dbpath "$rpm_db" --checksig -v "$bundle_dir"/rpm/*.rpm
 fi
 
 gh release upload "$TAG_NAME" "$verification_dir"/* \

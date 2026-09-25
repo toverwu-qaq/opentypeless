@@ -1,0 +1,323 @@
+name: Finalize Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Prerelease tag to promote (for example v1.1.60)'
+        required: true
+      official_sha:
+        description: 'Full official repository commit SHA for the tag'
+        required: true
+      expected_cicd_sha:
+        description: 'Full CICD main commit SHA used to build the release'
+        required: true
+      windows_signing_mode:
+        description: 'Expected Windows publisher identity mode'
+        required: true
+        default: 'signpath'
+        type: choice
+        options:
+          - signpath
+          - unsigned
+
+concurrency:
+  group: opentypeless-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Verify pinned release sources before exposing secrets
+        env:
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+        run: ./.github/scripts/verify-release-source.sh
+
+  snapshot:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      sha256: ${{ steps.snapshot.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Capture immutable asset inventory
+        id: snapshot
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: |
+          ./.github/scripts/snapshot-release-assets.sh > release-assets.json
+          sha256="$(sha256sum release-assets.json | awk '{ print $1 }')"
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+
+  verify-manifest:
+    needs: snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Verify updater manifest and asset inventory
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: ./.github/scripts/verify-release-manifest.sh
+
+      - name: Install updater signature verifier
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y minisign
+
+      - name: Verify updater signatures
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: ./.github/scripts/verify-updater-signatures.sh
+
+      - name: Confirm assets did not change
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          EXPECTED_ASSET_SNAPSHOT_SHA256: ${{ needs.snapshot.outputs.sha256 }}
+        run: ./.github/scripts/verify-release-asset-snapshot.sh
+
+  verify-linux:
+    needs: snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Install Linux verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg rpm
+
+      - name: Verify Linux release signatures
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          LINUX_EXPECTED_GPG_FINGERPRINT: ${{ secrets.LINUX_EXPECTED_GPG_FINGERPRINT }}
+        run: ./.github/scripts/verify-linux-release-assets.sh
+
+      - name: Confirm assets did not change
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          EXPECTED_ASSET_SNAPSHOT_SHA256: ${{ needs.snapshot.outputs.sha256 }}
+        run: ./.github/scripts/verify-release-asset-snapshot.sh
+
+  verify-provenance:
+    needs: snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Install provenance signature verifier
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y minisign
+
+      - name: Verify signed build provenance
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+        run: ./.github/scripts/verify-release-provenance.sh
+
+      - name: Confirm assets did not change
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          EXPECTED_ASSET_SNAPSHOT_SHA256: ${{ needs.snapshot.outputs.sha256 }}
+        run: ./.github/scripts/verify-release-asset-snapshot.sh
+
+  verify-windows:
+    needs: snapshot
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download and verify Windows installers
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          WINDOWS_RELEASE_MODE: ${{ inputs.windows_signing_mode }}
+          WINDOWS_EXPECTED_SIGNER_THUMBPRINT: ${{ secrets.WINDOWS_EXPECTED_SIGNER_THUMBPRINT }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:WINDOWS_RELEASE_MODE -notin 'signpath', 'unsigned') {
+            throw 'WINDOWS_RELEASE_MODE must be signpath or unsigned.'
+          }
+          if ($env:WINDOWS_RELEASE_MODE -eq 'signpath' -and [string]::IsNullOrWhiteSpace($env:WINDOWS_EXPECTED_SIGNER_THUMBPRINT)) {
+            throw 'WINDOWS_EXPECTED_SIGNER_THUMBPRINT is required for SignPath releases.'
+          }
+          $version = $env:TAG_NAME.TrimStart('v')
+          New-Item -ItemType Directory -Force -Path windows-release | Out-Null
+          gh release download $env:TAG_NAME `
+            --repo tover0314-w/opentypeless `
+            --pattern "OpenTypeless_${version}_x64_en-US.msi" `
+            --pattern "OpenTypeless_${version}_x64-setup.exe" `
+            --pattern SHA256SUMS-windows-x86_64.txt `
+            --dir windows-release
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to download Windows release assets.' }
+
+          $expected = $env:WINDOWS_EXPECTED_SIGNER_THUMBPRINT -replace '\s', ''
+          $installers = Get-ChildItem windows-release -File | Where-Object { $_.Extension -in '.exe', '.msi' }
+          if ($installers.Count -ne 2) { throw "Expected two Windows installers; found $($installers.Count)." }
+          foreach ($file in $installers) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $file.FullName
+            if ($env:WINDOWS_RELEASE_MODE -eq 'signpath') {
+              if ($signature.Status -ne 'Valid') {
+                throw "Invalid Authenticode signature for $($file.Name): $($signature.Status)"
+              }
+              $actual = $signature.SignerCertificate.Thumbprint -replace '\s', ''
+              if ($actual -ine $expected) { throw "Unexpected Authenticode signer for $($file.Name)." }
+            } elseif ($signature.Status -ne 'NotSigned' -or $signature.SignerCertificate) {
+              throw "Unsigned mode refuses an installer with any Authenticode certificate: $($file.Name) ($($signature.Status))."
+            }
+          }
+          Push-Location windows-release
+          $checksumLines = @(Get-Content -LiteralPath SHA256SUMS-windows-x86_64.txt | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+          if ($checksumLines.Count -ne 2) { throw 'Windows checksum file must contain exactly two entries.' }
+          $expectedChecksumLines = @($installers | ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          } | Sort-Object)
+          if ((@($checksumLines | Sort-Object) -join "`n") -cne ($expectedChecksumLines -join "`n")) {
+            throw 'Windows checksum file does not match the downloaded installers.'
+          }
+          Pop-Location
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Confirm assets did not change
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          EXPECTED_ASSET_SNAPSHOT_SHA256: ${{ needs.snapshot.outputs.sha256 }}
+        run: ./.github/scripts/verify-release-asset-snapshot.sh
+
+  verify-macos:
+    needs: snapshot
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download and verify macOS assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_EXPECTED_SIGNER_SHA256: ${{ secrets.APPLE_EXPECTED_SIGNER_SHA256 }}
+        run: |
+          set -euo pipefail
+          version="${TAG_NAME#v}"
+          mkdir -p macos-release/extract
+          gh release download "$TAG_NAME" \
+            --repo tover0314-w/opentypeless \
+            --pattern OpenTypeless_universal.app.tar.gz \
+            --pattern "OpenTypeless_${version}_universal.dmg" \
+            --dir macos-release
+          tar -xzf macos-release/OpenTypeless_universal.app.tar.gz -C macos-release/extract
+          app_path=macos-release/extract/OpenTypeless.app
+          dmg_path="macos-release/OpenTypeless_${version}_universal.dmg"
+          if [ -z "$APPLE_TEAM_ID" ] || [ -z "$APPLE_EXPECTED_SIGNER_SHA256" ]; then
+            echo "::error::APPLE_TEAM_ID and APPLE_EXPECTED_SIGNER_SHA256 are required."
+            exit 1
+          fi
+          app_identifier="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app_path/Contents/Info.plist")"
+          app_short_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app_path/Contents/Info.plist")"
+          app_build_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$app_path/Contents/Info.plist")"
+          if [ "$app_identifier" != "com.opentypeless.app" ] || [ "$app_short_version" != "$version" ] || [ "$app_build_version" != "$version" ]; then
+            echo "::error::The app bundle identity or version does not match $TAG_NAME."
+            exit 1
+          fi
+          codesign --verify --deep --strict --verbose=2 "$app_path"
+          cert_prefix="macos-release/app-signer-"
+          codesign -d --extract-certificates="$cert_prefix" "$app_path"
+          signer_sha256="$(shasum -a 256 "${cert_prefix}0" | awk '{ print $1 }')"
+          expected_signer_sha256="$(printf '%s' "$APPLE_EXPECTED_SIGNER_SHA256" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+          if [[ ! "$expected_signer_sha256" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::APPLE_EXPECTED_SIGNER_SHA256 must be a full SHA-256 certificate digest."
+            exit 1
+          fi
+          if [ "$signer_sha256" != "$expected_signer_sha256" ]; then
+            echo "::error::Unexpected Apple signing certificate."
+            exit 1
+          fi
+          requirement="anchor apple generic and identifier \"com.opentypeless.app\" and certificate leaf[subject.OU] = \"$APPLE_TEAM_ID\""
+          codesign --verify --deep --strict -R="$requirement" "$app_path"
+          xcrun stapler validate "$app_path"
+          spctl --assess --type execute --verbose=4 "$app_path"
+          codesign --verify --verbose=2 "$dmg_path"
+          dmg_cert_prefix="macos-release/dmg-signer-"
+          codesign -d --extract-certificates="$dmg_cert_prefix" "$dmg_path"
+          dmg_signer_sha256="$(shasum -a 256 "${dmg_cert_prefix}0" | awk '{ print $1 }')"
+          if [ "$dmg_signer_sha256" != "$expected_signer_sha256" ]; then
+            echo "::error::Unexpected Apple signing certificate on the DMG."
+            exit 1
+          fi
+          xcrun stapler validate "$dmg_path"
+          spctl --assess --type open --context context:primary-signature --verbose=4 "$dmg_path"
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Confirm assets did not change
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          EXPECTED_ASSET_SNAPSHOT_SHA256: ${{ needs.snapshot.outputs.sha256 }}
+        run: ./.github/scripts/verify-release-asset-snapshot.sh
+
+  promote:
+    needs:
+      - verify-manifest
+      - verify-linux
+      - verify-windows
+      - verify-macos
+      - verify-provenance
+      - snapshot
+      - preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Recheck sources, manifest, and prerelease state
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+          OFFICIAL_SHA: ${{ inputs.official_sha }}
+          EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+          EXPECTED_ASSET_SNAPSHOT_SHA256: ${{ needs.snapshot.outputs.sha256 }}
+        run: |
+          ./.github/scripts/verify-release-source.sh
+          ./.github/scripts/verify-release-manifest.sh
+          ./.github/scripts/verify-release-asset-snapshot.sh
+
+      - name: Promote the verified prerelease
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: |
+          gh release edit "$TAG_NAME" \
+            --repo tover0314-w/opentypeless \
+            --verify-tag \
+            --prerelease=false \
+            --latest
