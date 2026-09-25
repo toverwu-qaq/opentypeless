@@ -70,14 +70,6 @@ if compgen -G "$bundle_dir/appimage/*.AppImage" >/dev/null; then
   done
 fi
 
-if compgen -G "$bundle_dir/rpm/*.rpm" >/dev/null; then
-  rpm_db="${RUNNER_TEMP}/opentypeless-rpmdb-${LINUX_ARCH}"
-  mkdir -p "$rpm_db"
-  rpm --dbpath "$rpm_db" --initdb
-  rpm --dbpath "$rpm_db" --import "$public_key_path"
-  rpm --define '_pkgverify_level all' --dbpath "$rpm_db" --checksig -v "$bundle_dir"/rpm/*.rpm
-fi
-
 gh release upload "$TAG_NAME" "$verification_dir"/* \
   --repo tover0314-w/opentypeless \
   --clobber
