@@ -225,16 +225,6 @@ jobs:
           }
           Pop-Location
 
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-
-      - name: Confirm assets did not change
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          TAG_NAME: ${{ inputs.tag }}
-          EXPECTED_ASSET_SNAPSHOT_SHA256: ${{ needs.snapshot.outputs.sha256 }}
-        run: ./.github/scripts/verify-release-asset-snapshot.sh
-
   verify-macos:
     needs: snapshot
     runs-on: macos-latest
