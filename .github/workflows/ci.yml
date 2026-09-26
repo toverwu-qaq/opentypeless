@@ -24,6 +24,9 @@ jobs:
       - name: Test release provenance guards
         run: ./.github/scripts/test-release-provenance.sh
 
+      - name: Test release finalization guards
+        run: ./.github/scripts/test-release-finalization-guards.sh
+
       - name: Test RPM verifier with a published signed package
         env:
           RPM_X86_64_SHA256: b92fcd554f60543544db26256d7d15317ea8dd60c71ffed37c797c2caba4d036

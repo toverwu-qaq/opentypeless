@@ -27,11 +27,10 @@ if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
   echo "::error::Release workflows must be dispatched from the CICD main branch."
   exit 1
 fi
-if [[ "$GITHUB_SHA" != "$EXPECTED_CICD_SHA" ]]; then
-  echo "::error::The checked-out CICD commit does not match EXPECTED_CICD_SHA."
+if [[ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]]; then
+  echo "::error::The checked-out commit does not match GITHUB_SHA."
   exit 1
 fi
-
 read_remote_sha() {
   local repository=$1
   local reference=$2
@@ -39,8 +38,8 @@ read_remote_sha() {
 }
 
 cicd_main_sha="$(read_remote_sha "$cicd_repo" refs/heads/main)"
-if [[ "$cicd_main_sha" != "$EXPECTED_CICD_SHA" ]]; then
-  echo "::error::CICD main moved or EXPECTED_CICD_SHA is not its current commit."
+if [[ "$cicd_main_sha" != "$GITHUB_SHA" ]]; then
+  echo "::error::The finalizer is not running from the current CICD main commit."
   exit 1
 fi
 
@@ -63,9 +62,8 @@ if [[ "$tag_commit_sha" != "$OFFICIAL_SHA" ]]; then
 fi
 
 git fetch --no-tags --depth=1 "https://github.com/${official_repo}.git" "$OFFICIAL_SHA"
-if [[ "$(git rev-parse HEAD)" != "$EXPECTED_CICD_SHA" ]]; then
-  echo "::error::The checked-out commit does not match EXPECTED_CICD_SHA."
-  exit 1
+if [[ "$EXPECTED_CICD_SHA" != "$GITHUB_SHA" ]] && ! git cat-file -e "${EXPECTED_CICD_SHA}^{commit}" 2>/dev/null; then
+  git fetch --no-tags --depth=1 "https://github.com/${cicd_repo}.git" "$EXPECTED_CICD_SHA"
 fi
 
 if ! git diff --quiet "$OFFICIAL_SHA" "$EXPECTED_CICD_SHA" -- . \
@@ -79,6 +77,8 @@ if ! git diff --quiet "$OFFICIAL_SHA" "$EXPECTED_CICD_SHA" -- . \
     ':(exclude,glob)**/README*.md'
   exit 1
 fi
+
+./.github/scripts/verify-cicd-automation-advance.sh
 
 release_version="${TAG_NAME#v}"
 RELEASE_VERSION="$release_version" node <<'NODE'
@@ -115,4 +115,4 @@ if (mismatches.length > 0) {
 }
 NODE
 
-echo "Verified $TAG_NAME: official $OFFICIAL_SHA; CICD $EXPECTED_CICD_SHA; release inputs and versions match."
+echo "Verified $TAG_NAME: official $OFFICIAL_SHA; build $EXPECTED_CICD_SHA; finalizer $GITHUB_SHA; release inputs and versions match."

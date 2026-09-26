@@ -15,9 +15,9 @@ fi
 snapshot_file="$(mktemp "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/opentypeless-release-snapshot.XXXXXX")"
 ./.github/scripts/snapshot-release-assets.sh >"$snapshot_file"
 if command -v sha256sum >/dev/null; then
-  actual_digest="$(sha256sum "$snapshot_file" | awk '{ print $1 }')"
+  actual_digest="$(sha256sum "$snapshot_file" | awk '{ print $1 }' | tr -d '\r\n')"
 else
-  actual_digest="$(shasum -a 256 "$snapshot_file" | awk '{ print $1 }')"
+  actual_digest="$(shasum -a 256 "$snapshot_file" | awk '{ print $1 }' | tr -d '\r\n')"
 fi
 if [[ "$actual_digest" != "$EXPECTED_ASSET_SNAPSHOT_SHA256" ]]; then
   echo "::error::Release assets changed after verification began."
