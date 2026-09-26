@@ -91,7 +91,9 @@ inventory, signed build-provenance manifests, and the immutable asset digest
 snapshot pass. Each provenance manifest binds its platform assets to the exact
 official Tag SHA and CI/CD SHA used for the build.
 `Finalize Release.windows_signing_mode` must match the mode used by the Windows
-build.
+build. The Windows job verifies the installer signatures and checksums on a
+native runner; the complete immutable asset snapshot is checked by the other
+platform jobs and once more immediately before promotion.
 
 Freeze the official repository's `main` branch from the moment the official tag
 is created until `Finalize Release` completes. Every stage pins and rechecks the
