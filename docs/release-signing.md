@@ -93,9 +93,13 @@ official Tag SHA and CI/CD SHA used for the build.
 `Finalize Release.windows_signing_mode` must match the mode used by the Windows
 build.
 
-Freeze both repositories' `main` branches from the moment the official tag is
-created until `Finalize Release` completes. Every stage pins and rechecks both
-commit SHAs; an intervening merge intentionally stops the release.
+Freeze the official repository's `main` branch from the moment the official tag
+is created until `Finalize Release` completes. Every stage pins and rechecks the
+official Tag SHA and the CI/CD build SHA. `Finalize Release` normally runs from
+that exact CI/CD SHA; a later CI/CD commit is accepted only when the build SHA is
+its ancestor and every intervening change is limited to release automation or
+release documentation. Any application, dependency, or packaging-input change
+after the build intentionally stops the release.
 
 ## Windows Certificate Notes
 

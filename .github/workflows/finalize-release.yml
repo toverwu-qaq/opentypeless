@@ -35,12 +35,28 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Verify CI/CD dispatcher identity
+        env:
+          ACTUAL_CICD_ACTOR: ${{ github.actor }}
+          ACTUAL_TRIGGERING_ACTOR: ${{ github.triggering_actor }}
+          EXPECTED_CICD_ACTOR: toverwu-qaq
+        run: |
+          if [ "$ACTUAL_CICD_ACTOR" != "$EXPECTED_CICD_ACTOR" ] || \
+             [ "$ACTUAL_TRIGGERING_ACTOR" != "$EXPECTED_CICD_ACTOR" ]; then
+            echo "::error::Finalize Release must be dispatched and rerun by $EXPECTED_CICD_ACTOR."
+            exit 1
+          fi
+          echo "Verified CI/CD dispatcher identity: $EXPECTED_CICD_ACTOR."
 
       - name: Verify pinned release sources before exposing secrets
         env:
           TAG_NAME: ${{ inputs.tag }}
           OFFICIAL_SHA: ${{ inputs.official_sha }}
           EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+          ALLOW_CICD_AUTOMATION_ONLY_ADVANCE: 'true'
         run: ./.github/scripts/verify-release-source.sh
 
   snapshot:
@@ -51,6 +67,12 @@ jobs:
       sha256: ${{ steps.snapshot.outputs.sha256 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Verify official release publisher identity
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          EXPECTED_RELEASE_ACTOR: tover0314-w
+        run: ./.github/scripts/verify-release-publisher.sh
 
       - name: Capture immutable asset inventory
         id: snapshot
@@ -298,15 +320,20 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
 
-      - name: Recheck sources, manifest, and prerelease state
+      - name: Recheck publisher, sources, manifest, and prerelease state
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          EXPECTED_RELEASE_ACTOR: tover0314-w
           TAG_NAME: ${{ inputs.tag }}
           OFFICIAL_SHA: ${{ inputs.official_sha }}
           EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
+          ALLOW_CICD_AUTOMATION_ONLY_ADVANCE: 'true'
           EXPECTED_ASSET_SNAPSHOT_SHA256: ${{ needs.snapshot.outputs.sha256 }}
         run: |
+          ./.github/scripts/verify-release-publisher.sh
           ./.github/scripts/verify-release-source.sh
           ./.github/scripts/verify-release-manifest.sh
           ./.github/scripts/verify-release-asset-snapshot.sh
