@@ -38,12 +38,21 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
+      - name: Verify CI/CD dispatcher identity
+        run: ./.github/scripts/verify-cicd-dispatcher.sh
+
       - name: Verify pinned release sources
         env:
           TAG_NAME: ${{ inputs.tag }}
           OFFICIAL_SHA: ${{ inputs.official_sha }}
           EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
         run: ./.github/scripts/verify-release-source.sh
+
+      - name: Verify official release publisher identity
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          EXPECTED_RELEASE_ACTOR: tover0314-w
+        run: ./.github/scripts/verify-release-publisher.sh
 
       - name: Prepare the official prerelease
         env:
@@ -88,6 +97,12 @@ jobs:
           OFFICIAL_SHA: ${{ inputs.official_sha }}
           EXPECTED_CICD_SHA: ${{ inputs.expected_cicd_sha }}
         run: ./.github/scripts/verify-release-source.sh
+
+      - name: Verify official release publisher identity
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          EXPECTED_RELEASE_ACTOR: tover0314-w
+        run: ./.github/scripts/verify-release-publisher.sh
 
       - name: Verify target is still a prerelease
         env:

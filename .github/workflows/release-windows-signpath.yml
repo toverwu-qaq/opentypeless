@@ -46,6 +46,10 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
+      - name: Verify CI/CD dispatcher identity
+        shell: bash
+        run: ./.github/scripts/verify-cicd-dispatcher.sh
+
       - name: Verify pinned release sources
         shell: bash
         env:
@@ -101,6 +105,14 @@ jobs:
             Write-Error 'A SignPath test policy cannot publish Windows assets to a production GitHub Release.'
             exit 1
           }
+
+      - name: Verify official release publisher identity
+        if: ${{ inputs.publish_release == 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          EXPECTED_RELEASE_ACTOR: tover0314-w
+        run: ./.github/scripts/verify-release-publisher.sh
 
       - name: Verify target is still a prerelease
         if: ${{ inputs.publish_release == 'true' }}

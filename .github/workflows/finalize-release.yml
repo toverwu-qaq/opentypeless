@@ -39,17 +39,7 @@ jobs:
           fetch-depth: 0
 
       - name: Verify CI/CD dispatcher identity
-        env:
-          ACTUAL_CICD_ACTOR: ${{ github.actor }}
-          ACTUAL_TRIGGERING_ACTOR: ${{ github.triggering_actor }}
-          EXPECTED_CICD_ACTOR: toverwu-qaq
-        run: |
-          if [ "$ACTUAL_CICD_ACTOR" != "$EXPECTED_CICD_ACTOR" ] || \
-             [ "$ACTUAL_TRIGGERING_ACTOR" != "$EXPECTED_CICD_ACTOR" ]; then
-            echo "::error::Finalize Release must be dispatched and rerun by $EXPECTED_CICD_ACTOR."
-            exit 1
-          fi
-          echo "Verified CI/CD dispatcher identity: $EXPECTED_CICD_ACTOR."
+        run: ./.github/scripts/verify-cicd-dispatcher.sh
 
       - name: Verify pinned release sources before exposing secrets
         env:
