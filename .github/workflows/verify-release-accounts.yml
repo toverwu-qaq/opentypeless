@@ -1,0 +1,41 @@
+name: Verify CI/CD and Release Accounts
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-accounts:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Verify CI/CD dispatcher identity
+        run: ./.github/scripts/verify-cicd-dispatcher.sh
+
+      - name: Verify official Release account and repository access
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          EXPECTED_RELEASE_ACTOR: tover0314-w
+        run: |
+          ./.github/scripts/verify-release-publisher.sh
+          gh api repos/tover0314-w/opentypeless \
+            --jq 'select(.full_name == "tover0314-w/opentypeless" and .permissions.push == true) | .full_name' \
+            > official-release-access.txt
+          if ! grep -qx 'tover0314-w/opentypeless' official-release-access.txt; then
+            echo '::error::The Release account cannot publish to the official repository.'
+            exit 1
+          fi
+          echo 'Verified official Release repository access.'
+          {
+            echo '| Role | GitHub account | Repository |'
+            echo '|---|---|---|'
+            echo '| CI/CD | toverwu-qaq | toverwu-qaq/opentypeless |'
+            echo '| Release publisher | tover0314-w | tover0314-w/opentypeless |'
+            echo ''
+            echo 'Read-only identity and repository-access verification completed; no releases or assets were modified.'
+          } >> "$GITHUB_STEP_SUMMARY"
