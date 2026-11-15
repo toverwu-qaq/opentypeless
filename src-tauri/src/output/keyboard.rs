@@ -3,8 +3,6 @@ use enigo::{Direction, Enigo, Key, Keyboard, Settings};
 
 use crate::error::AppError;
 
-#[cfg(not(target_os = "macos"))]
-use super::InsertionStrategy;
 use super::{InsertResult, OutputMode, TextOutput};
 
 /// Maximum characters per enigo.text() call to avoid input buffer overflow.
@@ -188,9 +186,6 @@ impl KeyboardOutput {
 #[async_trait]
 impl TextOutput for KeyboardOutput {
     async fn type_text(&self, text: &str) -> Result<InsertResult, AppError> {
-        #[cfg(not(target_os = "macos"))]
-        let chars_inserted = text.chars().count();
-
         #[cfg(target_os = "macos")]
         {
             return self.type_text_on_main_thread(text).await;
@@ -201,14 +196,17 @@ impl TextOutput for KeyboardOutput {
             let text = text.to_string();
             let guard = self.guard.clone();
             tokio::task::spawn_blocking(move || {
-                type_text_sync_progress(&text, guard.as_ref(), &std::cell::Cell::new(0))
+                let completed_chars = std::cell::Cell::new(0);
+                let result = type_text_sync_progress(&text, guard.as_ref(), &completed_chars);
+                let progress = if result.is_ok() {
+                    text.chars().count()
+                } else {
+                    completed_chars.get()
+                };
+                super::keyboard_progress::finish_keyboard_attempt(result, progress)
             })
             .await
-            .map_err(|e| AppError::Output(format!("Spawn blocking error: {}", e)))??;
-            Ok(InsertResult::inserted(
-                InsertionStrategy::Keyboard,
-                chars_inserted,
-            ))
+            .map_err(|e| AppError::Output(format!("Spawn blocking error: {}", e)))?
         }
     }
 

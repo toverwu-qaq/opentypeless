@@ -8,6 +8,20 @@ use keyboard_progress::finish_keyboard_attempt;
 use output::{InsertStatus, InsertionStrategy};
 
 #[test]
+fn windows_keyboard_output_returns_chunk_progress_instead_of_replaying_failure() {
+    let source = include_str!("../src/output/keyboard.rs");
+    let worker = source
+        .split("tokio::task::spawn_blocking(move || {")
+        .nth(1)
+        .unwrap()
+        .split("    fn mode(")
+        .next()
+        .unwrap();
+    assert!(worker.contains("finish_keyboard_attempt("));
+    assert!(worker.contains("completed_chars.get()"));
+}
+
+#[test]
 fn failure_after_completed_chunks_preserves_partial_progress() {
     let result =
         finish_keyboard_attempt(Err(AppError::Output("synthetic failure".into())), 200).unwrap();

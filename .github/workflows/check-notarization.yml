@@ -39,6 +39,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path windows-verification | Out-Null
+          cargo test --locked --target x86_64-pc-windows-msvc --manifest-path src-tauri/Cargo.toml --test keyboard_progress -- --test-threads=2 2>&1 | Tee-Object windows-verification/keyboard-progress-tests.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           rustup component add clippy
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo clippy --locked --all-targets --target x86_64-pc-windows-msvc --manifest-path src-tauri/Cargo.toml -- -D warnings 2>&1 | Tee-Object windows-verification/windows-clippy.txt
