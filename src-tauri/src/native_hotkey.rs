@@ -2079,6 +2079,39 @@ mod platform {
     fn accept_synthetic_events() -> bool {
         std::env::var(ACCEPT_SYNTHETIC_EVENTS_ENV).ok().as_deref() == Some("1")
     }
+
+    #[cfg(test)]
+    mod timer_tests {
+        use super::*;
+        use windows_sys::Win32::UI::WindowsAndMessaging::PM_REMOVE;
+
+        #[test]
+        fn native_timer_delivers_to_its_message_thread_without_keyboard_injection() {
+            thread::spawn(|| unsafe {
+                let mut message: MSG = std::mem::zeroed();
+                PeekMessageW(&mut message, ptr::null_mut(), 0, 0, PM_NOREMOVE);
+                let timer = SetTimer(ptr::null_mut(), 0, 20, None);
+                assert_ne!(timer, 0);
+                let deadline = std::time::Instant::now() + Duration::from_secs(3);
+                let mut delivered = false;
+                while std::time::Instant::now() < deadline {
+                    if PeekMessageW(&mut message, ptr::null_mut(), WM_TIMER, WM_TIMER, PM_REMOVE)
+                        != 0
+                        && message.wParam == timer
+                    {
+                        delivered = true;
+                        break;
+                    }
+                    thread::sleep(Duration::from_millis(5));
+                }
+                let retired = KillTimer(ptr::null_mut(), timer);
+                assert!(delivered, "Windows message timer did not deliver");
+                assert_ne!(retired, 0);
+            })
+            .join()
+            .unwrap();
+        }
+    }
 }
 
 #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
