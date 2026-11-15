@@ -34,6 +34,7 @@ jobs:
           rustup target add x86_64-pc-windows-msvc
       - run: npm ci
       - run: npx tsc --noEmit
+      - run: npm run build
       - name: Compile Windows tests
         run: cargo test --locked --no-run --target x86_64-pc-windows-msvc --manifest-path src-tauri/Cargo.toml
       - name: Build unsigned internal installer
