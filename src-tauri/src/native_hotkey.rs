@@ -640,7 +640,7 @@ impl NativeComboState {
     }
 }
 
-#[cfg(any(target_os = "macos", test))]
+#[cfg(any(target_os = "macos", target_os = "windows", test))]
 fn activate_pending_base(
     state: &mut NativeComboState,
     bindings: &[NativeMonitoredBinding],
@@ -1400,6 +1400,45 @@ mod platform {
         }
 
         #[test]
+        fn characterizes_accepted_fn_edges_still_forwarded_to_system() {
+            let bindings = Arc::new(vec![NativeMonitoredBinding::new(
+                super::super::NativeHotkeyBinding {
+                    role: crate::hotkey::HotkeyRole::Dictation,
+                    index: 0,
+                    trigger: NativeHotkeyTrigger::Fn,
+                },
+            )]);
+            let handles = Arc::new(MacShutdownHandles::new(bindings.clone()));
+            let dispatched = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let captured = dispatched.clone();
+            let mut context = CallbackContext {
+                bindings,
+                handler: Arc::new(move |_: super::super::NativeHotkeyEvent| {
+                    captured.fetch_add(1, Ordering::SeqCst);
+                }),
+                state: handles.state.clone(),
+                handles,
+                consumption: Mutex::new(Default::default()),
+            };
+            for pressed in [true, false] {
+                let event = unsafe { CGEventCreateKeyboardEvent(std::ptr::null(), 63, pressed) };
+                assert!(!event.is_null());
+                unsafe {
+                    CGEventSetFlags(event, if pressed { FLAG_MASK_SECONDARY_FN } else { 0 });
+                }
+                let returned = event_tap_callback(
+                    std::ptr::null_mut(),
+                    FLAGS_CHANGED,
+                    event,
+                    (&mut context as *mut CallbackContext).cast(),
+                );
+                assert_eq!(returned, event);
+                unsafe { CFRelease(event as *const c_void) };
+            }
+            assert_eq!(dispatched.load(Ordering::SeqCst), 2);
+        }
+
+        #[test]
         fn owned_unicode_output_does_not_enter_configured_fn_combo() {
             let bindings = Arc::new(vec![NativeMonitoredBinding::new(
                 super::super::NativeHotkeyBinding {
@@ -1662,9 +1701,9 @@ mod platform {
 #[cfg(target_os = "windows")]
 mod platform {
     use super::{
-        dispatch_native_base_edge, dispatch_native_combo_edge, dispatch_native_state_update,
-        monitored_bindings_for_base, NativeComboKey, NativeComboState, NativeHotkeyHandler,
-        NativeHotkeyTrigger, NativeMonitoredBinding,
+        activate_pending_base, dispatch_native_base_edge, dispatch_native_combo_edge,
+        dispatch_native_state_update, monitored_bindings_for_base, NativeComboKey,
+        NativeComboState, NativeHotkeyHandler, NativeHotkeyTrigger, NativeMonitoredBinding,
     };
     use std::ptr;
     use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU32, Ordering as AtomicOrdering};
@@ -1675,12 +1714,13 @@ mod platform {
     use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
     use windows_sys::Win32::System::Threading::GetCurrentThreadId;
     use windows_sys::Win32::UI::WindowsAndMessaging::{
-        CallNextHookEx, DispatchMessageW, GetMessageW, PeekMessageW, PostThreadMessageW,
-        SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, HC_ACTION, HHOOK,
-        KBDLLHOOKSTRUCT, LLKHF_INJECTED, MSG, PM_NOREMOVE, WH_KEYBOARD_LL, WM_QUIT,
+        CallNextHookEx, DispatchMessageW, GetMessageW, KillTimer, PeekMessageW, PostThreadMessageW,
+        SetTimer, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, HC_ACTION, HHOOK,
+        KBDLLHOOKSTRUCT, LLKHF_INJECTED, MSG, PM_NOREMOVE, WH_KEYBOARD_LL, WM_QUIT, WM_TIMER,
     };
 
     const STARTUP_TIMEOUT: Duration = Duration::from_secs(3);
+    const HOLD_COMBO_GRACE_PERIOD: Duration = Duration::from_millis(200);
     const ACCEPT_SYNTHETIC_EVENTS_ENV: &str = "OPENTYPELESS_ACCEPT_SYNTHETIC_HOTKEY_EVENTS";
 
     const WM_KEYDOWN: usize = 0x0100;
@@ -1884,7 +1924,17 @@ mod platform {
                 return;
             }
 
+            let timer = SetTimer(ptr::null_mut(), 0, 20, None);
+            if timer == 0 {
+                let error = GetLastError();
+                cleanup_context(context);
+                let _ = status_tx.send(Err(format!(
+                    "Failed to start Windows shortcut timer: Win32 error {error}"
+                )));
+                return;
+            }
             if status_tx.send(Ok(thread_id)).is_err() || startup.is_cancelled() {
+                KillTimer(ptr::null_mut(), timer);
                 cleanup_context(context);
                 return;
             }
@@ -1894,10 +1944,33 @@ mod platform {
                 if result <= 0 {
                     break;
                 }
+                if message.message == WM_TIMER && message.wParam == timer {
+                    dispatch_native_state_update(
+                        &(*context).state,
+                        &(*context).handler,
+                        |state, collector| {
+                            if !state.pressed_at.is_some_and(|pressed_at| {
+                                pressed_at.elapsed() >= HOLD_COMBO_GRACE_PERIOD
+                            }) {
+                                return false;
+                            }
+                            let generation = state.edge_generation;
+                            activate_pending_base(
+                                state,
+                                &(*context).bindings,
+                                NativeHotkeyTrigger::RightAlt,
+                                generation,
+                                collector,
+                            )
+                        },
+                    );
+                    continue;
+                }
                 let _ = TranslateMessage(&message);
                 let _ = DispatchMessageW(&message);
             }
 
+            KillTimer(ptr::null_mut(), timer);
             cleanup_context(context);
         }
     }
@@ -2029,6 +2102,22 @@ mod platform {
 #[cfg(test)]
 mod tests {
     #[test]
+    fn windows_hook_loop_activates_pending_base_and_retires_its_timer() {
+        let windows = include_str!("native_hotkey.rs")
+            .split("#[cfg(target_os = \"windows\")]\nmod platform")
+            .nth(1)
+            .unwrap()
+            .split("#[cfg(all(not(target_os")
+            .next()
+            .unwrap();
+        assert!(windows.contains("SetTimer("));
+        assert!(windows.contains("WM_TIMER"));
+        assert!(windows.contains("activate_pending_base("));
+        assert!(windows.contains("KillTimer("));
+        assert!(windows.contains("pressed_at.elapsed() >= HOLD_COMBO_GRACE_PERIOD"));
+    }
+
+    #[test]
     fn windows_monitor_passes_selected_mode_into_native_state() {
         let windows = include_str!("native_hotkey.rs")
             .split("#[cfg(target_os = \"windows\")]\nmod platform")
@@ -2043,7 +2132,7 @@ mod tests {
     }
 
     #[test]
-    fn characterizes_right_alt_with_combo_delaying_base_press_until_release() {
+    fn right_alt_with_combo_activates_base_before_release() {
         let bindings = vec![
             NativeMonitoredBinding::new(NativeHotkeyBinding {
                 role: crate::hotkey::HotkeyRole::Dictation,
@@ -2074,6 +2163,15 @@ mod tests {
         );
         assert!(state.pending_base_press);
         assert!(events.lock().unwrap().is_empty());
+        let generation = state.edge_generation;
+        assert!(activate_pending_base(
+            &mut state,
+            &bindings,
+            NativeHotkeyTrigger::RightAlt,
+            generation,
+            &handler,
+        ));
+        assert_eq!(*events.lock().unwrap(), vec![ShortcutState::Pressed]);
         dispatch_native_base_edge(
             &mut state,
             &bindings,
@@ -2092,7 +2190,7 @@ mod tests {
             .split("#[cfg(not(any(")
             .next()
             .unwrap();
-        assert!(!windows.contains("activate_pending_base("));
+        assert!(windows.contains("activate_pending_base("));
     }
 
     #[test]
