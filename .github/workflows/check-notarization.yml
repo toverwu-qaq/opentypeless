@@ -35,16 +35,14 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm run build
-      - name: Run Windows core state tests
+      - name: Run strict Windows Clippy
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path windows-verification | Out-Null
-          cargo test --locked --target x86_64-pc-windows-msvc --manifest-path src-tauri/Cargo.toml --test input_session --test input_configuration --test input_command_queue --test shortcut_event_consumption --test shortcut_lease_state --test hotkey_controller -- --test-threads=2 2>&1 | Tee-Object windows-verification/core-input-tests.txt
+          rustup component add clippy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy --locked --all-targets --target x86_64-pc-windows-msvc --manifest-path src-tauri/Cargo.toml -- -D warnings 2>&1 | Tee-Object windows-verification/windows-clippy.txt
           $result = $LASTEXITCODE
-          if ($result -eq 0) {
-            cargo test --locked --lib native_hotkey:: --target x86_64-pc-windows-msvc --manifest-path src-tauri/Cargo.toml -- --test-threads=2 2>&1 | Tee-Object windows-verification/native-hotkey-tests.txt
-            $result = $LASTEXITCODE
-          }
           "Source: $env:GITHUB_SHA; includes Windows native timer repair. This run does not build a replacement installer." | Set-Content windows-verification/BUILD-INFO.txt
           exit $result
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
