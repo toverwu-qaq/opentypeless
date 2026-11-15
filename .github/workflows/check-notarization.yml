@@ -1,4 +1,4 @@
-name: Windows Local Test Package
+name: Windows Core Input Verification
 
 on:
   push:
@@ -35,26 +35,18 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm run build
-      - name: Compile Windows tests
-        run: cargo test --locked --no-run --target x86_64-pc-windows-msvc --manifest-path src-tauri/Cargo.toml
-      - name: Build unsigned internal installer
-        run: npx tauri build --debug --target x86_64-pc-windows-msvc --bundles nsis --no-sign --config '{"bundle":{"createUpdaterArtifacts":false}}'
-      - name: Collect package and checksums
+      - name: Run Windows core state tests
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Path windows-test-package | Out-Null
-          $installers = @(Get-ChildItem src-tauri/target/x86_64-pc-windows-msvc/debug/bundle/nsis/*.exe)
-          if ($installers.Count -eq 0) { throw "Windows installer not found" }
-          Copy-Item $installers.FullName windows-test-package/
-          Copy-Item src-tauri/target/x86_64-pc-windows-msvc/debug/opentypeless.exe windows-test-package/
-          "Internal unsigned test build. Not a stable release. Source: $env:GITHUB_SHA" | Set-Content windows-test-package/BUILD-INFO.txt
-          Get-ChildItem windows-test-package/*.exe | ForEach-Object {
-            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-            "$hash  $($_.Name)"
-          } | Set-Content windows-test-package/SHA256SUMS.txt
+          New-Item -ItemType Directory -Path windows-verification | Out-Null
+          cargo test --locked --target x86_64-pc-windows-msvc --manifest-path src-tauri/Cargo.toml --test input_session --test input_configuration --test input_command_queue --test shortcut_event_consumption --test shortcut_lease_state --test hotkey_controller -- --test-threads=2 2>&1 | Tee-Object windows-verification/core-input-tests.txt
+          $result = $LASTEXITCODE
+          "Source: $env:GITHUB_SHA; application source unchanged from e40bc7e368823f1cb4134e01363912b5372c6943. This run does not build a replacement installer." | Set-Content windows-verification/BUILD-INFO.txt
+          exit $result
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
         with:
-          name: OpenTypeless-windows-x64-test
-          path: windows-test-package/
+          name: OpenTypeless-windows-core-verification
+          path: windows-verification/
           retention-days: 7
           if-no-files-found: error
