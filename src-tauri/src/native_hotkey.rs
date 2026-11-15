@@ -431,6 +431,7 @@ impl NativeHandlerSlot {
         }
     }
 
+    #[cfg(any(target_os = "macos", test))]
     fn replace(&self, handler: NativeHotkeyHandler) -> NativeHotkeyHandler {
         {
             let mut current = self
