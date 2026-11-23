@@ -780,6 +780,7 @@ mod tests {
             }
         }
         drop(main);
+        drop(app.unmanage::<storage::HistoryStore>().unwrap());
         drop(app);
         drop(connection);
         for attempt in 0..20 {
