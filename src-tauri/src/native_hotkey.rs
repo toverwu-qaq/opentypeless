@@ -2369,7 +2369,7 @@ mod tests {
     }
 
     #[test]
-    fn windows_monitor_passes_selected_mode_into_native_state() {
+    fn windows_monitor_keeps_unused_mode_only_in_test_state() {
         let windows = include_str!("native_hotkey.rs")
             .split("#[cfg(target_os = \"windows\")]\nmod platform")
             .nth(1)
@@ -2377,9 +2377,8 @@ mod tests {
             .split("#[cfg(all(not(target_os")
             .next()
             .unwrap();
-        assert!(!windows.contains("_mode: super::InputMode"));
         assert!(windows.contains("run_keyboard_hook_loop(bindings, mode,"));
-        assert!(windows.contains("NativeComboState {\n                    mode,"));
+        assert!(windows.contains("NativeComboState {\n                    #[cfg(test)]\n                    mode: _mode,"));
     }
 
     #[test]
