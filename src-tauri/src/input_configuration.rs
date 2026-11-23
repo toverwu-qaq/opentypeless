@@ -313,6 +313,7 @@ impl<Fingerprint: PartialEq + Clone, Config> InputConfiguration<Fingerprint, Con
     }
 
     #[cfg(any(target_os = "macos", test))]
+    #[cfg_attr(all(not(target_os = "macos"), test), allow(dead_code))]
     pub fn observe_physical_keys(&mut self, keys: Option<Vec<u16>>) -> Vec<InputAction> {
         if keys.as_ref().is_some_and(Vec::is_empty) {
             self.installation_blocked_bindings.clear();
@@ -340,6 +341,7 @@ impl<Fingerprint: PartialEq + Clone, Config> InputConfiguration<Fingerprint, Con
     }
 
     #[cfg(any(target_os = "macos", test))]
+    #[cfg_attr(all(not(target_os = "macos"), test), allow(dead_code))]
     pub fn monitor_lost(&mut self, revision: u64) -> bool {
         if !self.session.monitor_lost(revision) {
             return false;

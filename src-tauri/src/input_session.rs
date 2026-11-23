@@ -229,6 +229,7 @@ impl InputSession {
     }
 
     #[cfg(any(target_os = "macos", test))]
+    #[cfg_attr(all(not(target_os = "macos"), test), allow(dead_code))]
     pub fn installation_failed(&mut self, revision: u64) -> bool {
         let Some(config) = self
             .pending_bindings
@@ -242,6 +243,7 @@ impl InputSession {
     }
 
     #[cfg(any(target_os = "macos", test))]
+    #[cfg_attr(all(not(target_os = "macos"), test), allow(dead_code))]
     pub fn monitor_lost(&mut self, revision: u64) -> bool {
         let Some(config) = self
             .active_bindings
@@ -520,6 +522,7 @@ impl InputSession {
     }
 
     #[cfg(any(target_os = "macos", test))]
+    #[cfg_attr(all(not(target_os = "macos"), test), allow(dead_code))]
     pub fn suspend(&mut self) {
         self.suspended = true;
         self.resume_release_required = true;
@@ -531,6 +534,7 @@ impl InputSession {
     }
 
     #[cfg(any(target_os = "macos", test))]
+    #[cfg_attr(all(not(target_os = "macos"), test), allow(dead_code))]
     pub fn observe_physical_keys(&mut self, keys: Option<Vec<u16>>) -> Vec<InputAction> {
         if self.stopped {
             return Vec::new();
