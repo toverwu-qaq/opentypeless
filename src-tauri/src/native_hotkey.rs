@@ -2021,7 +2021,7 @@ mod platform {
 
     fn run_keyboard_hook_loop(
         bindings: Vec<NativeMonitoredBinding>,
-        mode: super::InputMode,
+        _mode: super::InputMode,
         handler: NativeHotkeyHandler,
         startup: Arc<WindowsStartupState>,
         status_tx: mpsc::Sender<Result<u32, String>>,
@@ -2045,7 +2045,8 @@ mod platform {
                 handler,
                 hook: std::sync::Mutex::new(None),
                 state: std::sync::Mutex::new(NativeComboState {
-                    mode,
+                    #[cfg(test)]
+                    mode: _mode,
                     ..Default::default()
                 }),
                 consumption: std::sync::Mutex::default(),
