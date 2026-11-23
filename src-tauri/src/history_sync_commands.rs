@@ -3097,12 +3097,10 @@ mod tests {
                 .unwrap();
             let origin = if remote {
                 "https://example.invalid/"
+            } else if cfg!(target_os = "windows") {
+                "http://tauri.localhost"
             } else {
-                if cfg!(target_os = "windows") {
-                    "http://tauri.localhost"
-                } else {
-                    "tauri://localhost"
-                }
+                "tauri://localhost"
             };
             let url = if remote {
                 tauri::WebviewUrl::External(origin.parse().unwrap())
@@ -3172,12 +3170,10 @@ mod tests {
             }
             let origin = if remote {
                 "https://example.invalid/"
+            } else if cfg!(target_os = "windows") {
+                "http://tauri.localhost"
             } else {
-                if cfg!(target_os = "windows") {
-                    "http://tauri.localhost"
-                } else {
-                    "tauri://localhost"
-                }
+                "tauri://localhost"
             };
             let url = if remote {
                 tauri::WebviewUrl::External(origin.parse().unwrap())
@@ -3231,12 +3227,10 @@ mod tests {
                 .unwrap();
             let origin = if remote {
                 "https://example.invalid/"
+            } else if cfg!(target_os = "windows") {
+                "http://tauri.localhost"
             } else {
-                if cfg!(target_os = "windows") {
-                    "http://tauri.localhost"
-                } else {
-                    "tauri://localhost"
-                }
+                "tauri://localhost"
             };
             let url = if remote {
                 tauri::WebviewUrl::External(origin.parse().unwrap())
@@ -3303,12 +3297,10 @@ mod tests {
                     error: tauri::ipc::CallbackFn(1),
                     url: if remote {
                         "https://example.invalid/"
+                    } else if cfg!(target_os = "windows") {
+                        "http://tauri.localhost"
                     } else {
-                        if cfg!(target_os = "windows") {
-                            "http://tauri.localhost"
-                        } else {
-                            "tauri://localhost"
-                        }
+                        "tauri://localhost"
                     }
                     .parse()
                     .unwrap(),
@@ -3330,12 +3322,10 @@ mod tests {
                     error: tauri::ipc::CallbackFn(1),
                     url: if remote {
                         "https://example.invalid/"
+                    } else if cfg!(target_os = "windows") {
+                        "http://tauri.localhost"
                     } else {
-                        if cfg!(target_os = "windows") {
-                            "http://tauri.localhost"
-                        } else {
-                            "tauri://localhost"
-                        }
+                        "tauri://localhost"
                     }
                     .parse()
                     .unwrap(),
@@ -3409,12 +3399,10 @@ mod tests {
                     error: tauri::ipc::CallbackFn(1),
                     url: if remote {
                         "https://example.invalid/"
+                    } else if cfg!(target_os = "windows") {
+                        "http://tauri.localhost"
                     } else {
-                        if cfg!(target_os = "windows") {
-                            "http://tauri.localhost"
-                        } else {
-                            "tauri://localhost"
-                        }
+                        "tauri://localhost"
                     }
                     .parse()
                     .unwrap(),
