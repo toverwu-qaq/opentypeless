@@ -306,7 +306,7 @@ mod tests {
                         cmd: command.to_string(),
                         callback: tauri::ipc::CallbackFn(0),
                         error: tauri::ipc::CallbackFn(1),
-                        url: "tauri://localhost".parse().unwrap(),
+                        url: crate::local_test_url(),
                         body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                             "namespace": "invalid",
                             "provider": "synthetic-provider",
@@ -350,7 +350,7 @@ mod tests {
                             cmd: command.to_string(),
                             callback: tauri::ipc::CallbackFn(0),
                             error: tauri::ipc::CallbackFn(1),
-                            url: "tauri://localhost".parse().unwrap(),
+                            url: crate::local_test_url(),
                             body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                                 "namespace": namespace,
                                 "provider": "synthetic-provider",
@@ -386,7 +386,7 @@ mod tests {
                         cmd: "read_credential".to_string(),
                         callback: tauri::ipc::CallbackFn(0),
                         error: tauri::ipc::CallbackFn(1),
-                        url: "tauri://localhost".parse().unwrap(),
+                        url: crate::local_test_url(),
                         body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                             "namespace": namespace,
                             "provider": "synthetic-provider"

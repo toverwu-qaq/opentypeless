@@ -148,7 +148,10 @@ mod tests {
             let window = tauri::WebviewWindowBuilder::new(&app, label, Default::default())
                 .build()
                 .unwrap();
-            for origin in ["tauri://localhost", "https://untrusted.example.test/"] {
+            for origin in [
+                crate::local_test_url().as_str(),
+                "https://untrusted.example.test/",
+            ] {
                 let response = tauri::test::get_ipc_response(
                     &window,
                     tauri::webview::InvokeRequest {

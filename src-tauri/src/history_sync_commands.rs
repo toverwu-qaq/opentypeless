@@ -1574,7 +1574,7 @@ mod tests {
                     cmd: "acknowledge_history_sync_attempt".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                         "requestId": request_id,
                         "expectedSessionEpoch": view.session_epoch,
@@ -3098,7 +3098,11 @@ mod tests {
             let origin = if remote {
                 "https://example.invalid/"
             } else {
-                "tauri://localhost"
+                if cfg!(target_os = "windows") {
+                    "http://tauri.localhost"
+                } else {
+                    "tauri://localhost"
+                }
             };
             let url = if remote {
                 tauri::WebviewUrl::External(origin.parse().unwrap())
@@ -3169,7 +3173,11 @@ mod tests {
             let origin = if remote {
                 "https://example.invalid/"
             } else {
-                "tauri://localhost"
+                if cfg!(target_os = "windows") {
+                    "http://tauri.localhost"
+                } else {
+                    "tauri://localhost"
+                }
             };
             let url = if remote {
                 tauri::WebviewUrl::External(origin.parse().unwrap())
@@ -3224,7 +3232,11 @@ mod tests {
             let origin = if remote {
                 "https://example.invalid/"
             } else {
-                "tauri://localhost"
+                if cfg!(target_os = "windows") {
+                    "http://tauri.localhost"
+                } else {
+                    "tauri://localhost"
+                }
             };
             let url = if remote {
                 tauri::WebviewUrl::External(origin.parse().unwrap())
@@ -3292,7 +3304,11 @@ mod tests {
                     url: if remote {
                         "https://example.invalid/"
                     } else {
-                        "tauri://localhost"
+                        if cfg!(target_os = "windows") {
+                            "http://tauri.localhost"
+                        } else {
+                            "tauri://localhost"
+                        }
                     }
                     .parse()
                     .unwrap(),
@@ -3315,7 +3331,11 @@ mod tests {
                     url: if remote {
                         "https://example.invalid/"
                     } else {
-                        "tauri://localhost"
+                        if cfg!(target_os = "windows") {
+                            "http://tauri.localhost"
+                        } else {
+                            "tauri://localhost"
+                        }
                     }
                     .parse()
                     .unwrap(),
@@ -3390,7 +3410,11 @@ mod tests {
                     url: if remote {
                         "https://example.invalid/"
                     } else {
-                        "tauri://localhost"
+                        if cfg!(target_os = "windows") {
+                            "http://tauri.localhost"
+                        } else {
+                            "tauri://localhost"
+                        }
                     }
                     .parse()
                     .unwrap(),

@@ -196,7 +196,7 @@ mod tests {
                     cmd: "start_microphone_preview".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                         "device": "",
                         "window": "main"
@@ -229,7 +229,7 @@ mod tests {
                     cmd: "stop_microphone_preview".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({ "session": 0 })),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.into(),
@@ -267,7 +267,10 @@ mod tests {
         let window = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
             .build()
             .unwrap();
-        for origin in ["https://untrusted.example.test/", "tauri://localhost"] {
+        for origin in [
+            "https://untrusted.example.test/",
+            crate::local_test_url().as_str(),
+        ] {
             let response = tauri::test::get_ipc_response(
                 &window,
                 tauri::webview::InvokeRequest {

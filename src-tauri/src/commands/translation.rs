@@ -172,7 +172,7 @@ mod tests {
                     cmd: "set_active_translation_target".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({"code": "ja"})),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.to_string(),

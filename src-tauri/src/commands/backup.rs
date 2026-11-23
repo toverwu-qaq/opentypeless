@@ -810,7 +810,7 @@ mod tests {
                     cmd: "validate_backup_data".to_string(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(body),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.to_string(),
@@ -828,7 +828,7 @@ mod tests {
                     cmd: "validate_backup_data".to_string(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                         "history": [{"raw_text": "Synthetic words"}]
                     })),

@@ -585,7 +585,7 @@ mod tests {
                         cmd: command.to_string(),
                         callback: tauri::ipc::CallbackFn(0),
                         error: tauri::ipc::CallbackFn(1),
-                        url: "tauri://localhost".parse().unwrap(),
+                        url: crate::local_test_url(),
                         body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                             "accountSnapshot": {
                                 "schemaVersion": 1,
@@ -624,7 +624,7 @@ mod tests {
                 cmd: "get_stt_provider_diagnostics".to_string(),
                 callback: tauri::ipc::CallbackFn(0),
                 error: tauri::ipc::CallbackFn(1),
-                url: "tauri://localhost".parse().unwrap(),
+                url: crate::local_test_url(),
                 body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                     "apiKey": "synthetic-private-key",
                     "provider": "custom-whisper",
@@ -682,7 +682,7 @@ mod tests {
                         cmd: command.to_string(),
                         callback: tauri::ipc::CallbackFn(0),
                         error: tauri::ipc::CallbackFn(1),
-                        url: "tauri://localhost".parse().unwrap(),
+                        url: crate::local_test_url(),
                         body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                             "apiKey": "synthetic-key",
                             "provider": "cloud"

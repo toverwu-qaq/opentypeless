@@ -64,6 +64,15 @@ use tauri::{Emitter, Manager};
 use tauri_plugin_autostart::MacosLauncher;
 use tracing_subscriber::EnvFilter;
 
+#[cfg(test)]
+pub(crate) fn local_test_url() -> tauri::Url {
+    if cfg!(target_os = "windows") {
+        "http://tauri.localhost".parse().unwrap()
+    } else {
+        "tauri://localhost".parse().unwrap()
+    }
+}
+
 use std::sync::{Arc, Mutex};
 
 /// Default cloud API base URL. Override with the `API_BASE_URL` environment variable.
@@ -449,7 +458,7 @@ mod ask_dismiss_tests {
                     cmd: "dismiss_ask_window".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({})),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.into(),
@@ -784,7 +793,7 @@ mod tests {
                     cmd: "cancel_transcription_retry".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({})),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.into(),
@@ -817,7 +826,7 @@ mod tests {
                     cmd: "recover_unfinished_take".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({ "id": 7 })),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.into(),
@@ -850,7 +859,7 @@ mod tests {
                     cmd: "retry_transcription".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({})),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.into(),
@@ -883,7 +892,7 @@ mod tests {
                     cmd: "retry_history_transcription".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({ "id": 7 })),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.into(),

@@ -2338,18 +2338,21 @@ mod tests {
         #[cfg(target_os = "windows")]
         {
             assert!(plan
-                .global
+                .native
                 .iter()
                 .any(|entry| entry.role == HotkeyRole::Dictation));
             assert!(plan
-                .global
+                .native
                 .iter()
                 .any(|entry| entry.role == HotkeyRole::Ask));
             assert!(plan
-                .global
+                .native
                 .iter()
                 .any(|entry| entry.role == HotkeyRole::TranslateSelection));
-            assert!(plan.native.is_empty());
+            assert!(plan
+                .native
+                .iter()
+                .all(|entry| entry.trigger.canonical().starts_with("RightAlt")));
         }
 
         #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]

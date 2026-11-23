@@ -3318,7 +3318,7 @@ mod tests {
                     cmd: "show_saved_ask_answer".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(json!({
                         "question": "Synthetic question",
                         "answer": answer,
@@ -3547,7 +3547,7 @@ mod tests {
                     cmd: "show_saved_ask_answer".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(json!({
                         "question": "Synthetic question",
                         "answer": answer
@@ -3589,7 +3589,7 @@ mod tests {
                     cmd: "show_saved_ask_answer".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(json!({
                         "question": "Synthetic question",
                         "answer": "Synthetic saved answer"
@@ -5103,7 +5103,7 @@ mod tests {
                     cmd: "take_pending_ask_message".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(json!({})),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.into(),

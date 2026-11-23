@@ -430,7 +430,11 @@ mod tests {
             let origin = if remote {
                 "https://example.invalid/"
             } else {
-                "tauri://localhost"
+                if cfg!(target_os = "windows") {
+                    "http://tauri.localhost"
+                } else {
+                    "tauri://localhost"
+                }
             };
             let url = if remote {
                 tauri::WebviewUrl::External(origin.parse().unwrap())
@@ -619,7 +623,7 @@ mod tests {
                     cmd: "get_cloud_backup_history".into(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({})),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.into(),
@@ -635,7 +639,7 @@ mod tests {
                     cmd: "get_history".to_string(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(
                         serde_json::json!({"limit": 200, "offset": 0}),
                     ),
@@ -653,7 +657,7 @@ mod tests {
                     cmd: "search_history_page".to_string(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                         "query": "Synthetic",
                         "mode": "all",
@@ -674,7 +678,7 @@ mod tests {
                     cmd: "export_history_audio".to_string(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({"id": 1})),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.to_string(),
@@ -691,7 +695,7 @@ mod tests {
                         cmd: command.to_string(),
                         callback: tauri::ipc::CallbackFn(0),
                         error: tauri::ipc::CallbackFn(1),
-                        url: "tauri://localhost".parse().unwrap(),
+                        url: crate::local_test_url(),
                         body: tauri::ipc::InvokeBody::Json(serde_json::json!({"id": 1})),
                         headers: Default::default(),
                         invoke_key: tauri::test::INVOKE_KEY.to_string(),
@@ -719,7 +723,7 @@ mod tests {
                 cmd: "get_history".to_string(),
                 callback: tauri::ipc::CallbackFn(0),
                 error: tauri::ipc::CallbackFn(1),
-                url: "tauri://localhost".parse().unwrap(),
+                url: crate::local_test_url(),
                 body: tauri::ipc::InvokeBody::Json(serde_json::json!({"limit": 200, "offset": 0})),
                 headers: Default::default(),
                 invoke_key: tauri::test::INVOKE_KEY.to_string(),
@@ -737,7 +741,7 @@ mod tests {
                 cmd: "get_cloud_backup_history".into(),
                 callback: tauri::ipc::CallbackFn(0),
                 error: tauri::ipc::CallbackFn(1),
-                url: "tauri://localhost".parse().unwrap(),
+                url: crate::local_test_url(),
                 body: tauri::ipc::InvokeBody::Json(serde_json::json!({})),
                 headers: Default::default(),
                 invoke_key: tauri::test::INVOKE_KEY.into(),
@@ -756,7 +760,7 @@ mod tests {
                     cmd: command.to_string(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({"id": 1})),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.to_string(),
@@ -811,7 +815,7 @@ mod tests {
                 cmd: "clear_history".into(),
                 callback: tauri::ipc::CallbackFn(0),
                 error: tauri::ipc::CallbackFn(1),
-                url: "tauri://localhost".parse().unwrap(),
+                url: crate::local_test_url(),
                 body: tauri::ipc::InvokeBody::Json(serde_json::json!({})),
                 headers: Default::default(),
                 invoke_key: tauri::test::INVOKE_KEY.into(),

@@ -152,7 +152,7 @@ mod tests {
                 cmd: "request_update_install".into(),
                 callback: tauri::ipc::CallbackFn(0),
                 error: tauri::ipc::CallbackFn(1),
-                url: "tauri://localhost".parse().unwrap(),
+                url: crate::local_test_url(),
                 body: tauri::ipc::InvokeBody::Json(serde_json::json!({})),
                 headers: Default::default(),
                 invoke_key: tauri::test::INVOKE_KEY.into(),
@@ -188,7 +188,7 @@ mod tests {
                         cmd: command.into(),
                         callback: tauri::ipc::CallbackFn(0),
                         error: tauri::ipc::CallbackFn(1),
-                        url: "tauri://localhost".parse().unwrap(),
+                        url: crate::local_test_url(),
                         body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                             "requestId": request_id,
                             "window": "main"

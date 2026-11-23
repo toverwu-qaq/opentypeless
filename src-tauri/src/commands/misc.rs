@@ -1900,7 +1900,7 @@ mod tests {
                     cmd: "pause_hotkey".to_string(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({})),
                     headers: Default::default(),
                     invoke_key: tauri::test::INVOKE_KEY.to_string(),
@@ -2225,7 +2225,12 @@ mod tests {
     #[test]
     fn indexed_registration_results_do_not_mark_a_working_fn_role_failed() {
         let mut config = storage::AppConfig::default();
-        config.hotkey = "Fn".into();
+        config.hotkey = if cfg!(target_os = "windows") {
+            "RightAlt"
+        } else {
+            "Fn"
+        }
+        .into();
         config.ask_hotkey = "Ctrl+.".into();
         config.hotkeys = storage::HotkeyConfig::from_legacy(
             &config.hotkey,

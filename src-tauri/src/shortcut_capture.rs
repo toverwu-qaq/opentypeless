@@ -320,7 +320,7 @@ mod tests {
                         cmd: command.into(),
                         callback: tauri::ipc::CallbackFn(0),
                         error: tauri::ipc::CallbackFn(1),
-                        url: "tauri://localhost".parse().unwrap(),
+                        url: crate::local_test_url(),
                         body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                             "captureId": uuid::Uuid::new_v4().to_string()
                         })),

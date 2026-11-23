@@ -513,7 +513,7 @@ mod tests {
                     cmd: command.to_string(),
                     callback: tauri::ipc::CallbackFn(0),
                     error: tauri::ipc::CallbackFn(1),
-                    url: "tauri://localhost".parse().unwrap(),
+                    url: crate::local_test_url(),
                     body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                         "apiKey": api_key,
                         "provider": provider,
@@ -597,7 +597,7 @@ mod tests {
                         cmd: command.to_string(),
                         callback: tauri::ipc::CallbackFn(0),
                         error: tauri::ipc::CallbackFn(1),
-                        url: "tauri://localhost".parse().unwrap(),
+                        url: crate::local_test_url(),
                         body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                             "apiKey": "synthetic-key",
                             "provider": "openai",
@@ -647,7 +647,7 @@ mod tests {
                         cmd: command.to_string(),
                         callback: tauri::ipc::CallbackFn(0),
                         error: tauri::ipc::CallbackFn(1),
-                        url: "tauri://localhost".parse().unwrap(),
+                        url: crate::local_test_url(),
                         body: tauri::ipc::InvokeBody::Json(serde_json::json!({
                             "apiKey": "synthetic-key",
                             "provider": "cloud",
