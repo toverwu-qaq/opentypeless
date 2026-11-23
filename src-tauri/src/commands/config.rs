@@ -3928,7 +3928,12 @@ mod tests {
         let mut next = previous.clone();
         next.hotkey = "Ctrl+Shift+K".to_string();
         next.ask_hotkey = "Ctrl+Shift+J".to_string();
-        next.hotkey_mode = "hold".to_string();
+        next.hotkey_mode = if previous.hotkey_mode == "hold" {
+            "toggle"
+        } else {
+            "hold"
+        }
+        .to_string();
         next.hotkeys.dictation = storage::ShortcutBinding::from_hotkey("Ctrl+Shift+K").unwrap();
         next.hotkeys.dictation_bindings = vec![next.hotkeys.dictation.clone()];
         next.stt_api_key = "synthetic-secret".to_string();

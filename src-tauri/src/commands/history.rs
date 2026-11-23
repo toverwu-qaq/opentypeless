@@ -782,7 +782,16 @@ mod tests {
         drop(main);
         drop(app);
         drop(connection);
-        std::fs::remove_dir_all(directory).unwrap();
+        for attempt in 0..20 {
+            match std::fs::remove_dir_all(&directory) {
+                Ok(()) => break,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => break,
+                Err(error) if error.raw_os_error() == Some(32) && attempt < 19 => {
+                    std::thread::sleep(std::time::Duration::from_millis(50));
+                }
+                Err(error) => panic!("Could not clean synthetic history fixture: {error}"),
+            }
+        }
     }
 
     #[test]
