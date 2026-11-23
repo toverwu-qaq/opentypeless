@@ -984,6 +984,7 @@ pub(crate) fn input_configuration_busy(app: &tauri::AppHandle) -> bool {
         })
 }
 
+#[cfg(target_os = "macos")]
 pub(crate) fn input_monitor_lost(app: &tauri::AppHandle) {
     let Some(runtime) = app.try_state::<RecordingCommandQueue>() else {
         return;

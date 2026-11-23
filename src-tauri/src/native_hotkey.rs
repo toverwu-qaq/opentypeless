@@ -577,6 +577,7 @@ fn dispatch_matching_bindings_at(
 #[derive(Default)]
 struct NativeComboState {
     dispatch_order: Arc<Mutex<()>>,
+    #[cfg(any(target_os = "macos", test))]
     mode: InputMode,
     base_pressed: bool,
     held_combos: Vec<NativeComboKey>,
