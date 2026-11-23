@@ -2239,6 +2239,16 @@ pub struct HistoryStore {
 }
 
 impl HistoryStore {
+    #[cfg(test)]
+    pub(crate) fn release_fixture_connection(&self) -> Result<()> {
+        let mut connection = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("Fixture connection unavailable"))?;
+        *connection = Connection::open_in_memory()?;
+        Ok(())
+    }
+
     pub(crate) fn acknowledge_history_sync_attempt(
         &self,
         account: &str,

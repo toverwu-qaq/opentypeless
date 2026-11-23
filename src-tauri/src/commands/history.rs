@@ -780,7 +780,9 @@ mod tests {
             }
         }
         drop(main);
-        drop(app.unmanage::<storage::HistoryStore>().unwrap());
+        app.state::<storage::HistoryStore>()
+            .release_fixture_connection()
+            .unwrap();
         drop(app);
         drop(connection);
         for attempt in 0..20 {
